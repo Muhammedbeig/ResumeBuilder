@@ -1,0 +1,44 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getGeminiModel } from "@/lib/gemini";
+
+export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const bullet = String(body?.bullet || "").trim();
+  const context = body?.context ? String(body.context) : "";
+
+  if (!bullet) {
+    return NextResponse.json({ error: "Bullet text is required" }, { status: 400 });
+  }
+
+  try {
+    const model = getGeminiModel();
+    const prompt = `You are an expert resume writer. Rewrite this bullet point to be more impactful using the STAR method (Situation, Task, Action, Result).
+
+Focus on:
+- Start with a strong action verb
+- Include quantifiable metrics and results where possible
+- Be concise and specific
+- Avoid generic phrases
+
+Original: ${bullet}
+${context ? `Context: ${context}` : ""}
+
+Rewritten bullet:`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rewritten = response.text().trim();
+
+    return NextResponse.json({ rewritten });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "AI request failed";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
+}
