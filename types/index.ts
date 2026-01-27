@@ -47,6 +47,17 @@ export interface ResumeData {
   projects: Project[];
   certifications: Certification[];
   languages: Language[];
+  
+  // Section Ordering & Visibility
+  structure?: SectionConfig[];
+}
+
+export interface SectionConfig {
+  id: string;
+  type: 'basics' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'summary' | 'custom';
+  title: string;
+  isVisible: boolean;
+  order: number;
 }
 
 export interface Experience {

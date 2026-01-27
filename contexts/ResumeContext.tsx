@@ -48,13 +48,16 @@ interface ResumeContextType {
   removeSkillGroup: (id: string) => void;
   addCertification: (cert: Omit<Certification, "id">) => void;
   removeCertification: (id: string) => void;
+  // Dynamic Structure
+  updateStructure: (structure: import("@/types").SectionConfig[]) => void;
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
   extractSkillsAI: (text: string) => Promise<string[]>;
   tailorToJobAI: (jobDescription: string) => Promise<unknown>;
+  generatePDF?: (templateId: string) => Promise<void>;
 }
 
-const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
+export const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 function parseResumeDates(resume: Resume): Resume {
   return {
@@ -309,6 +312,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateStructure = useCallback((structure: import("@/types").SectionConfig[]) => {
+    setResumeData((prev) => ({
+      ...prev,
+      structure,
+    }));
+  }, []);
+
   const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
     const response = await fetch(`/api/ai/${path}`, {
       method: "POST",
@@ -453,6 +463,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       removeSkillGroup,
       addCertification,
       removeCertification,
+      updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
       extractSkillsAI,
@@ -484,6 +495,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       removeSkillGroup,
       addCertification,
       removeCertification,
+      updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
       extractSkillsAI,

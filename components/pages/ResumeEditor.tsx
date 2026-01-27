@@ -21,6 +21,7 @@ import {
   Plus,
   Trash2,
   Crown,
+  Layout
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import { Slider } from "@/components/ui/slider";
 import { useResume } from "@/contexts/ResumeContext";
 import { resumeTemplateMap, resumeTemplates } from "@/lib/resume-templates";
 import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
+import { SectionManager } from "@/components/editor/SectionManager";
 import { toast } from "sonner";
 import type { Experience, Education, Project } from "@/types";
 
@@ -50,6 +52,7 @@ export function ResumeEditorPage() {
     loadResume,
     updateTemplate,
     isLoading,
+    generatePDF: generatePDFContext,
   } = useResume();
 
   const [activeSection, setActiveSection] = useState("basics");
@@ -74,11 +77,15 @@ export function ResumeEditorPage() {
   const handleExportPDF = async () => {
     setIsExporting(true);
     try {
-      const pdfUrl = await generatePDF('resume-preview', 'resume.pdf');
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = 'resume.pdf';
-      link.click();
+      if (generatePDFContext) {
+        await generatePDFContext(activeTemplateId);
+      } else {
+        const pdfUrl = await generatePDF('resume-preview', 'resume.pdf');
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'resume.pdf';
+        link.click();
+      }
       toast.success('Resume exported successfully!');
     } catch (error) {
       console.error('Export PDF failed:', error);
@@ -134,6 +141,7 @@ export function ResumeEditorPage() {
     { id: 'skills', label: 'Skills', icon: Languages },
     { id: 'projects', label: 'Projects', icon: Code },
     { id: 'certifications', label: 'Certifications', icon: Award },
+    { id: 'structure', label: 'Rearrange', icon: Layout },
   ];
 
   return (
@@ -189,14 +197,6 @@ export function ResumeEditorPage() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => toast.info('Preview mode coming soon!')}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </Button>
             <Button 
               variant="outline" 
               size="sm"
@@ -434,6 +434,18 @@ export function ResumeEditorPage() {
               {activeSection === 'certifications' && (
                 <CertificationsSection />
               )}
+
+              {activeSection === 'structure' && (
+                  <motion.div
+                    key="structure"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                      <SectionManager />
+                  </motion.div>
+              )}
             </AnimatePresence>
             </div>
           </ResizablePanel>
@@ -450,7 +462,7 @@ export function ResumeEditorPage() {
                     Live Preview
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Pick a template to preview
+                    Real-time preview of your resume
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -470,41 +482,10 @@ export function ResumeEditorPage() {
                   </span>
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {templates.map((template) => {
-                  const hasPremium =
-                    user?.subscription === "pro" || user?.subscription === "business";
-                  const isLocked = template.premium && !hasPremium;
-                  const isActive = template.id === activeTemplateId;
-                  return (
-                    <Button
-                      key={template.id}
-                      size="sm"
-                      variant={isActive ? "default" : "outline"}
-                      className={
-                        isActive
-                          ? "bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
-                          : "border-gray-300 dark:border-gray-700"
-                      }
-                      onClick={() => handleTemplateSelect(template.id)}
-                      disabled={isLocked}
-                    >
-                      {template.name}
-                      {template.premium && (
-                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-800">
-                          <Crown className="h-3 w-3" />
-                          Pro
-                        </span>
-                      )}
-                    </Button>
-                  );
-                })}
-              </div>
               
               <div className="flex-1 overflow-auto bg-gray-100/50 dark:bg-gray-900/50 p-8 flex justify-center items-start">
                 <div 
-                  style={{ 
+                  style={{  
                     transform: `scale(${zoom[0] / 100})`, 
                     transformOrigin: "top center",
                     marginBottom: '2rem'
@@ -518,7 +499,10 @@ export function ResumeEditorPage() {
                       minHeight: '297mm',
                     }}
                   >
-                    <ActiveTemplate data={resumeData} />
+                    <ActiveTemplate 
+                      key={JSON.stringify(resumeData.structure)} 
+                      data={resumeData} 
+                    />
                   </div>
                 </div>
               </div>
