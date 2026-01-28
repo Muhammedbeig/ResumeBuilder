@@ -23,7 +23,7 @@ model User {
   
   // Relations
   resumes       Resume[]
-  cvs           CV[]
+  cvs           Cv[]
   accounts      Account[]
   sessions      Session[]
   
@@ -88,7 +88,7 @@ model Resume {
   @@map("resumes")
 }
 
-model CV {
+model Cv {
   id              String   @id @default(cuid())
   userId          String
   title           String   @default("Untitled CV")
@@ -100,13 +100,13 @@ model CV {
   
   // Relations
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  versions        CVVersion[]
-  exports         CVExport[]
+  versions        CvVersion[]
+  exports         CvExport[]
   
   @@map("cvs")
 }
 
-model CVVersion {
+model CvVersion {
   id         String   @id @default(cuid())
   cvId       String
   jsonData   Json     // Structured cv data
@@ -114,12 +114,12 @@ model CVVersion {
   createdAt  DateTime @default(now())
   
   // Relations
-  cv         CV   @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  cv         Cv   @relation(fields: [cvId], references: [id], onDelete: Cascade)
   
   @@map("cv_versions")
 }
 
-model CVExport {
+model CvExport {
   id               String   @id @default(cuid())
   cvId             String
   cvVersionId      String
@@ -129,7 +129,7 @@ model CVExport {
   completedAt      DateTime?
   
   // Relations
-  cv               CV   @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  cv               Cv   @relation(fields: [cvId], references: [id], onDelete: Cascade)
   
   @@map("cv_exports")
 }

@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const cvs = await prisma.cV.findMany({
+  const cvs = await prisma.cv.findMany({
     where: { userId },
     orderBy: { updatedAt: "desc" },
   });
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const source = typeof body?.source === "string" ? body.source : "manual";
 
   const result = await prisma.$transaction(async (tx) => {
-    const cv = await tx.cV.create({
+    const cv = await tx.cv.create({
       data: {
         userId,
         title,
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const version = await tx.cVVersion.create({
+    const version = await tx.cvVersion.create({
       data: {
         cvId: cv.id,
         jsonData: cvData as unknown as Prisma.InputJsonValue,
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const updated = await tx.cV.update({
+    const updated = await tx.cv.update({
       where: { id: cv.id },
       data: { activeVersionId: version.id },
     });

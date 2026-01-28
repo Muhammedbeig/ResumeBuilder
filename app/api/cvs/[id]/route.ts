@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const { id: cvId } = await context.params;
-  const cv = await prisma.cV.findFirst({
+  const cv = await prisma.cv.findFirst({
     where: { id: cvId, userId },
   });
 
@@ -29,13 +29,13 @@ export async function GET(_request: Request, context: RouteContext) {
 
   let version = null;
   if (cv.activeVersionId) {
-    version = await prisma.cVVersion.findUnique({
+    version = await prisma.cvVersion.findUnique({
       where: { id: cv.activeVersionId },
     });
   }
 
   if (!version) {
-    version = await prisma.cVVersion.findFirst({
+    version = await prisma.cvVersion.findFirst({
       where: { cvId: cv.id },
       orderBy: { createdAt: "desc" },
     });
@@ -55,7 +55,7 @@ export async function PUT(request: Request, context: RouteContext) {
   const { id: cvId } = await context.params;
   const body = await request.json().catch(() => ({}));
 
-  const cv = await prisma.cV.findFirst({
+  const cv = await prisma.cv.findFirst({
     where: { id: cvId, userId },
   });
 
@@ -70,7 +70,7 @@ export async function PUT(request: Request, context: RouteContext) {
   const source = typeof body?.source === "string" ? body.source : "manual";
 
   const result = await prisma.$transaction(async (tx) => {
-    const updatedCV = await tx.cV.update({
+    const updatedCV = await tx.cv.update({
       where: { id: cv.id },
       data: {
         title,
@@ -81,7 +81,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
     let data = cvData;
     if (body?.data) {
-      const version = await tx.cVVersion.create({
+      const version = await tx.cvVersion.create({
         data: {
           cvId: cv.id,
           jsonData: cvData as unknown as Prisma.InputJsonValue,
@@ -89,7 +89,7 @@ export async function PUT(request: Request, context: RouteContext) {
         },
       });
 
-      const updatedWithVersion = await tx.cV.update({
+      const updatedWithVersion = await tx.cv.update({
         where: { id: cv.id },
         data: { activeVersionId: version.id },
       });
@@ -111,7 +111,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   const { id: cvId } = await context.params;
-  const cv = await prisma.cV.findFirst({
+  const cv = await prisma.cv.findFirst({
     where: { id: cvId, userId },
   });
 
@@ -119,6 +119,6 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "CV not found" }, { status: 404 });
   }
 
-  await prisma.cV.delete({ where: { id: cv.id } });
+  await prisma.cv.delete({ where: { id: cv.id } });
   return NextResponse.json({ success: true });
 }
