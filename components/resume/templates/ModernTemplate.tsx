@@ -159,7 +159,7 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
   return (
     <div
       id="resume-modern"
-      className={`resume-template bg-white text-gray-900 p-8 font-sans ${className}`}
+      className={`resume-template bg-white text-gray-900 p-12 font-sans ${className}`}
     >
       {activeStructure.map((section) => {
         if (section.isVisible === false) return null;

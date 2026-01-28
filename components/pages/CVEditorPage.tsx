@@ -29,31 +29,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Slider } from "@/components/ui/slider";
-import { useResume } from "@/contexts/ResumeContext";
-import { resumeTemplateMap, resumeTemplates } from "@/lib/resume-templates";
+import { useCV } from "@/contexts/CVContext";
+import { cvTemplateMap, cvTemplates } from "@/lib/cv-templates";
 import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
 import { SectionManager } from "@/components/editor/SectionManager";
+import { GenericSectionManager } from "@/components/editor/GenericSectionManager";
 import { toast } from "sonner";
 import type { Experience, Education, Project } from "@/types";
 
-export function ResumeEditorPage() {
+export function CVEditorPage() {
   const params = useParams();
-  const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const cvId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session } = useSession();
   const user = session?.user;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-    resumeData,
-    currentResume,
+    cvData,
+    currentCV,
     updateBasics,
     generateSummaryAI,
     rewriteBulletAI,
-    saveResume,
-    loadResume,
+    saveCV,
+    loadCV,
     updateTemplate,
+    updateStructure,
     isLoading,
     generatePDF: generatePDFContext,
-  } = useResume();
+  } = useCV();
 
   const [activeSection, setActiveSection] = useState("basics");
   const [isExporting, setIsExporting] = useState(false);
@@ -62,17 +64,17 @@ export function ResumeEditorPage() {
   const [zoom, setZoom] = useState([90]);
 
   useEffect(() => {
-    if (resumeId) {
-      loadResume(resumeId);
+    if (cvId) {
+      loadCV(cvId);
     }
-  }, [resumeId, loadResume]);
+  }, [cvId, loadCV]);
 
-  const templates = resumeTemplates;
+  const templates = cvTemplates;
 
-  const activeTemplateId = currentResume?.template || "modern";
+  const activeTemplateId = currentCV?.template || "academic-cv";
   const ActiveTemplate =
-    resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap] ||
-    resumeTemplateMap.modern;
+    cvTemplateMap[activeTemplateId as keyof typeof cvTemplateMap] ||
+    cvTemplateMap["academic-cv"];
 
   const handleExportPDF = async () => {
     setIsExporting(true);
@@ -80,16 +82,16 @@ export function ResumeEditorPage() {
       if (generatePDFContext) {
         await generatePDFContext(activeTemplateId);
       } else {
-        const pdfUrl = await generatePDF('resume-preview', 'resume.pdf');
+        const pdfUrl = await generatePDF('resume-preview', 'cv.pdf');
         const link = document.createElement('a');
         link.href = pdfUrl;
-        link.download = 'resume.pdf';
+        link.download = 'cv.pdf';
         link.click();
       }
-      toast.success('Resume exported successfully!');
+      toast.success('CV exported successfully!');
     } catch (error) {
       console.error('Export PDF failed:', error);
-      toast.error('Failed to export resume');
+      toast.error('Failed to export CV');
     } finally {
       setIsExporting(false);
     }
@@ -99,24 +101,24 @@ export function ResumeEditorPage() {
     setIsExporting(true);
     try {
       const imageUrl = await generateImage('resume-preview');
-      downloadImage(imageUrl, 'resume.png');
-      toast.success('Resume exported successfully!');
+      downloadImage(imageUrl, 'cv.png');
+      toast.success('CV exported successfully!');
     } catch (error) {
       console.error('Export Image failed:', error);
-      toast.error('Failed to export resume');
+      toast.error('Failed to export CV');
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleSave = async () => {
-    if (!currentResume) return;
+    if (!currentCV) return;
     setIsSaving(true);
     try {
-      await saveResume();
-      toast.success("Resume saved!");
+      await saveCV();
+      toast.success("CV saved!");
     } catch (error) {
-      toast.error("Failed to save resume");
+      toast.error("Failed to save CV");
     } finally {
       setIsSaving(false);
     }
@@ -193,7 +195,7 @@ export function ResumeEditorPage() {
               )}
             </Button>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Resume Editor
+              CV Editor
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -246,11 +248,11 @@ export function ResumeEditorPage() {
                   
                   <div className="mb-6 flex items-center gap-6">
                     <div className="shrink-0">
-                      {resumeData.basics.image ? (
+                      {cvData.basics.image ? (
                         <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
-                            src={resumeData.basics.image} 
+                            src={cvData.basics.image} 
                             alt="Profile" 
                             className="w-full h-full object-cover"
                           />
@@ -290,7 +292,7 @@ export function ResumeEditorPage() {
                           }}
                           className="hidden"
                         />
-                        {resumeData.basics.image && (
+                        {cvData.basics.image && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -314,7 +316,7 @@ export function ResumeEditorPage() {
                         Full Name
                       </label>
                       <Input 
-                        value={resumeData.basics.name}
+                        value={cvData.basics.name}
                         onChange={(e) => updateBasics({ name: e.target.value })}
                         placeholder="John Doe"
                       />
@@ -324,7 +326,7 @@ export function ResumeEditorPage() {
                         Professional Title
                       </label>
                       <Input 
-                        value={resumeData.basics.title}
+                        value={cvData.basics.title}
                         onChange={(e) => updateBasics({ title: e.target.value })}
                         placeholder="Software Engineer"
                       />
@@ -338,7 +340,7 @@ export function ResumeEditorPage() {
                       </label>
                       <Input 
                         type="email"
-                        value={resumeData.basics.email}
+                        value={cvData.basics.email}
                         onChange={(e) => updateBasics({ email: e.target.value })}
                         placeholder="john@example.com"
                       />
@@ -348,7 +350,7 @@ export function ResumeEditorPage() {
                         Phone
                       </label>
                       <Input 
-                        value={resumeData.basics.phone}
+                        value={cvData.basics.phone}
                         onChange={(e) => updateBasics({ phone: e.target.value })}
                         placeholder="+1 (555) 000-0000"
                       />
@@ -360,7 +362,7 @@ export function ResumeEditorPage() {
                       Location
                     </label>
                     <Input 
-                      value={resumeData.basics.location}
+                      value={cvData.basics.location}
                       onChange={(e) => updateBasics({ location: e.target.value })}
                       placeholder="San Francisco, CA"
                     />
@@ -372,7 +374,7 @@ export function ResumeEditorPage() {
                         LinkedIn
                       </label>
                       <Input 
-                        value={resumeData.basics.linkedin || ''}
+                        value={cvData.basics.linkedin || ''}
                         onChange={(e) => updateBasics({ linkedin: e.target.value })}
                         placeholder="linkedin.com/in/johndoe"
                       />
@@ -382,7 +384,7 @@ export function ResumeEditorPage() {
                         GitHub
                       </label>
                       <Input 
-                        value={resumeData.basics.github || ''}
+                        value={cvData.basics.github || ''}
                         onChange={(e) => updateBasics({ github: e.target.value })}
                         placeholder="github.com/johndoe"
                       />
@@ -406,7 +408,7 @@ export function ResumeEditorPage() {
                       </Button>
                     </div>
                     <Textarea 
-                      value={resumeData.basics.summary}
+                      value={cvData.basics.summary}
                       onChange={(e) => updateBasics({ summary: e.target.value })}
                       placeholder="Write a brief summary about your professional background and career goals..."
                       rows={4}
@@ -443,7 +445,10 @@ export function ResumeEditorPage() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                      <SectionManager />
+                      <GenericSectionManager 
+                        sections={cvData.structure || []} 
+                        onUpdate={updateStructure} 
+                      />
                   </motion.div>
               )}
             </AnimatePresence>
@@ -494,8 +499,8 @@ export function ResumeEditorPage() {
                     }}
                   >
                     <ActiveTemplate 
-                      key={JSON.stringify(resumeData.structure)} 
-                      data={resumeData} 
+                      key={JSON.stringify(cvData.structure)} 
+                      data={cvData} 
                     />
                   </div>
                 </div>
@@ -509,16 +514,18 @@ export function ResumeEditorPage() {
   );
 }
 
-// Experience Section Component
+// Subcomponents (ExperienceSection, etc.) must use useCV instead of useResume.
+// I will rewrite them below quickly or assume they are copied and replaced.
+
 function ExperienceSection() {
   const {
-    resumeData,
+    cvData,
     addExperience,
     updateExperience,
     removeExperience,
     rewriteBulletAI,
     isLoading,
-  } = useResume();
+  } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newExperience, setNewExperience] = useState<Partial<Experience>>({
     company: '',
@@ -624,7 +631,7 @@ function ExperienceSection() {
         </Card>
       )}
 
-      {resumeData.experiences.map((exp) => (
+      {cvData.experiences.map((exp) => (
         <Card key={exp.id}>
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
@@ -680,9 +687,8 @@ function ExperienceSection() {
   );
 }
 
-// Education Section Component
 function EducationSection() {
-  const { resumeData, addEducation, updateEducation, removeEducation } = useResume();
+  const { cvData, addEducation, updateEducation, removeEducation } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newEducation, setNewEducation] = useState<Partial<Education>>({
     institution: '',
@@ -775,7 +781,7 @@ function EducationSection() {
         </Card>
       )}
 
-      {resumeData.education.map((edu) => (
+      {cvData.education.map((edu) => (
         <Card key={edu.id}>
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
@@ -831,9 +837,8 @@ function EducationSection() {
   );
 }
 
-// Skills Section Component
 function SkillsSection() {
-  const { resumeData, addSkillGroup, updateSkillGroup, removeSkillGroup } = useResume();
+  const { cvData, addSkillGroup, updateSkillGroup, removeSkillGroup } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', skills: '' });
 
@@ -892,7 +897,7 @@ function SkillsSection() {
         </Card>
       )}
 
-      {resumeData.skills.map((group) => (
+      {cvData.skills.map((group) => (
         <Card key={group.id}>
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
@@ -928,9 +933,8 @@ function SkillsSection() {
   );
 }
 
-// Projects Section Component
 function ProjectsSection() {
-  const { resumeData, addProject, updateProject, removeProject } = useResume();
+  const { cvData, addProject, updateProject, removeProject } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newProject, setNewProject] = useState<Partial<Project>>({
     name: '',
@@ -1018,7 +1022,7 @@ function ProjectsSection() {
         </Card>
       )}
 
-      {resumeData.projects.map((project) => (
+      {cvData.projects.map((project) => (
         <Card key={project.id}>
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
@@ -1072,9 +1076,8 @@ function ProjectsSection() {
   );
 }
 
-// Certifications Section Component
 function CertificationsSection() {
-  const { resumeData, addCertification, removeCertification } = useResume();
+  const { cvData, addCertification, removeCertification } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newCert, setNewCert] = useState({ name: '', issuer: '', date: '', link: '' });
 
@@ -1143,7 +1146,7 @@ function CertificationsSection() {
         </Card>
       )}
 
-      {resumeData.certifications.map((cert) => (
+      {cvData.certifications.map((cert) => (
         <Card key={cert.id}>
           <CardContent className="p-6">
             <div className="flex items-start justify-between">

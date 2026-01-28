@@ -15,7 +15,7 @@ export async function generatePDF(elementId: string, filename: string = 'resume.
       pixelRatio: 2,
     });
 
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('p', 'mm', 'letter');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     

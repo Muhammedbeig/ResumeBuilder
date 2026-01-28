@@ -51,14 +51,13 @@ export function Navigation() {
       label: "Resume",
       items: [
         { label: "Templates", href: "/templates" },
-        { label: "Examples", href: "#" },
-        { label: "Format", href: "#" },
+        { label: "ATS Checker", href: "/ats-checker" },
       ],
     },
     {
       label: "CV",
       items: [
-        { label: "CV Builder", href: "#" },
+        { label: "CV Builder", href: "/cv/new" },
         { label: "CV Examples", href: "#" },
         { label: "CV Templates", href: "#" },
         { label: "CV Format", href: "#" },

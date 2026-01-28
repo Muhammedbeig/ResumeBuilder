@@ -16,8 +16,8 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const containerWidth = entry.contentRect.width;
-        // Standard A4 width at 96 DPI is approx 794px
-        const targetWidth = 794; 
+        // Target width based on user request: 918px
+        const targetWidth = 918; 
         const newScale = containerWidth / targetWidth;
         setScale(newScale);
       }
@@ -33,13 +33,13 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full aspect-[210/160] bg-gray-100 dark:bg-gray-800 rounded-t-xl overflow-hidden"
+      className="relative w-full aspect-[918/1188] bg-gray-100 dark:bg-gray-800 rounded-t-xl overflow-hidden"
     >
       <div 
         className="absolute top-0 left-0 origin-top-left shadow-2xl bg-white"
         style={{
-          width: '794px',
-          height: '1123px', // Keep full height internally so layout doesn't break
+          width: '918px',
+          height: '1188px', // Keep full height internally so layout doesn't break
           transform: `scale(${scale})`,
         }}
       >
@@ -53,7 +53,7 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
 
 export default function TemplatesPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-16">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
         <motion.div

@@ -23,6 +23,7 @@ model User {
   
   // Relations
   resumes       Resume[]
+  cvs           CV[]
   accounts      Account[]
   sessions      Session[]
   
@@ -85,6 +86,52 @@ model Resume {
   exports         Export[]
   
   @@map("resumes")
+}
+
+model CV {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String   @default("Untitled CV")
+  template        String   @default("academic-cv")
+  isPublic        Boolean  @default(false)
+  activeVersionId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions        CVVersion[]
+  exports         CVExport[]
+  
+  @@map("cvs")
+}
+
+model CVVersion {
+  id         String   @id @default(cuid())
+  cvId       String
+  jsonData   Json     // Structured cv data
+  source     String   @default("manual") // upload, manual, ai
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  cv         CV   @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  
+  @@map("cv_versions")
+}
+
+model CVExport {
+  id               String   @id @default(cuid())
+  cvId             String
+  cvVersionId      String
+  fileUrl          String?
+  status           String   @default("pending") // pending, processing, completed, failed
+  createdAt        DateTime @default(now())
+  completedAt      DateTime?
+  
+  // Relations
+  cv               CV   @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  
+  @@map("cv_exports")
 }
 
 model ResumeVersion {
