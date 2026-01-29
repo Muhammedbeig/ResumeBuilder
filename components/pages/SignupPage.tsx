@@ -15,7 +15,13 @@ export function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  
+  // If the callbackUrl is just the auth pages, default to dashboard
+  const rawCallback = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = rawCallback.includes("/login") || rawCallback.includes("/signup") 
+    ? "/dashboard" 
+    : rawCallback;
+
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
