@@ -40,8 +40,8 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         return (
           <div key={section.id} className="mb-5">
             <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Professional Experience</h2>
-            {experiences.map((exp) => (
-              <div key={exp.id} className="mb-4">
+            {experiences.map((exp, idx) => (
+              <div key={exp.id || idx} className="mb-4">
                 <div className="flex justify-between items-baseline mb-1">
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">{exp.role}</h3>
@@ -67,8 +67,8 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         return (
           <div key={section.id} className="mb-5">
             <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Education</h2>
-            {education.map((edu) => (
-              <div key={edu.id} className="mb-2">
+            {education.map((edu, idx) => (
+              <div key={edu.id || idx} className="mb-2">
                 <div className="flex justify-between items-baseline">
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">{edu.institution}</h3>
@@ -102,8 +102,8 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         return (
           <div key={section.id} className="mb-5">
             <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Projects</h2>
-            {projects.map((project) => (
-              <div key={project.id} className="mb-2">
+            {projects.map((project, idx) => (
+              <div key={project.id || idx} className="mb-2">
                 <div className="flex justify-between items-baseline">
                   <h3 className="font-bold text-gray-900 text-sm">{project.name}</h3>
                 </div>
@@ -122,8 +122,8 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         return (
           <div key={section.id} className="mb-5">
             <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Certifications</h2>
-            {certifications.map((cert) => (
-              <div key={cert.id} className="mb-1">
+            {certifications.map((cert, idx) => (
+              <div key={cert.id || idx} className="mb-1">
                 <p className="text-sm font-medium text-gray-900">{cert.name}</p>
                 <p className="text-xs text-gray-600">{cert.issuer} • {cert.date}</p>
               </div>

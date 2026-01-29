@@ -8,7 +8,7 @@ import { verifyPassword } from "@/lib/password";
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
   providers: [
     GoogleProvider({
@@ -39,26 +39,45 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const subscription =
-          user.subscription === "pro" || user.subscription === "business"
-            ? user.subscription
-            : "free";
-
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
-          subscription,
+          subscription: (user.subscription as "free" | "pro" | "business") ?? "free",
+          hasPassword: true,
         };
       },
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, user, trigger, session }: any) {
+      if (user) {
+        token.id = user.id;
+        token.subscription = user.subscription;
+        // Check if user has password (for OAuth users who haven't set one yet)
+        if (user.hasPassword !== undefined) {
+          token.hasPassword = user.hasPassword;
+        } else {
+          // For initial OAuth login, we need to check the DB or assume false
+          // But 'user' here comes from the adapter on first sign in
+          const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+          token.hasPassword = !!dbUser?.passwordHash;
+        }
+      }
+      
+      // Handle session update (e.g. name change)
+      if (trigger === "update" && session) {
+        if (session.name) token.name = session.name;
+      }
+      
+      return token;
+    },
+    async session({ session, token }: any) {
       if (session.user) {
-        session.user.id = user.id;
-        session.user.subscription = user.subscription ?? "free";
+        session.user.id = token.id;
+        session.user.subscription = token.subscription ?? "free";
+        session.user.hasPassword = token.hasPassword;
       }
       return session;
     },

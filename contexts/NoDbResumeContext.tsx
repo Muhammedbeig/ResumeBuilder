@@ -18,7 +18,7 @@ import type {
 } from "@/types";
 import { ResumeContext } from "@/contexts/ResumeContext";
 import { MOCK_RESUME } from "@/lib/mock-resume";
-import { normalizeResumeData } from "@/lib/resume-data";
+import { normalizeResumeData, emptyResumeData } from "@/lib/resume-data";
 import { toast } from "sonner";
 import { generateImage, downloadImage } from "@/lib/pdf";
 
@@ -42,6 +42,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [resumes, setResumes] = useState<Resume[]>([INITIAL_RESUME]);
   const [currentResume, setCurrentResume] = useState<Resume | null>(INITIAL_RESUME);
   const [resumeData, setResumeData] = useState<ResumeData>(localResumeData.get(INITIAL_RESUME.id)!);
+  const [importedData, setImportedData] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Mock implementation of createResume
@@ -83,6 +84,19 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     [resumes]
   );
 
+  const deleteResume = useCallback(
+    async (id: string) => {
+      setResumes((prev) => prev.filter((r) => r.id !== id));
+      localResumeData.delete(id);
+      if (currentResume?.id === id) {
+        setCurrentResume(null);
+        setResumeData(emptyResumeData);
+      }
+      toast.success("Resume deleted locally");
+    },
+    [currentResume?.id]
+  );
+
   const selectResume = useCallback(
     (resume: Resume) => {
       setCurrentResume(resume);
@@ -93,6 +107,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+  const syncGuestData = useCallback(async () => {
+    // No-op for NoDb version
+  }, []);
 
   // Mock implementation of saveResume - effectively just confirms the current state
   const saveResume = useCallback(async () => {
@@ -302,8 +320,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       isLoading,
       createResume,
       loadResume,
+      deleteResume,
       selectResume,
       saveResume,
+      syncGuestData,
       updateTemplate,
       updateResumeData,
       updateBasics,
@@ -327,11 +347,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       extractSkillsAI,
       tailorToJobAI,
       generatePDF, 
+      importedData,
+      setImportedData,
     }),
     [
       resumes,
       currentResume,
       resumeData,
+      importedData,
       isLoading,
       createResume,
       loadResume,
@@ -359,6 +382,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       extractSkillsAI,
       tailorToJobAI,
       generatePDF,
+      setImportedData,
     ]
   );
 

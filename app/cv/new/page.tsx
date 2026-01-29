@@ -16,15 +16,15 @@ import { toast } from "sonner";
 export default function NewCVPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { createCV } = useCV();
+  const { createCV, importedData } = useCV();
   const [title, setTitle] = useState("Untitled CV");
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
+    if (importedData?.basics?.name) {
+      setTitle(`${importedData.basics.name}'s CV`);
     }
-  }, [status, router]);
+  }, [importedData]);
 
   const hasPremium = useMemo(
     () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
@@ -41,7 +41,7 @@ export default function NewCVPage() {
       const cv = await createCV(
         title.trim() || "Untitled CV",
         templateId,
-        placeholderResumeData
+        importedData || placeholderResumeData
       );
       toast.success("CV created successfully!");
       router.push(`/cv/${cv.id}`);

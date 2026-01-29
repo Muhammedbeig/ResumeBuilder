@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter, useParams } from "next/navigation";
 import type {
   Certification,
   Education,
@@ -32,8 +33,10 @@ interface CVContextType {
   isLoading: boolean;
   createCV: (title: string, template: string, initialData?: ResumeData) => Promise<CV>;
   loadCV: (cvId: string) => Promise<void>;
+  deleteCV: (id: string) => Promise<void>;
   selectCV: (cv: CV) => void;
   saveCV: () => Promise<void>;
+  syncGuestData: () => Promise<void>;
   updateTemplate: (template: string) => void;
   updateCVData: (data: Partial<ResumeData>) => void;
   updateBasics: (basics: Partial<ResumeData["basics"]>) => void;
@@ -58,9 +61,13 @@ interface CVContextType {
   extractSkillsAI: (text: string) => Promise<string[]>;
   tailorToJobAI: (jobDescription: string) => Promise<unknown>;
   generatePDF?: (templateId: string) => Promise<void>;
+  importedData: ResumeData | null;
+  setImportedData: (data: ResumeData | null) => void;
 }
 
 export const CVContext = createContext<CVContextType | undefined>(undefined);
+
+const LOCAL_STORAGE_PREFIX = "resupra_guest_cv_";
 
 function parseCVDates(cv: CV): CV {
   return {
@@ -76,16 +83,40 @@ function normalizeCVList(cvs: CV[]): CV[] {
 
 export function CVProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
+  const router = useRouter();
+  const params = useParams();
+  const currentPathId = params?.id as string;
+
   const [cvs, setCVs] = useState<CV[]>([]);
   const [currentCV, setCurrentCV] = useState<CV | null>(null);
   const [cvData, setCVData] = useState<ResumeData>(emptyResumeData);
+  const [importedData, setImportedData] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const getLocalCVs = useCallback(() => {
+    const guestCVs: CV[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(LOCAL_STORAGE_PREFIX)) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key)!);
+          guestCVs.push(parseCVDates(data.cv));
+        } catch (e) {
+          console.error("Error parsing local CV", e);
+        }
+      }
+    }
+    return guestCVs;
+  }, []);
+
   const refreshCVs = useCallback(async () => {
+    const localCVs = getLocalCVs();
+
     if (!session?.user) {
-      setCVs([]);
+      setCVs(localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
       return;
     }
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/cvs");
@@ -93,33 +124,110 @@ export function CVProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to load CVs");
       }
       const data = await response.json();
-      setCVs(normalizeCVList(data.cvs || []));
+      const remoteCVs = normalizeCVList(data.cvs || []);
+      setCVs([...remoteCVs, ...localCVs].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user]);
+  }, [session?.user, getLocalCVs]);
+
+  useEffect(() => {
+    refreshCVs();
+  }, [session?.user, refreshCVs]);
+
+  const syncGuestData = useCallback(async () => {
+    if (!session?.user) return;
+    
+    const localKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(LOCAL_STORAGE_PREFIX)) {
+        localKeys.push(key);
+      }
+    }
+
+    if (localKeys.length === 0) return;
+
+    setIsLoading(true);
+    let syncedCurrentId: string | null = null;
+
+    try {
+      for (const key of localKeys) {
+        const localData = JSON.parse(localStorage.getItem(key)!);
+        const oldId = localData.cv.id;
+
+        const response = await fetch("/api/cvs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            title: localData.cv.title, 
+            template: localData.cv.template, 
+            data: localData.data 
+          }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          localStorage.removeItem(key);
+
+          if (oldId === currentPathId) {
+            syncedCurrentId = result.cv.id;
+          }
+        }
+      }
+      await refreshCVs();
+
+      if (syncedCurrentId) {
+        router.replace(`/cv/${syncedCurrentId}`);
+      }
+
+      toast.success("Syncing your guest data...");
+    } catch (error) {
+      console.error("Failed to sync guest data", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session?.user, refreshCVs, currentPathId, router]);
 
   useEffect(() => {
     if (session?.user) {
-      refreshCVs();
-    } else {
-      setCVs([]);
-      setCurrentCV(null);
-      setCVData(emptyResumeData);
+      syncGuestData();
     }
-  }, [session?.user, refreshCVs]);
+  }, [session?.user, syncGuestData]);
 
   const createCV = useCallback(
     async (title: string, template: string, initialData?: ResumeData) => {
+      const dataToUse = normalizeResumeData(initialData || emptyResumeData);
+
       if (!session?.user) {
-        throw new Error("Not authenticated");
+        const guestId = `local-${Date.now()}`;
+        const newCV: CV = {
+          id: guestId,
+          userId: "guest",
+          title,
+          template,
+          isPublic: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${guestId}`, JSON.stringify({
+          cv: newCV,
+          data: dataToUse
+        }));
+        
+        setCVs((prev) => [newCV, ...prev]);
+        setCurrentCV(newCV);
+        setCVData(dataToUse);
+        return newCV;
       }
+
       setIsLoading(true);
       try {
         const response = await fetch("/api/cvs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, template, data: initialData }),
+          body: JSON.stringify({ title, template, data: dataToUse }),
         });
         if (!response.ok) {
           throw new Error("Failed to create CV");
@@ -139,8 +247,21 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const loadCV = useCallback(
     async (cvId: string) => {
-      if (!session?.user || !cvId) return;
+      if (!cvId) return;
       if (currentCV?.id === cvId) return;
+
+      if (cvId.startsWith("local-")) {
+        const local = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}${cvId}`);
+        if (local) {
+          const parsed = JSON.parse(local);
+          setCurrentCV(parseCVDates(parsed.cv));
+          setCVData(normalizeResumeData(parsed.data));
+        }
+        return;
+      }
+
+      if (!session?.user) return;
+
       setIsLoading(true);
       try {
         const response = await fetch(`/api/cvs/${cvId}`);
@@ -158,6 +279,43 @@ export function CVProvider({ children }: { children: ReactNode }) {
     [session?.user, currentCV?.id]
   );
 
+  const deleteCV = useCallback(
+    async (id: string) => {
+      if (id.startsWith("local-")) {
+        localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}${id}`);
+        setCVs((prev) => prev.filter((cv) => cv.id !== id));
+        if (currentCV?.id === id) {
+          setCurrentCV(null);
+          setCVData(emptyResumeData);
+        }
+        toast.success("CV deleted");
+        return;
+      }
+
+      if (!session?.user) return;
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/cvs/${id}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to delete CV");
+        }
+        setCVs((prev) => prev.filter((cv) => cv.id !== id));
+        if (currentCV?.id === id) {
+          setCurrentCV(null);
+          setCVData(emptyResumeData);
+        }
+        toast.success("CV deleted");
+      } catch (error) {
+        toast.error("Failed to delete CV");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [session?.user, currentCV?.id]
+  );
+
   const selectCV = useCallback(
     (cv: CV) => {
       setCurrentCV(cv);
@@ -167,7 +325,19 @@ export function CVProvider({ children }: { children: ReactNode }) {
   );
 
   const saveCV = useCallback(async () => {
-    if (!session?.user || !currentCV) return;
+    if (!currentCV) return;
+
+    if (currentCV.id.startsWith("local-")) {
+      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${currentCV.id}`, JSON.stringify({
+        cv: { ...currentCV, updatedAt: new Date() },
+        data: cvData
+      }));
+      toast.success("Progress saved locally");
+      return;
+    }
+
+    if (!session?.user) return;
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/cvs/${currentCV.id}`, {
@@ -447,8 +617,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
       isLoading,
       createCV,
       loadCV,
+      deleteCV,
       selectCV,
       saveCV,
+      syncGuestData,
       updateTemplate,
       updateCVData,
       updateBasics,
@@ -471,16 +643,21 @@ export function CVProvider({ children }: { children: ReactNode }) {
       generateSummaryAI,
       extractSkillsAI,
       tailorToJobAI,
+      importedData,
+      setImportedData,
     }),
     [
       cvs,
       currentCV,
       cvData,
+      importedData,
       isLoading,
       createCV,
       loadCV,
+      deleteCV,
       selectCV,
       saveCV,
+      syncGuestData,
       updateTemplate,
       updateCVData,
       updateBasics,
@@ -503,6 +680,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       generateSummaryAI,
       extractSkillsAI,
       tailorToJobAI,
+      setImportedData,
     ]
   );
 

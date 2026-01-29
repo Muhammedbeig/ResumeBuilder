@@ -38,10 +38,10 @@ export function CTA() {
       } as React.CSSProperties}
     >
       {/* Background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white via-purple-50 to-white dark:from-gray-950 dark:via-purple-900/20 dark:to-gray-950">
         {/* Animated gradient orbs */}
         <motion.div 
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl"
           animate={{
             x: [0, 50, 0],
             y: [0, 30, 0],
@@ -53,7 +53,7 @@ export function CTA() {
           }}
         />
         <motion.div 
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/20 rounded-full blur-3xl"
           animate={{
             x: [0, -40, 0],
             y: [0, -20, 0],
@@ -66,7 +66,7 @@ export function CTA() {
         />
         
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px]" />
         
         {/* Radial gradient following mouse */}
         <div 
@@ -89,10 +89,10 @@ export function CTA() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={isInView ? { opacity: 1, scale: 1 } : {}}
             transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 mb-8"
           >
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span className="text-sm font-medium text-white">
+            <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
               Start Building Your Future
             </span>
           </motion.div>
@@ -102,10 +102,10 @@ export function CTA() {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6"
           >
             Ready to Build 
-            <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-purple-600 to-cyan-500 dark:from-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
               {' '}Your Future?
             </span>
           </motion.h2>
@@ -115,7 +115,7 @@ export function CTA() {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.4 }}
-            className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
+            className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto"
           >
             Join 50,000+ job seekers who have landed their dream jobs with AI-powered resumes.
             Start your free trial today.
@@ -128,10 +128,10 @@ export function CTA() {
             transition={{ delay: 0.5 }}
             className="flex flex-wrap justify-center gap-4"
           >
-            <Link href="/signup">
+            <Link href="/choose-builder">
               <Button 
                 size="lg"
-                className="bg-white text-gray-900 hover:bg-gray-100 rounded-full px-8 py-6 text-lg font-semibold group shadow-2xl shadow-white/20"
+                className="bg-purple-600 text-white hover:bg-purple-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-full px-8 py-6 text-lg font-semibold group shadow-xl shadow-purple-500/20 dark:shadow-white/10"
               >
                 Create My Resume Now
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -141,7 +141,7 @@ export function CTA() {
               <Button 
                 size="lg"
                 variant="outline"
-                className="rounded-full px-8 py-6 text-lg font-semibold border-white/30 text-white hover:bg-white/10"
+                className="rounded-full px-8 py-6 text-lg font-semibold border-gray-300 dark:border-white/30 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/10"
               >
                 Learn More
               </Button>

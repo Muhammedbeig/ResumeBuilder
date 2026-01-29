@@ -147,3 +147,40 @@ export interface ExportJob {
   createdAt: Date;
   completedAt?: Date;
 }
+
+export interface CoverLetter {
+  id: string;
+  userId: string;
+  title: string;
+  template: string;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CoverLetterData {
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    zipCode: string;
+  };
+  recipientInfo: {
+    managerName: string;
+    companyName: string;
+    address: string;
+    city: string;
+    zipCode: string;
+    email: string;
+  };
+  content: {
+    subject: string;
+    greeting: string;
+    opening: string;
+    body: string;
+    closing: string;
+    signature: string;
+  };
+}

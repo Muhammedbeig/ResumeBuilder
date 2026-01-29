@@ -112,7 +112,7 @@ export function Hero() {
               transition={{ delay: 0.4 }}
               className="flex flex-wrap gap-4"
             >
-      <Link href="/signup">
+      <Link href="/choose-builder">
                 <Button 
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full px-8 py-6 text-lg font-semibold group shadow-lg shadow-purple-500/25"
@@ -121,13 +121,13 @@ export function Hero() {
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="#how-it-works">
+              <Link href="/resume/start">
                 <Button 
                   size="lg"
                   variant="outline"
                   className="rounded-full px-8 py-6 text-lg font-semibold border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  See How It Works
+                  Import Resume
                 </Button>
               </Link>
             </motion.div>

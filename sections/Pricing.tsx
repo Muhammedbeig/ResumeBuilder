@@ -126,7 +126,7 @@ export function Pricing() {
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 items-start">
+        <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan, index) => {
             const Icon = plan.icon;
             const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
@@ -137,9 +137,9 @@ export function Pricing() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`relative p-8 rounded-2xl transition-all duration-500 ${
+                className={`relative p-8 rounded-2xl transition-all duration-500 flex flex-col h-full ${
                   plan.popular 
-                    ? 'bg-gradient-to-br from-purple-600 to-cyan-500 text-white scale-105 shadow-2xl shadow-purple-500/25' 
+                    ? 'bg-gradient-to-br from-purple-600 to-cyan-500 text-white scale-105 shadow-2xl shadow-purple-500/25 z-10' 
                     : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:shadow-xl'
                 }`}
                 style={{
@@ -199,7 +199,7 @@ export function Pricing() {
                 </div>
 
                 {/* Features */}
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -216,7 +216,7 @@ export function Pricing() {
 
                 {/* CTA */}
                 <Button
-                  className={`w-full py-6 rounded-xl font-semibold ${
+                  className={`w-full py-6 rounded-xl font-semibold mt-auto ${
                     plan.popular 
                       ? 'bg-white text-purple-600 hover:bg-gray-100' 
                       : 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white hover:from-purple-700 hover:to-cyan-600'

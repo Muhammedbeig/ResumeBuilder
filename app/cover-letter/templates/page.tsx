@@ -5,8 +5,35 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { resumeTemplates } from '@/lib/resume-templates';
-import { previewResumeData } from '@/lib/resume-samples';
+import { coverLetterTemplates } from '@/lib/cover-letter-templates';
+
+// Using a placeholder data for previews
+const previewData = {
+  personalInfo: {
+    fullName: "Alex Morgan",
+    email: "alex.morgan@example.com",
+    phone: "(555) 123-4567",
+    address: "123 Innovation Dr",
+    city: "San Francisco",
+    zipCode: "94103",
+  },
+  recipientInfo: {
+    managerName: "Sarah Connor",
+    companyName: "TechCorp Inc.",
+    address: "456 Future Way",
+    city: "San Francisco",
+    zipCode: "94105",
+    email: "hiring@techcorp.com",
+  },
+  content: {
+    subject: "Application for Senior Developer Position",
+    greeting: "Dear Ms. Connor,",
+    opening: "I am writing to express my strong interest in the Senior Developer position at TechCorp Inc.",
+    body: "With over 5 years of experience in full-stack development, I have a proven track record of delivering scalable web applications. I was particularly impressed by TechCorp's recent work on AI-driven analytics, and I believe my background in machine learning integration would be a valuable asset to your team.",
+    closing: "Thank you for considering my application. I look forward to the possibility of discussing how I can contribute to your team's success.",
+    signature: "Alex Morgan",
+  },
+};
 
 function RescaleContainer({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,8 +43,7 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const containerWidth = entry.contentRect.width;
-        // Target width based on user request: 918px
-        const targetWidth = 918; 
+        const targetWidth = 800; // Standard A4 width approx
         const newScale = containerWidth / targetWidth;
         setScale(newScale);
       }
@@ -33,25 +59,24 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full aspect-[918/1188] bg-gray-100 dark:bg-gray-800 rounded-t-xl overflow-hidden"
+      className="relative w-full aspect-[210/297] bg-gray-100 dark:bg-gray-800 rounded-t-xl overflow-hidden"
     >
       <div 
         className="absolute top-0 left-0 origin-top-left shadow-2xl bg-white"
         style={{
-          width: '918px',
-          height: '1188px', // Keep full height internally so layout doesn't break
+          width: '800px',
+          height: '1131px', 
           transform: `scale(${scale})`,
         }}
       >
         {children}
       </div>
-      {/* Fade effect at the bottom to show it's a preview */}
       <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-gray-50 dark:from-gray-900/50 to-transparent pointer-events-none" />
     </div>
   );
 }
 
-export default function TemplatesPage() {
+export default function CoverLetterTemplatesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
       {/* Header */}
@@ -62,21 +87,20 @@ export default function TemplatesPage() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 text-sm font-medium mb-6"
         >
           <Sparkles className="w-4 h-4" />
-          <span>Professional Resume Templates</span>
+          <span>Professional Cover Letter Templates</span>
         </motion.div>
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-          Stand Out with <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-500">Premium Designs</span>
+          Make a Great <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-500">First Impression</span>
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Choose from our collection of ATS-friendly and creative templates. 
-          Tested by recruiters and optimized for landing interviews.
+          Choose from our collection of professionally designed cover letter templates.
         </p>
       </div>
 
       {/* Templates Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {resumeTemplates.map((template, index) => {
+          {coverLetterTemplates.map((template, index) => {
             const TemplateComponent = template.component;
             return (
               <motion.div
@@ -89,12 +113,12 @@ export default function TemplatesPage() {
                 {/* Preview Container */}
                 <div className="relative p-4 pb-0 bg-gray-50 dark:bg-gray-800/50 rounded-t-2xl">
                   <RescaleContainer>
-                    <TemplateComponent data={previewResumeData} />
+                    <TemplateComponent data={previewData} />
                   </RescaleContainer>
                   
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl z-10">
-                    <Link href={`/resume/new?template=${template.id}`}>
+                    <Link href={`/cover-letter/new?template=${template.id}`}>
                       <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-xl scale-105">
                         Use This Template
                       </Button>
@@ -122,32 +146,10 @@ export default function TemplatesPage() {
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
                     {template.description}
                   </p>
-                  
-                  <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      <span>ATS Friendly</span>
-                    </div>
-                  </div>
                 </div>
               </motion.div>
             );
           })}
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 text-center">
-        <div className="bg-gradient-to-r from-purple-600 to-cyan-500 rounded-3xl p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">Ready to build your resume?</h2>
-          <p className="text-lg opacity-90 mb-8 max-w-xl mx-auto">
-            Join thousands of job seekers who have successfully landed jobs at top companies.
-          </p>
-          <Link href="/resume/new">
-            <Button size="lg" variant="secondary" className="gap-2">
-              Create My Resume <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
         </div>
       </div>
     </div>

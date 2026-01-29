@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import type { Experience, Education, Project } from "@/types";
 
 export function ResumeEditorPage() {
+  const router = useRouter();
   const params = useParams();
   const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session } = useSession();
@@ -75,6 +76,11 @@ export function ResumeEditorPage() {
     resumeTemplateMap.modern;
 
   const handleExportPDF = async () => {
+    if (!session?.user) {
+      toast.error("Please sign in to export your resume");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
     setIsExporting(true);
     try {
       if (generatePDFContext) {
@@ -96,6 +102,11 @@ export function ResumeEditorPage() {
   };
 
   const handleExportImage = async () => {
+    if (!session?.user) {
+      toast.error("Please sign in to export your resume");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
     setIsExporting(true);
     try {
       const imageUrl = await generateImage('resume-preview');
@@ -111,6 +122,19 @@ export function ResumeEditorPage() {
 
   const handleSave = async () => {
     if (!currentResume) return;
+    
+    if (!session?.user && currentResume.id.startsWith("local-")) {
+        // Guest save
+        await saveResume();
+        return;
+    }
+
+    if (!session?.user) {
+      toast.error("Please sign in to save your resume to the cloud");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
+
     setIsSaving(true);
     try {
       await saveResume();
@@ -145,7 +169,7 @@ export function ResumeEditorPage() {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex pt-24">
       {/* Sidebar */}
       <div
         className={`bg-gray-50 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${

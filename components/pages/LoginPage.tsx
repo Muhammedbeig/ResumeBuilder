@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Sparkles, Chrome } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,24 @@ import { toast } from "sonner";
 
 export function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  
+  const isFromEditor = callbackUrl.includes("/resume/") || 
+                       callbackUrl.includes("/cv/") || 
+                       callbackUrl.includes("/cover-letter/");
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl);
+    }
+  }, [status, router, callbackUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +46,7 @@ export function LoginPage() {
         return;
       }
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      router.push(callbackUrl);
     } finally {
       setIsLoading(false);
     }
@@ -42,14 +55,14 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/dashboard" });
+      await signIn("google", { callbackUrl });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       {/* Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
@@ -62,7 +75,7 @@ export function LoginPage() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        <Card className="border-gray-200 dark:border-gray-800">
+        <Card className="border-gray-200 dark:border-gray-800 shadow-xl">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="w-8 h-8 text-purple-600" />
@@ -76,6 +89,22 @@ export function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {isFromEditor && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 p-4 rounded-xl mb-4"
+              >
+                <div className="flex gap-3">
+                  <Sparkles className="w-5 h-5 text-purple-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-purple-900 dark:text-purple-100">Don't worry about your progress!</p>
+                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">Your current work will be automatically synced to your account after you sign in.</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <Button
               variant="outline"
               className="w-full"

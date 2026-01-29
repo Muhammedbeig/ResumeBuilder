@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import type { Experience, Education, Project } from "@/types";
 
 export function CVEditorPage() {
+  const router = useRouter();
   const params = useParams();
   const cvId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session } = useSession();
@@ -77,6 +78,11 @@ export function CVEditorPage() {
     cvTemplateMap["academic-cv"];
 
   const handleExportPDF = async () => {
+    if (!session?.user) {
+      toast.error("Please sign in to export your CV");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
     setIsExporting(true);
     try {
       if (generatePDFContext) {
@@ -98,6 +104,11 @@ export function CVEditorPage() {
   };
 
   const handleExportImage = async () => {
+    if (!session?.user) {
+      toast.error("Please sign in to export your CV");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
     setIsExporting(true);
     try {
       const imageUrl = await generateImage('resume-preview');
@@ -113,6 +124,18 @@ export function CVEditorPage() {
 
   const handleSave = async () => {
     if (!currentCV) return;
+    
+    if (!session?.user && currentCV.id.startsWith("local-")) {
+        await saveCV();
+        return;
+    }
+
+    if (!session?.user) {
+      toast.error("Please sign in to save to cloud");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
+
     setIsSaving(true);
     try {
       await saveCV();
@@ -123,6 +146,7 @@ export function CVEditorPage() {
       setIsSaving(false);
     }
   };
+
 
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find((item) => item.id === templateId);
@@ -147,7 +171,7 @@ export function CVEditorPage() {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex pt-24">
       {/* Sidebar */}
       <div
         className={`bg-gray-50 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${

@@ -16,11 +16,22 @@ export async function POST(request: Request) {
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
+  
+  if (existingUser && existingUser.passwordHash) {
     return NextResponse.json({ error: "Email already in use" }, { status: 409 });
   }
 
   const passwordHash = await hashPassword(password);
+
+  if (existingUser) {
+    // Update existing OAuth user with a password
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: { passwordHash, name: name || existingUser.name }
+    });
+    return NextResponse.json({ id: existingUser.id });
+  }
+
   const user = await prisma.user.create({
     data: {
       name: name || null,

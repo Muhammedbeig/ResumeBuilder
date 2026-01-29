@@ -58,8 +58,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
         return (
           <div key={id} className="mb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">Experience</h2>
-            {experiences.map((exp) => (
-              <div key={exp.id} className="mb-4">
+            {experiences.map((exp, idx) => (
+              <div key={exp.id || idx} className="mb-4">
                 <div className="flex justify-between items-start mb-1">
                   <div>
                     <h3 className="font-bold text-gray-900">{exp.role}</h3>
@@ -70,8 +70,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
                   </p>
                 </div>
                 <ul className="mt-2 space-y-1">
-                  {exp.bullets.map((bullet, idx) => (
-                    <li key={idx} className="text-gray-700 pl-4 relative">
+                  {exp.bullets.map((bullet, bIdx) => (
+                    <li key={bIdx} className="text-gray-700 pl-4 relative">
                       <span className="absolute left-0 top-2 w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
                       {bullet}
                     </li>
@@ -86,8 +86,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
         return (
           <div key={id} className="mb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">Education</h2>
-            {education.map((edu) => (
-              <div key={edu.id} className="mb-3">
+            {education.map((edu, idx) => (
+              <div key={edu.id || idx} className="mb-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold text-gray-900">{edu.institution}</h3>
@@ -107,8 +107,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
         return (
           <div key={id} className="mb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">Skills</h2>
-            {skills.map((group) => (
-              <div key={group.id} className="mb-2">
+            {skills.map((group, idx) => (
+              <div key={group.id || idx} className="mb-2">
                 <span className="font-semibold text-gray-900">{group.name}: </span>
                 <span className="text-gray-700">{group.skills.join(', ')}</span>
               </div>
@@ -120,8 +120,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
         return (
           <div key={id} className="mb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">Projects</h2>
-            {projects.map((project) => (
-              <div key={project.id} className="mb-3">
+            {projects.map((project, idx) => (
+              <div key={project.id || idx} className="mb-3">
                 <div className="flex justify-between items-start">
                   <h3 className="font-bold text-gray-900">{project.name}</h3>
                   {project.link && (
@@ -143,8 +143,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
         return (
           <div key={id} className="mb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">Certifications</h2>
-            {certifications.map((cert) => (
-              <div key={cert.id} className="mb-2">
+            {certifications.map((cert, idx) => (
+              <div key={cert.id || idx} className="mb-2">
                 <p className="font-semibold text-gray-900">{cert.name}</p>
                 <p className="text-sm text-gray-600">{cert.issuer} • {cert.date}</p>
               </div>
