@@ -32,7 +32,7 @@ interface ResumeContextType {
   loadResume: (resumeId: string) => Promise<void>;
   deleteResume: (id: string) => Promise<void>;
   selectResume: (resume: Resume) => void;
-  saveResume: () => Promise<void>;
+  saveResume: (isAutoSave?: boolean) => Promise<void>;
   syncGuestData: () => Promise<void>;
   updateTemplate: (template: string) => void;
   updateResumeData: (data: Partial<ResumeData>) => void;
@@ -328,7 +328,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     [loadResume]
   );
 
-  const saveResume = useCallback(async () => {
+  const saveResume = useCallback(async (isAutoSave = false) => {
     if (!currentResume) return;
 
     if (currentResume.id.startsWith("local-")) {
@@ -336,13 +336,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         resume: { ...currentResume, updatedAt: new Date() },
         data: resumeData
       }));
-      toast.success("Progress saved locally");
+      if (!isAutoSave) toast.success("Progress saved locally");
       return;
     }
 
     if (!session?.user) return;
     
-    setIsLoading(true);
+    if (!isAutoSave) setIsLoading(true);
     try {
       const response = await fetch(`/api/resumes/${currentResume.id}`, {
         method: "PUT",
@@ -359,15 +359,37 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       }
       const data = await response.json();
       const updatedResume = parseResumeDates(data.resume);
-      setCurrentResume(updatedResume);
-      setResumeData(normalizeResumeData(data.data || resumeData));
-      setResumes((prev) =>
-        prev.map((resume) => (resume.id === updatedResume.id ? updatedResume : resume))
-      );
+      // Only update currentResume if it's not an auto-save to prevent re-renders or focus loss
+      // Actually we should update timestamps but maybe silently
+      if (!isAutoSave) {
+          setCurrentResume(updatedResume);
+          setResumes((prev) =>
+            prev.map((resume) => (resume.id === updatedResume.id ? updatedResume : resume))
+          );
+      }
+      // We don't need to update resumeData from server on auto-save as local is more recent
+      if (!isAutoSave) {
+        setResumeData(normalizeResumeData(data.data || resumeData));
+        toast.success("Resume saved");
+      }
+    } catch (error) {
+       console.error("Auto-save error:", error);
+       if (!isAutoSave) toast.error("Failed to save resume");
     } finally {
-      setIsLoading(false);
+      if (!isAutoSave) setIsLoading(false);
     }
   }, [session?.user, currentResume, resumeData]);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!currentResume) return;
+
+    const timer = setTimeout(() => {
+      saveResume(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [resumeData, saveResume, currentResume]);
 
   const updateTemplate = useCallback((template: string) => {
     setCurrentResume((prev) => (prev ? { ...prev, template } : prev));

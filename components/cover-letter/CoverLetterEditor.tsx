@@ -88,9 +88,9 @@ export function CoverLetterEditor() {
   return (
     <div className="flex h-[calc(100vh-96px)] overflow-hidden">
       {/* Editor Side (Left) */}
-      <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col">
+      <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
         {/* Toolbar */}
-        <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
           <h2 className="font-semibold text-gray-900 dark:text-white">Editor</h2>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
@@ -108,8 +108,8 @@ export function CoverLetterEditor() {
           </div>
         </div>
 
-        <Tabs defaultValue="personal" className="flex-1 flex flex-col">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+        <Tabs defaultValue="personal" className="flex-1 flex flex-col min-h-0">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
              <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="personal">Personal</TabsTrigger>
               <TabsTrigger value="recipient">Recipient</TabsTrigger>
@@ -117,9 +117,9 @@ export function CoverLetterEditor() {
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1">
-            <div className="p-6">
-              <TabsContent value="personal" className="space-y-4 mt-0">
+          <TabsContent value="personal" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6 pb-32 space-y-4">
                 <div className="space-y-2">
                   <Label>Full Name</Label>
                   <Input value={coverLetterData.personalInfo.fullName} onChange={(e) => updatePersonalInfo({ fullName: e.target.value })} placeholder="John Doe" />
@@ -148,9 +148,18 @@ export function CoverLetterEditor() {
                   <Label>Address</Label>
                   <Input value={coverLetterData.personalInfo.address} onChange={(e) => updatePersonalInfo({ address: e.target.value })} />
                 </div>
-              </TabsContent>
+                <div className="pt-4">
+                  <Button onClick={handleSave} disabled={isSaving} className="w-full">
+                    {isSaving ? "Saving..." : "Save Progress"}
+                  </Button>
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
 
-              <TabsContent value="recipient" className="space-y-4 mt-0">
+          <TabsContent value="recipient" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6 pb-32 space-y-4">
                 <div className="space-y-2">
                   <Label>Manager Name</Label>
                   <Input value={coverLetterData.recipientInfo.managerName} onChange={(e) => updateRecipientInfo({ managerName: e.target.value })} placeholder="Hiring Manager Name" />
@@ -177,9 +186,18 @@ export function CoverLetterEditor() {
                     <Input value={coverLetterData.recipientInfo.zipCode} onChange={(e) => updateRecipientInfo({ zipCode: e.target.value })} />
                   </div>
                 </div>
-              </TabsContent>
+                <div className="pt-4">
+                  <Button onClick={handleSave} disabled={isSaving} className="w-full">
+                    {isSaving ? "Saving..." : "Save Progress"}
+                  </Button>
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
 
-              <TabsContent value="content" className="space-y-4 mt-0">
+          <TabsContent value="content" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6 pb-32 space-y-4">
                 <div className="space-y-2">
                   <Label>Subject Line</Label>
                   <Input value={coverLetterData.content.subject} onChange={(e) => updateContent({ subject: e.target.value })} placeholder="e.g. Application for Software Engineer position" />
@@ -190,11 +208,11 @@ export function CoverLetterEditor() {
                 </div>
                 <div className="space-y-2">
                   <Label>Opening Paragraph</Label>
-                  <Textarea className="h-24" value={coverLetterData.content.opening} onChange={(e) => updateContent({ opening: e.target.value })} placeholder="How did you find the job? Why are you interested?" />
+                  <Textarea className="min-h-32" value={coverLetterData.content.opening} onChange={(e) => updateContent({ opening: e.target.value })} placeholder="How did you find the job? Why are you interested?" />
                 </div>
                 <div className="space-y-2">
                   <Label>Body Paragraphs</Label>
-                  <Textarea className="h-48" value={coverLetterData.content.body} onChange={(e) => updateContent({ body: e.target.value })} placeholder="Highlight your key achievements and match them to job requirements." />
+                  <Textarea className="min-h-64" value={coverLetterData.content.body} onChange={(e) => updateContent({ body: e.target.value })} placeholder="Highlight your key achievements and match them to job requirements." />
                 </div>
                 <div className="space-y-2">
                   <Label>Closing</Label>
@@ -204,9 +222,14 @@ export function CoverLetterEditor() {
                   <Label>Signature</Label>
                   <Input value={coverLetterData.content.signature} onChange={(e) => updateContent({ signature: e.target.value })} />
                 </div>
-              </TabsContent>
-            </div>
-          </ScrollArea>
+                <div className="pt-4">
+                  <Button onClick={handleSave} disabled={isSaving} className="w-full">
+                    {isSaving ? "Saving..." : "Save Progress"}
+                  </Button>
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
         </Tabs>
       </div>
 

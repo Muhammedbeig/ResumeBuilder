@@ -36,6 +36,7 @@ export function UserNav() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const user = session?.user;
   const initials = user?.name
@@ -45,16 +46,42 @@ export function UserNav() {
     .toUpperCase()
     .slice(0, 2) || "U";
 
-  const handleUpdateName = async () => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024 * 2) { // 2MB limit
+          toast.error("Image size must be less than 2MB");
+          return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
     setIsLoading(true);
     try {
-      // API call to update name would go here
-      // For now, we'll just update the session locally if possible or mock it
-      // await fetch('/api/user/update', ...)
-      await update({ name: newName });
-      toast.success("Name updated successfully");
-    } catch (error) {
-      toast.error("Failed to update name");
+      const res = await fetch('/api/user/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            name: newName,
+            image: selectedImage 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to update profile");
+
+      await update({ name: newName, image: selectedImage || user?.image });
+      toast.success("Profile updated successfully");
+      setSelectedImage(null);
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -67,14 +94,25 @@ export function UserNav() {
     }
     setIsLoading(true);
     try {
-        // API call to update password
-        // await fetch('/api/user/password', ...)
+        const res = await fetch('/api/user/update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                currentPassword,
+                newPassword 
+            }),
+        });
+    
+        const data = await res.json();
+    
+        if (!res.ok) throw new Error(data.error || "Failed to update password");
+
         toast.success("Password updated successfully");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-    } catch (error) {
-        toast.error("Failed to update password");
+    } catch (error: any) {
+        toast.error(error.message);
     } finally {
         setIsLoading(false);
     }
@@ -87,7 +125,7 @@ export function UserNav() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10 border border-gray-200 dark:border-gray-800">
-                <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
+                <AvatarImage src={selectedImage || user?.image || ""} alt={user?.name || ""} />
                 <AvatarFallback className="bg-gradient-to-br from-purple-500 to-cyan-500 text-white font-medium">
                   {initials}
                 </AvatarFallback>
@@ -134,6 +172,37 @@ export function UserNav() {
             </TabsList>
             
             <TabsContent value="general" className="space-y-4 py-4">
+              <div className="flex flex-col items-center space-y-4 mb-4">
+                  <div className="relative">
+                    <Avatar className="h-24 w-24 border-2 border-gray-100">
+                        <AvatarImage src={selectedImage || user?.image || ""} />
+                        <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="flex items-center">
+                    <Label htmlFor="picture" className="cursor-pointer text-sm text-blue-600 hover:text-blue-500">
+                        Change Picture
+                        <Input 
+                            id="picture" 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={handleImageUpload}
+                        />
+                    </Label>
+                    {selectedImage && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="ml-2 text-red-500 h-auto p-0" 
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            Cancel
+                        </Button>
+                    )}
+                  </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input 
@@ -152,7 +221,7 @@ export function UserNav() {
                   This account is managed via Google. You can add a password by registering with your email.
                 </p>
               )}
-              <Button onClick={handleUpdateName} disabled={isLoading}>
+              <Button onClick={handleUpdateProfile} disabled={isLoading}>
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
             </TabsContent>

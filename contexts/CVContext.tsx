@@ -35,7 +35,7 @@ interface CVContextType {
   loadCV: (cvId: string) => Promise<void>;
   deleteCV: (id: string) => Promise<void>;
   selectCV: (cv: CV) => void;
-  saveCV: () => Promise<void>;
+  saveCV: (isAutoSave?: boolean) => Promise<void>;
   syncGuestData: () => Promise<void>;
   updateTemplate: (template: string) => void;
   updateCVData: (data: Partial<ResumeData>) => void;
@@ -324,7 +324,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
     [loadCV]
   );
 
-  const saveCV = useCallback(async () => {
+  const saveCV = useCallback(async (isAutoSave = false) => {
     if (!currentCV) return;
 
     if (currentCV.id.startsWith("local-")) {
@@ -332,13 +332,13 @@ export function CVProvider({ children }: { children: ReactNode }) {
         cv: { ...currentCV, updatedAt: new Date() },
         data: cvData
       }));
-      toast.success("Progress saved locally");
+      if (!isAutoSave) toast.success("Progress saved locally");
       return;
     }
 
     if (!session?.user) return;
 
-    setIsLoading(true);
+    if (!isAutoSave) setIsLoading(true);
     try {
       const response = await fetch(`/api/cvs/${currentCV.id}`, {
         method: "PUT",
@@ -355,15 +355,33 @@ export function CVProvider({ children }: { children: ReactNode }) {
       }
       const data = await response.json();
       const updatedCV = parseCVDates(data.cv);
-      setCurrentCV(updatedCV);
-      setCVData(normalizeResumeData(data.data || cvData));
-      setCVs((prev) =>
-        prev.map((cv) => (cv.id === updatedCV.id ? updatedCV : cv))
-      );
+      
+      if (!isAutoSave) {
+          setCurrentCV(updatedCV);
+          setCVs((prev) =>
+            prev.map((cv) => (cv.id === updatedCV.id ? updatedCV : cv))
+          );
+          setCVData(normalizeResumeData(data.data || cvData));
+          toast.success("CV saved");
+      }
+    } catch (error) {
+        console.error("Auto-save error:", error);
+        if (!isAutoSave) toast.error("Failed to save CV");
     } finally {
-      setIsLoading(false);
+      if (!isAutoSave) setIsLoading(false);
     }
   }, [session?.user, currentCV, cvData]);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!currentCV) return;
+
+    const timer = setTimeout(() => {
+      saveCV(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [cvData, saveCV, currentCV]);
 
   const updateTemplate = useCallback((template: string) => {
     setCurrentCV((prev) => (prev ? { ...prev, template } : prev));

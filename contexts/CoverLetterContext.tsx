@@ -54,7 +54,7 @@ interface CoverLetterContextType {
   updatePersonalInfo: (info: Partial<CoverLetterData['personalInfo']>) => void;
   updateRecipientInfo: (info: Partial<CoverLetterData['recipientInfo']>) => void;
   updateContent: (content: Partial<CoverLetterData['content']>) => void;
-  saveCoverLetter: () => Promise<void>;
+  saveCoverLetter: (isAutoSave?: boolean) => Promise<void>;
   syncGuestData: () => Promise<void>;
   importedData: CoverLetterData | null;
   setImportedData: (data: CoverLetterData | null) => void;
@@ -257,17 +257,29 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const saveCoverLetter = useCallback(async () => {
+  const saveCoverLetter = useCallback(async (isAutoSave = false) => {
     if (currentCoverLetter?.id.startsWith("local-")) {
         localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${currentCoverLetter.id}`, JSON.stringify({
             letter: { ...currentCoverLetter, updatedAt: new Date() },
             data: coverLetterData
         }));
-        toast.success("Saved locally");
+        if (!isAutoSave) toast.success("Saved locally");
         return;
     }
-    toast.success("Saved!");
+    // Simulate API save for now (or implement real API call if available)
+    if (!isAutoSave) toast.success("Saved!");
   }, [currentCoverLetter, coverLetterData]);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!currentCoverLetter) return;
+
+    const timer = setTimeout(() => {
+        saveCoverLetter(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [coverLetterData, saveCoverLetter, currentCoverLetter]);
 
   const value = useMemo(
     () => ({

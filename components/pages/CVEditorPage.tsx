@@ -14,25 +14,29 @@ import {
   Save,
   Download,
   Image as ImageIcon,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
+  ChevronDown,
   Sparkles,
   Plus,
   Trash2,
-  Crown,
-  Layout
+  Layout,
+  MoreHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCV } from "@/contexts/CVContext";
 import { cvTemplateMap, cvTemplates } from "@/lib/cv-templates";
 import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
-import { SectionManager } from "@/components/editor/SectionManager";
 import { GenericSectionManager } from "@/components/editor/GenericSectionManager";
 import { toast } from "sonner";
 import type { Experience, Education, Project } from "@/types";
@@ -56,12 +60,25 @@ export function CVEditorPage() {
     updateStructure,
     isLoading,
     generatePDF: generatePDFContext,
+    addExperience,
+    updateExperience,
+    removeExperience,
+    addEducation,
+    updateEducation,
+    removeEducation,
+    addSkillGroup,
+    updateSkillGroup,
+    removeSkillGroup,
+    addProject,
+    updateProject,
+    removeProject,
+    addCertification,
+    removeCertification
   } = useCV();
 
-  const [activeSection, setActiveSection] = useState("basics");
+  const [activeTab, setActiveTab] = useState("basics");
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [zoom, setZoom] = useState([90]);
 
   useEffect(() => {
@@ -69,8 +86,6 @@ export function CVEditorPage() {
       loadCV(cvId);
     }
   }, [cvId, loadCV]);
-
-  const templates = cvTemplates;
 
   const activeTemplateId = currentCV?.template || "academic-cv";
   const ActiveTemplate =
@@ -147,400 +162,308 @@ export function CVEditorPage() {
     }
   };
 
+  const mainTabs = [
+    { id: 'basics', label: 'Basics' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'education', label: 'Education' },
+    { id: 'skills', label: 'Skills' },
+  ];
 
-  const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find((item) => item.id === templateId);
-    const hasPremium =
-      user?.subscription === "pro" || user?.subscription === "business";
-    const isLocked = template?.premium && !hasPremium;
-    if (isLocked) {
-      toast.error("Upgrade to Pro to unlock this template");
-      return;
-    }
-    updateTemplate(templateId);
-  };
-
-  const sidebarItems = [
-    { id: 'basics', label: 'Basics', icon: User },
-    { id: 'experience', label: 'Experience', icon: Briefcase },
-    { id: 'education', label: 'Education', icon: GraduationCap },
-    { id: 'skills', label: 'Skills', icon: Languages },
+  const moreTabs = [
     { id: 'projects', label: 'Projects', icon: Code },
     { id: 'certifications', label: 'Certifications', icon: Award },
     { id: 'structure', label: 'Rearrange', icon: Layout },
   ];
 
   return (
-    <div className="min-h-screen flex pt-24">
-      {/* Sidebar */}
-      <div
-        className={`bg-gray-50 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${
-          isSidebarOpen ? "w-64 p-4" : "w-0 p-0 border-r-0"
-        }`}
-      >
-        {isSidebarOpen && (
-          <div className="space-y-2">
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveSection(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    activeSection === item.id
-                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </button>
-              );
-            })}
+    <div className="pt-24">
+      <div className="flex h-[calc(100vh-96px)] overflow-hidden">
+        {/* Editor Side (Left) */}
+        <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
+          {/* Toolbar */}
+          <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
+            <h2 className="font-semibold text-gray-900 dark:text-white">CV Editor</h2>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportImage} disabled={isExporting}>
+                <ImageIcon className="w-4 h-4 mr-2" />
+                Image
+              </Button>
+              <Button size="sm" onClick={handleExportPDF} disabled={isExporting} className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white">
+                <Download className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Toolbar */}
-        <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between pl-6 pr-16 bg-white dark:bg-gray-900">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-              aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-            >
-              {isSidebarOpen ? (
-                <ChevronLeft className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </Button>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              CV Editor
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportImage}
-              disabled={isExporting}
-            >
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Export Image
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleExportPDF}
-              disabled={isExporting}
-              className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
-          </div>
-        </div>
-
-        <ResizablePanelGroup className="flex-1 overflow-hidden">
-          {/* Editor Panel */}
-          <ResizablePanel defaultSize={50} minSize={35}>
-            <div className="h-full p-6 overflow-y-auto">
-            <AnimatePresence mode="wait">
-              {activeSection === 'basics' && (
-                <motion.div
-                  key="basics"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Basic Information
-                  </h2>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+              <div className="flex items-center gap-2">
+                  <TabsList className="flex-1 grid grid-cols-4">
+                    {mainTabs.map(tab => (
+                      <TabsTrigger key={tab.id} value={tab.id} className="text-xs sm:text-sm">
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
                   
-                  <div className="mb-6 flex items-center gap-6">
-                    <div className="shrink-0">
-                      {cvData.basics.image ? (
-                        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img 
-                            src={cvData.basics.image} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400">
-                          <User className="w-8 h-8" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="relative overflow-hidden"
-                          onClick={() => fileInputRef.current?.click()}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="shrink-0 h-9 w-9">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {moreTabs.map(tab => (
+                        <DropdownMenuItem 
+                          key={tab.id} 
+                          onClick={() => setActiveTab(tab.id)}
+                          className={activeTab === tab.id ? "bg-accent" : ""}
                         >
-                          <span className="relative z-10 flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4" />
-                            Upload Photo
-                          </span>
-                        </Button>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                updateBasics({ image: reader.result as string });
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                          className="hidden"
-                        />
-                        {cvData.basics.image && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            onClick={() => updateBasics({ image: '' })}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Remove
-                          </Button>
+                          <tab.icon className="mr-2 h-4 w-4" />
+                          {tab.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
+            </div>
+
+                      <ScrollArea className="flex-1 h-full">
+                        <div className="p-6 pb-32">
+                          <TabsContent value="basics" className="mt-0 space-y-6">                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Basic Information
+                    </h2>
+                    
+                    <div className="mb-6 flex items-center gap-6">
+                      <div className="shrink-0">
+                        {cvData.basics.image ? (
+                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img 
+                              src={cvData.basics.image} 
+                              alt="Profile" 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400">
+                            <User className="w-8 h-8" />
+                          </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Recommended: Square JPG, PNG. Max 2MB.
-                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="relative overflow-hidden"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <span className="relative z-10 flex items-center gap-2">
+                              <ImageIcon className="w-4 h-4" />
+                              Upload Photo
+                            </span>
+                          </Button>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  updateBasics({ image: reader.result as string });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          {cvData.basics.image && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              onClick={() => updateBasics({ image: '' })}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Recommended: Square JPG, PNG. Max 2MB.
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Full Name
+                        </label>
+                        <Input 
+                          value={cvData.basics.name}
+                          onChange={(e) => updateBasics({ name: e.target.value })}
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Professional Title
+                        </label>
+                        <Input 
+                          value={cvData.basics.title}
+                          onChange={(e) => updateBasics({ title: e.target.value })}
+                          placeholder="Software Engineer"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Email
+                        </label>
+                        <Input 
+                          type="email"
+                          value={cvData.basics.email}
+                          onChange={(e) => updateBasics({ email: e.target.value })}
+                          placeholder="john@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Phone
+                        </label>
+                        <Input 
+                          value={cvData.basics.phone}
+                          onChange={(e) => updateBasics({ phone: e.target.value })}
+                          placeholder="+1 (555) 000-0000"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Full Name
+                        Location
                       </label>
                       <Input 
-                        value={cvData.basics.name}
-                        onChange={(e) => updateBasics({ name: e.target.value })}
-                        placeholder="John Doe"
+                        value={cvData.basics.location}
+                        onChange={(e) => updateBasics({ location: e.target.value })}
+                        placeholder="San Francisco, CA"
                       />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          LinkedIn
+                        </label>
+                        <Input 
+                          value={cvData.basics.linkedin || ''}
+                          onChange={(e) => updateBasics({ linkedin: e.target.value })}
+                          placeholder="linkedin.com/in/johndoe"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          GitHub
+                        </label>
+                        <Input 
+                          value={cvData.basics.github || ''}
+                          onChange={(e) => updateBasics({ github: e.target.value })}
+                          placeholder="github.com/johndoe"
+                        />
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Professional Title
-                      </label>
-                      <Input 
-                        value={cvData.basics.title}
-                        onChange={(e) => updateBasics({ title: e.target.value })}
-                        placeholder="Software Engineer"
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Professional Summary
+                        </label>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => generateSummaryAI()}
+                          disabled={isLoading}
+                          className="text-purple-600 hover:text-purple-700"
+                        >
+                          <Sparkles className="w-4 h-4 mr-1" />
+                          Generate with AI
+                        </Button>
+                      </div>
+                      <Textarea 
+                        value={cvData.basics.summary}
+                        onChange={(e) => updateBasics({ summary: e.target.value })}
+                        placeholder="Write a brief summary about your professional background and career goals..."
+                        rows={4}
                       />
                     </div>
-                  </div>
+                  </TabsContent>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Email
-                      </label>
-                      <Input 
-                        type="email"
-                        value={cvData.basics.email}
-                        onChange={(e) => updateBasics({ email: e.target.value })}
-                        placeholder="john@example.com"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Phone
-                      </label>
-                      <Input 
-                        value={cvData.basics.phone}
-                        onChange={(e) => updateBasics({ phone: e.target.value })}
-                        placeholder="+1 (555) 000-0000"
-                      />
-                    </div>
-                  </div>
+                  <TabsContent value="experience" className="mt-0">
+                    <ExperienceSection />
+                  </TabsContent>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Location
-                    </label>
-                    <Input 
-                      value={cvData.basics.location}
-                      onChange={(e) => updateBasics({ location: e.target.value })}
-                      placeholder="San Francisco, CA"
-                    />
-                  </div>
+                  <TabsContent value="education" className="mt-0">
+                    <EducationSection />
+                  </TabsContent>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        LinkedIn
-                      </label>
-                      <Input 
-                        value={cvData.basics.linkedin || ''}
-                        onChange={(e) => updateBasics({ linkedin: e.target.value })}
-                        placeholder="linkedin.com/in/johndoe"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        GitHub
-                      </label>
-                      <Input 
-                        value={cvData.basics.github || ''}
-                        onChange={(e) => updateBasics({ github: e.target.value })}
-                        placeholder="github.com/johndoe"
-                      />
-                    </div>
-                  </div>
+                  <TabsContent value="skills" className="mt-0">
+                    <SkillsSection />
+                  </TabsContent>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Professional Summary
-                      </label>
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => generateSummaryAI()}
-                        disabled={isLoading}
-                        className="text-purple-600 hover:text-purple-700"
-                      >
-                        <Sparkles className="w-4 h-4 mr-1" />
-                        Generate with AI
-                      </Button>
-                    </div>
-                    <Textarea 
-                      value={cvData.basics.summary}
-                      onChange={(e) => updateBasics({ summary: e.target.value })}
-                      placeholder="Write a brief summary about your professional background and career goals..."
-                      rows={4}
-                    />
-                  </div>
-                </motion.div>
-              )}
+                  <TabsContent value="projects" className="mt-0">
+                    <ProjectsSection />
+                  </TabsContent>
 
-              {activeSection === 'experience' && (
-                <ExperienceSection />
-              )}
+                  <TabsContent value="certifications" className="mt-0">
+                    <CertificationsSection />
+                  </TabsContent>
 
-              {activeSection === 'education' && (
-                <EducationSection />
-              )}
-
-              {activeSection === 'skills' && (
-                <SkillsSection />
-              )}
-
-              {activeSection === 'projects' && (
-                <ProjectsSection />
-              )}
-
-              {activeSection === 'certifications' && (
-                <CertificationsSection />
-              )}
-
-              {activeSection === 'structure' && (
-                  <motion.div
-                    key="structure"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                      <GenericSectionManager 
+                  <TabsContent value="structure" className="mt-0">
+                    <GenericSectionManager 
                         sections={cvData.structure || []} 
                         onUpdate={updateStructure} 
-                      />
-                  </motion.div>
-              )}
-            </AnimatePresence>
+                    />
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
+          </div>
+
+          {/* Preview Side (Right) */}
+          <div className="w-1/2 bg-gray-100 dark:bg-gray-950 p-8 overflow-auto flex flex-col items-center">
+            <div className="w-full max-w-[816px] flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+                <span className="text-xs font-medium text-gray-500 px-2">Preview Zoom</span>
+                <div className="flex items-center gap-4 w-48 px-2">
+                    <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
+                    <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+                </div>
             </div>
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          {/* Preview Panel */}
-          <ResizablePanel defaultSize={50} minSize={35}>
-            <div className="h-full bg-gray-50 dark:bg-gray-900/50 p-6 overflow-y-auto">
-            <div className="sticky top-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Live Preview
-                  </h3>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right">{zoom[0]}%</span>
-                    <Slider
-                      value={zoom}
-                      onValueChange={setZoom}
-                      min={50}
-                      max={150}
-                      step={5}
-                      className="w-32"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex-1 overflow-auto bg-gray-100/50 dark:bg-gray-900/50 p-8 flex justify-center items-start">
-                <div 
-                  style={{  
-                    transform: `scale(${zoom[0] / 100})`, 
-                    transformOrigin: "top center",
-                    marginBottom: '2rem'
-                  }}
-                >
-                  <div
-                    id="resume-preview"
-                    className="bg-white text-black shadow-2xl mx-auto"
-                    style={{
-                      width: '918px',
-                      minHeight: '1188px',
-                    }}
-                  >
-                    <ActiveTemplate 
-                      key={JSON.stringify(cvData.structure)} 
-                      data={cvData} 
-                    />
-                  </div>
-                </div>
+            
+            <div className="transition-transform duration-200" style={{ transform: `scale(${zoom[0] / 100})`, transformOrigin: "top center" }}>
+              <div id="resume-preview" className="bg-white shadow-2xl min-h-[1056px] w-[816px] text-black">
+                <ActiveTemplate 
+                  key={JSON.stringify(cvData.structure)} 
+                  data={cvData} 
+                />
               </div>
             </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+        </div>
       </div>
-    </div>
   );
 }
 
-// Subcomponents (ExperienceSection, etc.) must use useCV instead of useResume.
-// I will rewrite them below quickly or assume they are copied and replaced.
-
+// Subcomponents
 function ExperienceSection() {
   const {
     cvData,
