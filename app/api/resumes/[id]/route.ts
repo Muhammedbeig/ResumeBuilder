@@ -98,6 +98,9 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     return { resume: updatedResume, data: resumeData };
+  }, {
+    maxWait: 10000,
+    timeout: 20000,
   });
 
   return NextResponse.json(result);

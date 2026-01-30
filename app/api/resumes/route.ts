@@ -56,6 +56,9 @@ export async function POST(request: Request) {
     });
 
     return { resume: updated, data: resumeData };
+  }, {
+    maxWait: 10000, // default: 2000
+    timeout: 20000, // default: 5000
   });
 
   return NextResponse.json(result);

@@ -57,6 +57,9 @@ export async function POST(request: Request) {
     });
 
     return { cv: updated, data: cvData };
+  }, {
+    maxWait: 10000, // default: 2000
+    timeout: 20000, // default: 5000
   });
 
   return NextResponse.json(result);
