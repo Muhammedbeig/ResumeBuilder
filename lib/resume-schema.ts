@@ -76,6 +76,11 @@ export const ResumeDataSchema = z.object({
   projects: z.array(ProjectSchema).default([]),
   certifications: z.array(CertificationSchema).default([]),
   languages: z.array(LanguageSchema).default([]),
+  metadata: z.object({
+    themeColor: z.string().optional(),
+    fontFamily: z.string().optional(),
+    fontSize: z.string().optional(),
+  }).optional(),
 });
 
 // Metadata schema for styling and configuration

@@ -7,15 +7,23 @@ interface ClassicTemplateProps {
 }
 
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: 'experience', type: 'experience', title: 'Experience', isVisible: true, order: 0 },
-  { id: 'projects', type: 'projects', title: 'Projects', isVisible: true, order: 1 },
-  { id: 'education', type: 'education', title: 'Education', isVisible: true, order: 2 },
-  { id: 'skills', type: 'skills', title: 'Skills', isVisible: true, order: 3 },
-  { id: 'certifications', type: 'certifications', title: 'Certifications', isVisible: true, order: 4 },
+  { id: 'summary', type: 'summary', title: 'Summary', isVisible: true, order: 0 },
+  { id: 'experience', type: 'experience', title: 'Experience', isVisible: true, order: 1 },
+  { id: 'projects', type: 'projects', title: 'Projects', isVisible: true, order: 2 },
+  { id: 'education', type: 'education', title: 'Education', isVisible: true, order: 3 },
+  { id: 'skills', type: 'skills', title: 'Skills', isVisible: true, order: 4 },
+  { id: 'certifications', type: 'certifications', title: 'Certifications', isVisible: true, order: 5 },
 ];
 
 export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
+  
+  const themeColor = data.metadata?.themeColor || '#374151'; // Default gray-700
+  const fontName = data.metadata?.fontFamily || 'Inter';
+  const fontSize = data.metadata?.fontSize || 'md';
+  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
+  const scale = scaleMap[fontSize] || 1;
+
   const contactItems = [
     basics.phone,
     basics.email,
@@ -37,7 +45,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
         if (experiences.length === 0) return null;
         return (
           <section key={section.id} className="mb-5">
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-700 border-b border-gray-200 pb-1 mb-3">
+            <h2 
+                className="text-sm font-bold uppercase tracking-[0.2em] border-b border-gray-200 pb-1 mb-3"
+                style={{ color: themeColor }}
+            >
               Experience
             </h2>
             <ul className="space-y-4">
@@ -57,7 +68,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
                   <ul className="mt-2 space-y-1">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-sm text-gray-700 pl-4 relative">
-                        <span className="absolute left-0 top-2 h-1.5 w-1.5 rounded-full bg-gray-400" />
+                        <span 
+                            className="absolute left-0 top-2 h-1.5 w-1.5 rounded-full" 
+                            style={{ backgroundColor: themeColor }}
+                        />
                         {bullet || "Add an achievement with measurable impact."}
                       </li>
                     ))}
@@ -71,7 +85,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
         if (projects.length === 0) return null;
         return (
           <section key={section.id} className="mb-5">
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-700 border-b border-gray-200 pb-1 mb-3">
+            <h2 
+                className="text-sm font-bold uppercase tracking-[0.2em] border-b border-gray-200 pb-1 mb-3"
+                style={{ color: themeColor }}
+            >
               Projects
             </h2>
             <ul className="space-y-3">
@@ -98,7 +115,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
         if (education.length === 0) return null;
         return (
           <section key={section.id} className="mb-5">
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-700 border-b border-gray-200 pb-1 mb-3">
+            <h2 
+                className="text-sm font-bold uppercase tracking-[0.2em] border-b border-gray-200 pb-1 mb-3"
+                style={{ color: themeColor }}
+            >
               Education
             </h2>
             <ul className="space-y-3">
@@ -125,7 +145,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
         if (skills.length === 0) return null;
         return (
           <section key={section.id} className="mb-5">
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-700 border-b border-gray-200 pb-1 mb-3">
+            <h2 
+                className="text-sm font-bold uppercase tracking-[0.2em] border-b border-gray-200 pb-1 mb-3"
+                style={{ color: themeColor }}
+            >
               Skills
             </h2>
             <div className="space-y-1 text-sm text-gray-700">
@@ -142,7 +165,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
         if (certifications.length === 0) return null;
         return (
           <section key={section.id}>
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-700 border-b border-gray-200 pb-1 mb-3">
+            <h2 
+                className="text-sm font-bold uppercase tracking-[0.2em] border-b border-gray-200 pb-1 mb-3"
+                style={{ color: themeColor }}
+            >
               Certifications
             </h2>
             <ul className="space-y-2 text-sm text-gray-700">
@@ -159,7 +185,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
          if (!basics.summary) return null;
          return (
              <section key={section.id} className="mb-5">
-                 <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-700 border-b border-gray-200 pb-1 mb-3">
+                 <h2 
+                    className="text-sm font-bold uppercase tracking-[0.2em] border-b border-gray-200 pb-1 mb-3"
+                    style={{ color: themeColor }}
+                 >
                      Summary
                  </h2>
                  <p className="text-sm text-gray-700 leading-relaxed">{basics.summary}</p>
@@ -173,10 +202,18 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
   return (
     <div
       id="resume-classic"
-      className={`resume-template bg-white text-gray-900 p-12 font-sans ${className}`}
+      className={`resume-template bg-white text-gray-900 p-12 ${className}`}
+      style={{ 
+        fontFamily: `"${fontName}", sans-serif`,
+        zoom: scale
+      }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+      `}</style>
+
       <div className="text-center border-b border-gray-200 pb-3 mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900" style={{ color: themeColor }}>
           {basics.name || "Your Name"}
         </h1>
         <p className="text-sm text-gray-600 mt-1">

@@ -4,11 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = await request.json().catch(() => ({}));
   const bullet = String(body?.bullet || "").trim();
   const context = body?.context ? String(body.context) : "";

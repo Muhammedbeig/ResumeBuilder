@@ -26,6 +26,11 @@ export const emptyResumeData: ResumeData = {
   certifications: [],
   languages: [],
   structure: defaultSectionOrder,
+  metadata: {
+    themeColor: "#000000",
+    fontFamily: "Inter",
+    fontSize: "md",
+  },
 };
 
 export function normalizeResumeData(data?: Partial<ResumeData> | null): ResumeData {
@@ -39,5 +44,6 @@ export function normalizeResumeData(data?: Partial<ResumeData> | null): ResumeDa
     certifications: data.certifications || [],
     languages: data.languages || [],
     structure: data.structure || defaultSectionOrder,
+    metadata: { ...emptyResumeData.metadata, ...(data.metadata || {}) },
   };
 }

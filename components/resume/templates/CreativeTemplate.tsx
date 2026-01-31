@@ -17,6 +17,12 @@ const DEFAULT_STRUCTURE: SectionConfig[] = [
 
 export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
+  const themeColor = data.metadata?.themeColor || '#0f172a'; // Default slate-900
+  const fontName = data.metadata?.fontFamily || 'Inter';
+  const fontSize = data.metadata?.fontSize || 'md';
+  
+  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
+  const scale = scaleMap[fontSize] || 1;
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -88,7 +94,7 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
         return (
           <div key={section.id}>
             <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-              <span className="w-8 h-1 bg-slate-900 block"></span>
+              <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
               About Me
             </h2>
             <p className="text-slate-600 leading-relaxed text-lg">
@@ -101,13 +107,13 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
         return (
           <div key={section.id}>
             <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-              <span className="w-8 h-1 bg-slate-900 block"></span>
+              <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
               Experience
             </h2>
             <div className="space-y-10">
               {experiences.map((exp) => (
                 <div key={exp.id} className="relative pl-8 border-l border-slate-300">
-                  <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-slate-900 rounded-full ring-4 ring-slate-100"></div>
+                  <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full ring-4 ring-slate-100" style={{ backgroundColor: themeColor }}></div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
                     <h3 className="text-xl font-bold text-slate-900">{exp.role}</h3>
                     <span className="text-slate-500 font-mono text-sm bg-slate-200 px-2 py-1 rounded">
@@ -133,7 +139,7 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
         return (
           <div key={section.id}>
             <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-              <span className="w-8 h-1 bg-slate-900 block"></span>
+              <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
               Projects
             </h2>
             <div className="grid grid-cols-1 gap-6">
@@ -142,7 +148,7 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-slate-900 text-lg">{project.name}</h3>
                     {project.link && (
-                      <a href={project.link} className="text-xs font-bold text-white bg-slate-900 px-2 py-1 rounded hover:bg-slate-700 transition-colors">VIEW</a>
+                      <a href={project.link} className="text-xs font-bold text-white px-2 py-1 rounded transition-colors" style={{ backgroundColor: themeColor }}>VIEW</a>
                     )}
                   </div>
                   <p className="text-slate-600 text-sm mb-3">{project.description}</p>
@@ -172,19 +178,30 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
     <div
       id="resume-creative"
       className={`resume-template bg-white text-gray-800 grid grid-cols-[300px_1fr] min-h-[1188px] ${className}`}
+      style={{ 
+        fontFamily: `"${fontName}", sans-serif`,
+        zoom: scale
+      }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+      `}</style>
       {/* Sidebar - Left Column */}
-      <div className="bg-slate-900 text-white p-10 flex flex-col gap-8">
-        {/* Photo Placeholder / Initials */}
-        <div className="w-32 h-32 mx-auto bg-slate-700 rounded-full flex items-center justify-center border-4 border-slate-600">
-           <span className="text-4xl font-bold tracking-widest">
-            {basics.name ? basics.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'ME'}
-           </span>
+      <div className="text-white p-10 flex flex-col gap-8" style={{ backgroundColor: themeColor }}>
+        {/* Photo Placeholder / Image */}
+        <div className="w-32 h-32 mx-auto bg-slate-700/50 rounded-full flex items-center justify-center border-4 border-white/20 overflow-hidden">
+           {basics.image ? (
+             <img src={basics.image} alt={basics.name} className="w-full h-full object-cover" />
+           ) : (
+             <span className="text-4xl font-bold tracking-widest">
+              {basics.name ? basics.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'ME'}
+             </span>
+           )}
         </div>
 
         {/* Contact */}
         <div className="space-y-4 text-center sm:text-left">
-            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">Contact</h3>
+            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-white/10 pb-2 mb-4">Contact</h3>
             <div className="flex flex-col gap-3 text-sm font-light text-slate-300">
                 {basics.email && (
                     <div className="break-all">
@@ -231,9 +248,9 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
       {/* Main Content - Right Column */}
       <div className="p-12 flex flex-col gap-8 bg-slate-50">
         {/* Header Name & Title */}
-        <div className="border-b-4 border-slate-900 pb-6">
+        <div className="pb-6 border-b-4" style={{ borderColor: themeColor }}>
             <h1 className="text-5xl font-extrabold text-slate-900 uppercase tracking-tighter leading-none mb-2">
-                {basics.name?.split(' ')[0]} <span className="text-slate-400">{basics.name?.split(' ').slice(1).join(' ')}</span>
+                {basics.name?.split(' ')[0]} <span style={{ color: themeColor }}>{basics.name?.split(' ').slice(1).join(' ')}</span>
             </h1>
             <p className="text-2xl text-slate-500 font-light tracking-widest uppercase">{basics.title}</p>
         </div>

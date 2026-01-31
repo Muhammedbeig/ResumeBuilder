@@ -39,7 +39,8 @@ export function Navigation() {
     "/cv",
     "/cover-letter",
     "/ats-checker",
-    "/editor"
+    "/editor",
+    "/ai-resume-optimizer"
   ];
 
   const isSimplified = simplifiedPaths.some(path => pathname?.startsWith(path));
@@ -59,6 +60,7 @@ export function Navigation() {
         { label: "Resume Builder", href: "/resume/start" },
         { label: "Cover Letter Builder", href: "/cover-letter/start" },
         { label: "ATS Checker", href: "/ats-checker" },
+        { label: "AI Resume Optimizer", href: "/ai-resume-optimizer" },
         { label: "Cover Letter Templates", href: "/cover-letter/templates" },
       ],
     },
@@ -90,18 +92,19 @@ export function Navigation() {
     {
       label: "Career Blog",
       items: [
-        { label: "Career Advice", href: "#" },
-        { label: "Career Paths", href: "#" },
-        { label: "Career Services", href: "#" },
-        { label: "Internship", href: "#" },
-        { label: "Professional Development", href: "#" },
+        { label: "Career Advice", href: "/#features" },
+        { label: "Career Paths", href: "/#how-it-works" },
+        { label: "Career Services", href: "/#pricing" },
+        { label: "Internship", href: "/#features" },
+        { label: "Professional Development", href: "/#faq" },
       ],
     },
     {
       label: "About",
       items: [
-        { label: "About", href: "#" },
-        { label: "Press", href: "#" },
+        { label: "About Us", href: "/#how-it-works" },
+        { label: "Our Story", href: "/#features" },
+        { label: "Press", href: "/#pricing" },
       ],
     },
   ];

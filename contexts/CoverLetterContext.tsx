@@ -54,6 +54,7 @@ interface CoverLetterContextType {
   updatePersonalInfo: (info: Partial<CoverLetterData['personalInfo']>) => void;
   updateRecipientInfo: (info: Partial<CoverLetterData['recipientInfo']>) => void;
   updateContent: (content: Partial<CoverLetterData['content']>) => void;
+  updateMetadata: (metadata: Partial<NonNullable<CoverLetterData['metadata']>>) => void;
   saveCoverLetter: (isAutoSave?: boolean) => Promise<void>;
   syncGuestData: () => Promise<void>;
   importedData: CoverLetterData | null;
@@ -257,6 +258,13 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateMetadata = useCallback((metadata: Partial<NonNullable<CoverLetterData['metadata']>>) => {
+    setCoverLetterData(prev => ({
+      ...prev,
+      metadata: { ...prev.metadata, ...metadata }
+    }));
+  }, []);
+
   const saveCoverLetter = useCallback(async (isAutoSave = false) => {
     if (currentCoverLetter?.id.startsWith("local-")) {
         localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${currentCoverLetter.id}`, JSON.stringify({
@@ -294,6 +302,7 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
       updatePersonalInfo,
       updateRecipientInfo,
       updateContent,
+      updateMetadata,
       saveCoverLetter,
       syncGuestData,
       importedData,
@@ -311,6 +320,7 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
       updatePersonalInfo,
       updateRecipientInfo,
       updateContent,
+      updateMetadata,
       saveCoverLetter,
       syncGuestData,
       importedData,

@@ -4,19 +4,19 @@ const footerLinks = {
   product: [
     { name: 'Features', href: '#features' },
     { name: 'Pricing', href: '#pricing' },
-    { name: 'Templates', href: '#' },
-    { name: 'AI Tools', href: '#' },
+    { name: 'Templates', href: '/templates' },
+    { name: 'ATS Checker', href: '/ats-checker' },
   ],
   company: [
-    { name: 'About Us', href: '#' },
-    { name: 'Careers', href: '#' },
-    { name: 'Blog', href: '#' },
-    { name: 'Press', href: '#' },
+    { name: 'About Us', href: '#how-it-works' },
+    { name: 'Careers', href: '#features' },
+    { name: 'Blog', href: '#faq' },
+    { name: 'Press', href: '#pricing' },
   ],
   resources: [
-    { name: 'Help Center', href: '#' },
-    { name: 'Resume Examples', href: '#' },
-    { name: 'Career Advice', href: '#' },
+    { name: 'Help Center', href: '#faq' },
+    { name: 'Resume Examples', href: '/templates' },
+    { name: 'Career Advice', href: '#how-it-works' },
     { name: 'API Docs', href: '#' },
   ],
   legal: [

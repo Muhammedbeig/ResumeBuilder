@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 import {
   User,
   Briefcase,
@@ -19,7 +20,12 @@ import {
   Plus,
   Trash2,
   Layout,
-  MoreHorizontal
+  MoreHorizontal,
+  Palette,
+  Share2,
+  Copy,
+  Globe,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +34,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,6 +180,7 @@ export function ResumeEditorPage() {
     { id: 'experience', label: 'Experience' },
     { id: 'education', label: 'Education' },
     { id: 'skills', label: 'Skills' },
+    { id: 'design', label: 'Design' },
   ];
 
   const moreTabs = [
@@ -174,10 +189,6 @@ export function ResumeEditorPage() {
     { id: 'structure', label: 'Rearrange', icon: Layout },
   ];
 
-  // Helper functions for sub-sections are now defined inside the main component or passed props
-  // For simplicity, I'll keep them as inner functions or inline them, but cleaner is to keep structure.
-  // Actually, I can keep the helper components below but they need to useResume() themselves.
-  
   return (
     <div className="pt-24">
       <div className="flex h-[calc(100vh-96px)] overflow-hidden">
@@ -187,6 +198,7 @@ export function ResumeEditorPage() {
           <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
             <h2 className="font-semibold text-gray-900 dark:text-white">Editor</h2>
             <div className="flex items-center gap-2">
+              <SharePopover />
               <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? "Saving..." : "Save"}
@@ -205,7 +217,7 @@ export function ResumeEditorPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
               <div className="flex items-center gap-2">
-                  <TabsList className="flex-1 grid grid-cols-4">
+                  <TabsList className="flex-1 grid grid-cols-5">
                     {mainTabs.map(tab => (
                       <TabsTrigger key={tab.id} value={tab.id} className="text-xs sm:text-sm">
                         {tab.label}
@@ -307,9 +319,7 @@ export function ResumeEditorPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Full Name
-                        </label>
+                        <Label>Full Name</Label>
                         <Input 
                           value={resumeData.basics.name}
                           onChange={(e) => updateBasics({ name: e.target.value })}
@@ -317,9 +327,7 @@ export function ResumeEditorPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Professional Title
-                        </label>
+                        <Label>Professional Title</Label>
                         <Input 
                           value={resumeData.basics.title}
                           onChange={(e) => updateBasics({ title: e.target.value })}
@@ -330,9 +338,7 @@ export function ResumeEditorPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Email
-                        </label>
+                        <Label>Email</Label>
                         <Input 
                           type="email"
                           value={resumeData.basics.email}
@@ -341,9 +347,7 @@ export function ResumeEditorPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Phone
-                        </label>
+                        <Label>Phone</Label>
                         <Input 
                           value={resumeData.basics.phone}
                           onChange={(e) => updateBasics({ phone: e.target.value })}
@@ -353,9 +357,7 @@ export function ResumeEditorPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Location
-                      </label>
+                      <Label>Location</Label>
                       <Input 
                         value={resumeData.basics.location}
                         onChange={(e) => updateBasics({ location: e.target.value })}
@@ -365,9 +367,7 @@ export function ResumeEditorPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          LinkedIn
-                        </label>
+                        <Label>LinkedIn</Label>
                         <Input 
                           value={resumeData.basics.linkedin || ''}
                           onChange={(e) => updateBasics({ linkedin: e.target.value })}
@@ -375,9 +375,7 @@ export function ResumeEditorPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          GitHub
-                        </label>
+                        <Label>GitHub</Label>
                         <Input 
                           value={resumeData.basics.github || ''}
                           onChange={(e) => updateBasics({ github: e.target.value })}
@@ -388,9 +386,7 @@ export function ResumeEditorPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Professional Summary
-                        </label>
+                        <Label>Professional Summary</Label>
                         <Button 
                           size="sm" 
                           variant="ghost"
@@ -421,6 +417,10 @@ export function ResumeEditorPage() {
 
                 <TabsContent value="skills" className="mt-0">
                   <SkillsSection />
+                </TabsContent>
+
+                <TabsContent value="design" className="mt-0">
+                  <DesignSection />
                 </TabsContent>
 
                 <TabsContent value="projects" className="mt-0">
@@ -471,6 +471,8 @@ function ExperienceSection() {
     updateExperience,
     removeExperience,
     rewriteBulletAI,
+    suggestResponsibilitiesAI,
+    generateJobDescriptionAI,
     isLoading,
   } = useResume();
   const [isAdding, setIsAdding] = useState(false);
@@ -526,34 +528,49 @@ function ExperienceSection() {
         <Card className="border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Company Name</Label>
+                <Input
+                  placeholder="e.g. Acme Corp"
+                  value={newExperience.company}
+                  onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Job Title</Label>
+                <Input
+                  placeholder="e.g. Senior Engineer"
+                  value={newExperience.role}
+                  onChange={(e) => setNewExperience({ ...newExperience, role: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Location</Label>
               <Input
-                placeholder="Company Name"
-                value={newExperience.company}
-                onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
-              />
-              <Input
-                placeholder="Job Title"
-                value={newExperience.role}
-                onChange={(e) => setNewExperience({ ...newExperience, role: e.target.value })}
+                placeholder="e.g. New York, NY"
+                value={newExperience.location}
+                onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
               />
             </div>
-            <Input
-              placeholder="Location"
-              value={newExperience.location}
-              onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
-            />
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                placeholder="Start Date (e.g., Jan 2020)"
-                value={newExperience.startDate}
-                onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
-              />
-              <Input
-                placeholder="End Date (e.g., Dec 2022)"
-                value={newExperience.endDate}
-                onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
-                disabled={newExperience.current}
-              />
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <MonthYearPicker
+                  date={newExperience.startDate ? new Date(newExperience.startDate) : undefined}
+                  onSelect={(date) => setNewExperience({ ...newExperience, startDate: format(date, "MMM yyyy") })}
+                  placeholder="Start Date"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <MonthYearPicker
+                  date={newExperience.endDate && newExperience.endDate !== 'Present' ? new Date(newExperience.endDate) : undefined}
+                  onSelect={(date) => setNewExperience({ ...newExperience, endDate: format(date, "MMM yyyy") })}
+                  placeholder="End Date"
+                  disabled={newExperience.current}
+                />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -564,6 +581,54 @@ function ExperienceSection() {
               />
               <label className="text-sm text-gray-600 dark:text-gray-400">I currently work here</label>
             </div>
+            
+            <div className="flex justify-end gap-2 mb-2">
+                 <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isLoading}
+                    onClick={async () => {
+                        if (!newExperience.role) {
+                            toast.error("Please enter a Job Title");
+                            return;
+                        }
+                        const desc = await generateJobDescriptionAI(newExperience.role, newExperience.company);
+                        if (desc) {
+                            setNewExperience(prev => ({ 
+                                ...prev, 
+                                bullets: [desc, ...(prev.bullets || []).filter(b => b)] 
+                            }));
+                        }
+                    }}
+                    className="text-purple-600 text-xs"
+                >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Generate Description
+                </Button>
+                 <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isLoading}
+                    onClick={async () => {
+                        if (!newExperience.role) {
+                            toast.error("Please enter a Job Title");
+                            return;
+                        }
+                        const bullets = await suggestResponsibilitiesAI(newExperience.role, newExperience.company);
+                        if (bullets && bullets.length > 0) {
+                            setNewExperience(prev => ({ 
+                                ...prev, 
+                                bullets: [...(prev.bullets || []).filter(b => b), ...bullets]
+                            }));
+                        }
+                    }}
+                    className="text-purple-600 text-xs"
+                >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Suggest Bullets
+                </Button>
+            </div>
+
             <Textarea
               placeholder="Job description and achievements..."
               value={newExperience.bullets?.[0] || ''}
@@ -686,39 +751,57 @@ function EducationSection() {
       {isAdding && (
         <Card className="border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 space-y-4">
-            <Input
-              placeholder="Institution Name"
-              value={newEducation.institution}
-              onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
-            />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Institution</Label>
               <Input
-                placeholder="Degree (e.g., Bachelor's)"
-                value={newEducation.degree}
-                onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
-              />
-              <Input
-                placeholder="Field of Study"
-                value={newEducation.field}
-                onChange={(e) => setNewEducation({ ...newEducation, field: e.target.value })}
+                placeholder="Institution Name"
+                value={newEducation.institution}
+                onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Degree</Label>
+                <Input
+                  placeholder="e.g. Bachelor's"
+                  value={newEducation.degree}
+                  onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Field of Study</Label>
+                <Input
+                  placeholder="e.g. Computer Science"
+                  value={newEducation.field}
+                  onChange={(e) => setNewEducation({ ...newEducation, field: e.target.value })}
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-4">
-              <Input
-                placeholder="Start Year"
-                value={newEducation.startDate}
-                onChange={(e) => setNewEducation({ ...newEducation, startDate: e.target.value })}
-              />
-              <Input
-                placeholder="End Year"
-                value={newEducation.endDate}
-                onChange={(e) => setNewEducation({ ...newEducation, endDate: e.target.value })}
-              />
-              <Input
-                placeholder="GPA (optional)"
-                value={newEducation.gpa}
-                onChange={(e) => setNewEducation({ ...newEducation, gpa: e.target.value })}
-              />
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <MonthYearPicker
+                  date={newEducation.startDate ? new Date(newEducation.startDate) : undefined}
+                  onSelect={(date) => setNewEducation({ ...newEducation, startDate: format(date, "MMM yyyy") })}
+                  placeholder="Start"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <MonthYearPicker
+                  date={newEducation.endDate && newEducation.endDate !== 'Present' ? new Date(newEducation.endDate) : undefined}
+                  onSelect={(date) => setNewEducation({ ...newEducation, endDate: format(date, "MMM yyyy") })}
+                  placeholder="End"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>GPA (Optional)</Label>
+                <Input
+                  placeholder="3.8"
+                  value={newEducation.gpa}
+                  onChange={(e) => setNewEducation({ ...newEducation, gpa: e.target.value })}
+                />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Education</Button>
@@ -785,7 +868,7 @@ function EducationSection() {
 }
 
 function SkillsSection() {
-  const { resumeData, addSkillGroup, updateSkillGroup, removeSkillGroup } = useResume();
+  const { resumeData, addSkillGroup, updateSkillGroup, removeSkillGroup, suggestSkillsAI, isLoading } = useResume();
   const [isAdding, setIsAdding] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', skills: '' });
 
@@ -825,6 +908,30 @@ function SkillsSection() {
       {isAdding && (
         <Card className="border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 space-y-4">
+             <div className="flex justify-end">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isLoading}
+                    onClick={async () => {
+                        if (!resumeData.basics.title) {
+                            toast.error("Add a Professional Title in Basics first");
+                            return;
+                        }
+                        const result = await suggestSkillsAI(resumeData.basics.title);
+                        if (result.hardSkills.length > 0) {
+                            setNewGroup({ 
+                                name: "Technical Skills", 
+                                skills: result.hardSkills.join(", ") 
+                            });
+                        }
+                    }}
+                    className="text-purple-600"
+                >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Auto-Suggest
+                </Button>
+             </div>
             <Input
               placeholder="Category Name (e.g., Programming Languages)"
               value={newGroup.name}
@@ -1074,16 +1181,22 @@ function CertificationsSection() {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                placeholder="Date Earned"
-                value={newCert.date}
-                onChange={(e) => setNewCert({ ...newCert, date: e.target.value })}
-              />
-              <Input
-                placeholder="Certificate Link (optional)"
-                value={newCert.link}
-                onChange={(e) => setNewCert({ ...newCert, link: e.target.value })}
-              />
+              <div className="space-y-2">
+                <Label>Date Earned</Label>
+                <MonthYearPicker
+                  date={newCert.date ? new Date(newCert.date) : undefined}
+                  onSelect={(date) => setNewCert({ ...newCert, date: format(date, "MMM yyyy") })}
+                  placeholder="Date"
+                />
+              </div>
+              <div className="space-y-2">
+                 <Label>Link (Optional)</Label>
+                 <Input
+                    placeholder="Certificate Link"
+                    value={newCert.link}
+                    onChange={(e) => setNewCert({ ...newCert, link: e.target.value })}
+                 />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Certification</Button>
@@ -1132,5 +1245,201 @@ function CertificationsSection() {
         </Card>
       ))}
     </motion.div>
+  );
+}
+
+function DesignSection() {
+  const { resumeData, updateMetadata } = useResume();
+  
+  const colors = [
+    "#000000", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6", 
+    "#f59e0b", "#ec4899", "#0ea5e9", "#6366f1", "#14b8a6",
+  ];
+
+  const fonts = [
+    "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Raleway", 
+    "Poppins", "Merriweather", "Playfair Display", "Ubuntu", "Nunito", 
+    "Rubik", "Lora", "PT Sans", "PT Serif", "Quicksand", "Work Sans", 
+    "Fira Sans", "Inconsolata", "Oswald"
+  ];
+
+  const fontSizes = [
+    { id: "sm", label: "Small" },
+    { id: "md", label: "Medium" },
+    { id: "lg", label: "Large" },
+  ];
+
+  // Dynamically load font
+  useEffect(() => {
+    const font = resumeData.metadata?.fontFamily || "Inter";
+    const link = document.createElement("link");
+    link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}:wght@300;400;500;700&display=swap`;
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [resumeData.metadata?.fontFamily]);
+
+  return (
+    <motion.div
+      key="design"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-8"
+    >
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Design & Appearance
+        </h2>
+        
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Palette className="w-4 h-4 text-purple-600" />
+                <h3 className="font-medium text-gray-900 dark:text-white">Accent Color</h3>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {colors.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => updateMetadata({ themeColor: color })}
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      resumeData.metadata?.themeColor === color 
+                        ? "border-gray-900 dark:border-white scale-110" 
+                        : "border-transparent hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    aria-label={`Select color ${color}`}
+                  />
+                ))}
+                <div className="relative">
+                    <input 
+                        type="color" 
+                        value={resumeData.metadata?.themeColor || "#000000"}
+                        onChange={(e) => updateMetadata({ themeColor: e.target.value })}
+                        className="w-8 h-8 rounded-full overflow-hidden cursor-pointer opacity-0 absolute inset-0"
+                    />
+                    <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center pointer-events-none">
+                        <span className="text-xs">+</span>
+                    </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+               <div className="flex items-center gap-2 mb-4">
+                 <h3 className="font-medium text-gray-900 dark:text-white">Font Size</h3>
+               </div>
+               <div className="flex gap-2">
+                 {fontSizes.map((size) => (
+                    <Button
+                        key={size.id}
+                        variant={resumeData.metadata?.fontSize === size.id ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => updateMetadata({ fontSize: size.id })}
+                        className="flex-1"
+                    >
+                        {size.label}
+                    </Button>
+                 ))}
+               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-4">
+                <h3 className="font-medium text-gray-900 dark:text-white">Font Family</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                {fonts.map((font) => (
+                  <div
+                    key={font}
+                    onClick={() => updateMetadata({ fontFamily: font })}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      resumeData.metadata?.fontFamily === font
+                        ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-600"
+                        : "border-gray-200 dark:border-gray-800 hover:border-purple-300"
+                    }`}
+                  >
+                    <div className="font-medium text-sm" style={{ fontFamily: font }}>{font}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function SharePopover() {
+  const { currentResume, togglePublic } = useResume();
+  const [copied, setCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!currentResume) return null;
+
+  const url = typeof window !== 'undefined' 
+    ? `${window.location.origin}/shared/${currentResume.id}`
+    : '';
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success("Link copied to clipboard");
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Share2 className="w-4 h-4 mr-2" />
+          Share
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="end">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium leading-none">Share Resume</h4>
+            <div className="flex items-center gap-2">
+               <Label htmlFor="public-mode" className="text-xs">Public</Label>
+               <Switch 
+                 id="public-mode" 
+                 checked={currentResume.isPublic}
+                 onCheckedChange={() => togglePublic()}
+               />
+            </div>
+          </div>
+          <p className="text-sm text-gray-500">
+            {currentResume.isPublic 
+              ? "Your resume is visible to anyone with the link." 
+              : "Your resume is private. Only you can see it."}
+          </p>
+          
+          {currentResume.isPublic && (
+            <div className="flex items-center space-x-2">
+              <Input value={url} readOnly className="h-8 text-xs" />
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCopy}>
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                    <Globe className="w-4 h-4" />
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

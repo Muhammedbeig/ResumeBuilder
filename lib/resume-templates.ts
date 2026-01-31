@@ -6,6 +6,8 @@ import { ProfessionalTemplate } from "@/components/resume/templates/Professional
 import { CreativeTemplate } from "@/components/resume/templates/CreativeTemplate";
 import { MinimalistPhotoTemplate } from "@/components/resume/templates/MinimalistPhotoTemplate";
 import { TechModernTemplate } from "@/components/resume/templates/TechModernTemplate";
+import { ImpactTemplate } from "@/components/resume/templates/ImpactTemplate";
+import { MinimalTemplate } from "@/components/resume/templates/MinimalTemplate";
 
 export const resumeTemplates = [
   {
@@ -21,6 +23,20 @@ export const resumeTemplates = [
     premium: false,
     description: "Clean, contemporary layout with balanced spacing.",
     component: ModernTemplate,
+  },
+  {
+    id: "impact",
+    name: "Impact",
+    premium: true,
+    description: "Bold, sidebar-driven design for making a strong first impression.",
+    component: ImpactTemplate,
+  },
+  {
+    id: "minimal",
+    name: "Minimal",
+    premium: false,
+    description: "Ultra-clean, whitespace-focused design with black typography.",
+    component: MinimalTemplate,
   },
   {
     id: "tech-modern",
@@ -70,6 +86,8 @@ export const resumeTemplateMap = {
   classic: ClassicTemplate,
   modern: ModernTemplate,
   ats: ATSTemplate,
+  impact: ImpactTemplate,
+  minimal: MinimalTemplate,
   executive: ExecutiveTemplate,
   professional: ProfessionalTemplate,
   creative: CreativeTemplate,

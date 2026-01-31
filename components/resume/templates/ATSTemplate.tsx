@@ -17,6 +17,12 @@ const DEFAULT_STRUCTURE: SectionConfig[] = [
 
 export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
+  const themeColor = data.metadata?.themeColor || '#000000';
+  const fontName = data.metadata?.fontFamily || 'Inter';
+  const fontSize = data.metadata?.fontSize || 'md';
+  
+  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
+  const scale = scaleMap[fontSize] || 1;
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -31,7 +37,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         if (!basics.summary) return null;
         return (
           <div key={section.id} className="mb-5">
-            <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Summary</h2>
+            <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Summary</h2>
             <p className="text-sm text-gray-700 leading-normal">{basics.summary}</p>
           </div>
         );
@@ -39,7 +45,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         if (experiences.length === 0) return null;
         return (
           <div key={section.id} className="mb-5">
-            <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Professional Experience</h2>
+            <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Professional Experience</h2>
             {experiences.map((exp, idx) => (
               <div key={exp.id || idx} className="mb-4">
                 <div className="flex justify-between items-baseline mb-1">
@@ -66,7 +72,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         if (education.length === 0) return null;
         return (
           <div key={section.id} className="mb-5">
-            <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Education</h2>
+            <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Education</h2>
             {education.map((edu, idx) => (
               <div key={edu.id || idx} className="mb-2">
                 <div className="flex justify-between items-baseline">
@@ -87,7 +93,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         if (skills.length === 0) return null;
         return (
           <div key={section.id} className="mb-5">
-            <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Skills</h2>
+            <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Skills</h2>
             <div className="flex flex-wrap gap-1">
               {skills.flatMap(group => group.skills).map((skill, idx) => (
                 <span key={idx} className="text-sm text-gray-700 bg-gray-100 px-2 py-0.5">
@@ -101,7 +107,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         if (projects.length === 0) return null;
         return (
           <div key={section.id} className="mb-5">
-            <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Projects</h2>
+            <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Projects</h2>
             {projects.map((project, idx) => (
               <div key={project.id || idx} className="mb-2">
                 <div className="flex justify-between items-baseline">
@@ -121,7 +127,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         if (certifications.length === 0) return null;
         return (
           <div key={section.id} className="mb-5">
-            <h2 className="text-base font-bold text-gray-900 mb-2 uppercase tracking-widest border-b border-gray-300 pb-1">Certifications</h2>
+            <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Certifications</h2>
             {certifications.map((cert, idx) => (
               <div key={cert.id || idx} className="mb-1">
                 <p className="text-sm font-medium text-gray-900">{cert.name}</p>
@@ -138,11 +144,18 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
   return (
     <div
       id="resume-ats"
-      className={`resume-template bg-white text-gray-900 p-12 font-sans ${className}`}
+      className={`resume-template bg-white text-gray-900 p-12 ${className}`}
+      style={{ 
+        fontFamily: `"${fontName}", sans-serif`,
+        zoom: scale
+      }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+      `}</style>
       {/* Header */}
-      <div className="text-center mb-6 pb-4 border-b-2 border-gray-900">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">{basics.name || 'Your Name'}</h1>
+      <div className="text-center mb-6 pb-4 border-b-2" style={{ borderColor: themeColor }}>
+        <h1 className="text-3xl font-bold mb-1" style={{ color: themeColor }}>{basics.name || 'Your Name'}</h1>
         <p className="text-lg text-gray-700 mb-2">{basics.title || 'Professional Title'}</p>
         <div className="flex flex-wrap justify-center gap-3 text-sm text-gray-600">
           {basics.location && <span>{basics.location}</span>}

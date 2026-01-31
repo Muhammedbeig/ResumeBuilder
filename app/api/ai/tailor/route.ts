@@ -6,11 +6,6 @@ import { extractJson } from "@/lib/ai-utils";
 import type { ResumeData, TailoringResult } from "@/types";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = await request.json().catch(() => ({}));
   const resumeData = body?.resumeData as ResumeData | undefined;
   const jobDescription = body?.jobDescription;
@@ -35,92 +30,84 @@ export async function POST(request: Request) {
 
   try {
     const model = getGeminiModel();
-    const keywordPrompt = `Extract key skills, qualifications, and requirements from this job description.
+    
+    const prompt = `You are a strict ATS (Applicant Tracking System) Auditor and Expert Resume Optimizer.
+
+Role: 
+1. Verify keyword matches with ZERO hallucinations.
+2. Rewrite resume content to ACTIVELY INTEGRATE missing keywords with strict length constraints.
 
 Job Description:
 ${jobText}
 
-Return a JSON object with:
-- "hardSkills": array of technical/hard skills
-- "softSkills": array of soft skills
-- "qualifications": array of qualifications
-- "keywords": array of important keywords
+Resume Data (JSON):
+${JSON.stringify(resumeData)}
 
-Format as valid JSON.`;
+TASK 1: AUDIT (Keyword Matching)
+- Extract ALL relevant keywords from the Job Description.
+- Compare strictly against the Resume Data. Mark as "matched" ONLY if the exact term exists.
 
-    let keywords = { hardSkills: [], softSkills: [], qualifications: [], keywords: [] } as {
-      hardSkills: string[];
-      softSkills: string[];
-      qualifications: string[];
-      keywords: string[];
-    };
+TASK 2: OPTIMIZE (Suggestion Generation)
+- Identify experience bullet points to rewrite.
+- **STRICT CONSTRAINT**: Each "suggested" rewrite MUST be under 220 characters AND under 30 words.
+- **NO SENTENCE BREAKAGE**: Do not truncate mid-sentence. The suggestion must be a complete, professional, and impactful statement.
+- **KEYWORD INJECTION**: You MUST inject "missingKeywords" into these rewrites.
+- **FORMATTING**: Use PLAIN TEXT ONLY. NO bolding (**), NO italics, NO markdown symbols.
 
-    const keywordResult = await model.generateContent(keywordPrompt);
-    const keywordResponse = await keywordResult.response;
-
-    try {
-      keywords = extractJson(keywordResponse.text());
-    } catch {
-      keywords = { hardSkills: [], softSkills: [], qualifications: [], keywords: [] };
+Return a SINGLE JSON object:
+{
+  "matchScore": number,
+  "matchedKeywords": string[],
+  "missingKeywords": string[],
+  "suggestions": [
+    {
+      "experienceId": "string",
+      "bulletIndex": number,
+      "original": "string",
+      "suggested": "string", // STRICT LIMIT: < 220 chars, < 30 words. Plain text.
+      "keywords": string[]
     }
+  ]
+}`;
 
-    const allJobKeywords = [
-      ...keywords.hardSkills,
-      ...keywords.softSkills,
-      ...keywords.keywords,
-    ].filter(Boolean);
-    const resumeText = JSON.stringify(resumeData).toLowerCase();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const data = extractJson<TailoringResult>(response.text());
 
-    const matchedKeywords = allJobKeywords.filter((keyword) =>
-      resumeText.includes(keyword.toLowerCase())
-    );
-    const missingKeywords = allJobKeywords.filter(
-      (keyword) => !resumeText.includes(keyword.toLowerCase())
-    );
-    const matchScore = Math.round((matchedKeywords.length / allJobKeywords.length) * 100) || 0;
-
-    const suggestions: TailoringResult["suggestions"] = [];
-    for (const experience of resumeData.experiences) {
-      for (let i = 0; i < experience.bullets.length; i++) {
-        if (suggestions.length >= 5) break;
-        const bullet = experience.bullets[i];
-        const suggestionPrompt = `Rewrite this resume bullet to better match the job requirements.
-
-Job Description:
-${jobText}
-
-Keywords to include: ${missingKeywords.slice(0, 3).join(", ")}
-Current Bullet: ${bullet}
-
-Rewrite the bullet to naturally incorporate relevant keywords and emphasize results that match the job requirements. Return only the rewritten bullet.`;
-
-        try {
-          const suggestionResult = await model.generateContent(suggestionPrompt);
-          const suggestionResponse = await suggestionResult.response;
-          const suggested = suggestionResponse.text().trim();
-
-          if (suggested && suggested !== bullet) {
-            suggestions.push({
-              experienceId: experience.id,
-              bulletIndex: i,
-              original: bullet,
-              suggested,
-              keywords: missingKeywords.slice(0, 3),
-            });
+    // Final safety filter for formatting and length
+    if (data.suggestions && Array.isArray(data.suggestions)) {
+      data.suggestions = data.suggestions
+        .map(s => {
+          // Remove any markdown
+          let cleanText = s.suggested.replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '');
+          
+          // If the AI failed the length constraint, we attempt to keep only complete sentences that fit
+          if (cleanText.length > 220 || cleanText.split(' ').length > 30) {
+             const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+             let limitedText = "";
+             for (const sentence of sentences) {
+                 if ((limitedText + sentence).length <= 220 && (limitedText + sentence).split(' ').length <= 30) {
+                     limitedText += sentence;
+                 } else {
+                     break;
+                 }
+             }
+             cleanText = limitedText.trim() || cleanText.substring(0, 217) + "...";
           }
-        } catch {
-          // Ignore suggestion errors
-        }
-      }
+
+          return {
+            ...s,
+            suggested: cleanText
+          };
+        })
+        // Filter out any suggestions that might have become empty after cleaning
+        .filter(s => s.suggested.length > 0);
     }
-    return NextResponse.json({
-      matchScore,
-      matchedKeywords,
-      missingKeywords,
-      suggestions,
-    });
+
+    return NextResponse.json(data);
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
+    console.error("AI Analysis Error:", error);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

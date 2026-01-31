@@ -132,8 +132,21 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setCurrentResume((prev) => (prev ? { ...prev, template } : prev));
   }, []);
 
+  const togglePublic = useCallback(async () => {
+    setCurrentResume(prev => prev ? { ...prev, isPublic: !prev.isPublic } : prev);
+    toast.info("Visibility toggled locally");
+    return true;
+  }, []);
+
   const updateResumeData = useCallback((data: Partial<ResumeData>) => {
     setResumeData((prev) => ({ ...prev, ...data }));
+  }, []);
+
+  const updateMetadata = useCallback((metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
+    setResumeData((prev) => ({
+      ...prev,
+      metadata: { ...(prev.metadata || {}), ...metadata },
+    }));
   }, []);
 
   const updateBasics = useCallback((basics: Partial<ResumeData["basics"]>) => {
@@ -272,6 +285,21 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     return [];
   }, []);
 
+  const suggestSkillsAI = useCallback(async (jobTitle: string, description?: string) => {
+    toast.info("AI features are disabled in this phase.");
+    return { hardSkills: [], softSkills: [] };
+  }, []);
+
+  const suggestResponsibilitiesAI = useCallback(async (jobTitle: string, company?: string) => {
+    toast.info("AI features are disabled in this phase.");
+    return [];
+  }, []);
+
+  const generateJobDescriptionAI = useCallback(async (jobTitle: string, company?: string) => {
+    toast.info("AI features are disabled in this phase.");
+    return "";
+  }, []);
+
   const tailorToJobAI = useCallback(async (jobDescription: string) => {
     toast.info("AI features are disabled in this phase.");
     return {};
@@ -325,7 +353,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       saveResume,
       syncGuestData,
       updateTemplate,
+      togglePublic,
       updateResumeData,
+      updateMetadata,
       updateBasics,
       addExperience,
       updateExperience,
@@ -345,6 +375,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       rewriteBulletAI,
       generateSummaryAI,
       extractSkillsAI,
+      suggestSkillsAI,
+      suggestResponsibilitiesAI,
+      generateJobDescriptionAI,
       tailorToJobAI,
       generatePDF, 
       importedData,
@@ -361,7 +394,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       selectResume,
       saveResume,
       updateTemplate,
+      togglePublic,
       updateResumeData,
+      updateMetadata,
       updateBasics,
       addExperience,
       updateExperience,
@@ -380,6 +415,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       rewriteBulletAI,
       generateSummaryAI,
       extractSkillsAI,
+      suggestSkillsAI,
+      suggestResponsibilitiesAI,
+      generateJobDescriptionAI,
       tailorToJobAI,
       generatePDF,
       setImportedData,

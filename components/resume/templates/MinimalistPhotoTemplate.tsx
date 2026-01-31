@@ -18,6 +18,12 @@ const DEFAULT_STRUCTURE: SectionConfig[] = [
 
 export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhotoTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
+  const themeColor = data.metadata?.themeColor || '#8b5cf6'; // Default purple-500
+  const fontName = data.metadata?.fontFamily || 'Inter';
+  const fontSize = data.metadata?.fontSize || 'md';
+  
+  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
+  const scale = scaleMap[fontSize] || 1;
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -81,7 +87,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
         return (
           <div key={section.id} className="mb-8">
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-gray-900"></span>
+              <span className="w-8 h-0.5" style={{ backgroundColor: themeColor }}></span>
               Profile
             </h2>
             <p className="text-gray-600 leading-relaxed text-sm">
@@ -94,20 +100,20 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
         return (
           <div key={section.id} className="mb-8">
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-gray-900"></span>
+              <span className="w-8 h-0.5" style={{ backgroundColor: themeColor }}></span>
               Experience
             </h2>
             <div className="space-y-6">
               {experiences.map((exp) => (
                 <div key={exp.id} className="relative pl-6 border-l-2 border-gray-100">
-                  <span className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white border-2 border-purple-500"></span>
+                  <span className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white border-2" style={{ borderColor: themeColor }}></span>
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="text-lg font-bold text-gray-800">{exp.role}</h3>
                     <span className="text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded">
                       {exp.startDate} – {exp.current ? 'Present' : exp.endDate}
                     </span>
                   </div>
-                  <p className="text-purple-600 font-medium text-sm mb-2">{exp.company}, {exp.location}</p>
+                  <p className="font-medium text-sm mb-2" style={{ color: themeColor }}>{exp.company}, {exp.location}</p>
                   <ul className="space-y-1.5">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-sm text-gray-600 leading-relaxed">
@@ -125,7 +131,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
         return (
           <div key={section.id}>
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-gray-900"></span>
+              <span className="w-8 h-0.5" style={{ backgroundColor: themeColor }}></span>
               Projects
             </h2>
             <div className="grid grid-cols-1 gap-4">
@@ -134,7 +140,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-bold text-gray-800">{project.name}</h3>
                     {project.link && (
-                      <span className="text-xs text-purple-600 bg-white px-2 py-0.5 rounded shadow-sm">Link</span>
+                      <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm" style={{ color: themeColor }}>Link</span>
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{project.description}</p>
@@ -159,16 +165,23 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
   return (
     <div
       id="resume-minimalist-photo"
-      className={`resume-template bg-white text-gray-800 font-sans min-h-[1188px] relative ${className}`}
+      className={`resume-template bg-white text-gray-800 min-h-[1188px] relative ${className}`}
+      style={{ 
+        fontFamily: `"${fontName}", sans-serif`,
+        zoom: scale
+      }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+      `}</style>
       {/* Sidebar / Left Column */}
       <div className="absolute top-0 left-0 w-[260px] h-full bg-gray-50 border-r border-gray-100 p-10 flex flex-col gap-6">
         
         {/* Photo Placeholder */}
         <div className="w-40 h-40 mx-auto rounded-full bg-gray-200 border-4 border-white shadow-md flex items-center justify-center overflow-hidden">
-            {data.basics.image ? (
+            {basics.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={data.basics.image} alt={data.basics.name} className="w-full h-full object-cover" />
+              <img src={basics.image} alt={basics.name} className="w-full h-full object-cover" />
             ) : (
               <User className="w-20 h-20 text-gray-400" />
             )}
@@ -219,7 +232,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
         {/* Header Name/Title */}
         <div className="mb-10">
           <h1 className="text-5xl font-light text-gray-900 mb-2 tracking-tight">{basics.name}</h1>
-          <p className="text-xl text-purple-600 font-medium tracking-wide">{basics.title}</p>
+          <p className="text-xl font-medium tracking-wide" style={{ color: themeColor }}>{basics.title}</p>
         </div>
 
         {/* Dynamic Main Sections */}

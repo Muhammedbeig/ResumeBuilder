@@ -35,7 +35,9 @@ interface ResumeContextType {
   saveResume: (isAutoSave?: boolean) => Promise<void>;
   syncGuestData: () => Promise<void>;
   updateTemplate: (template: string) => void;
+  togglePublic: () => Promise<boolean>;
   updateResumeData: (data: Partial<ResumeData>) => void;
+  updateMetadata: (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => void;
   updateBasics: (basics: Partial<ResumeData["basics"]>) => void;
   addExperience: (experience: Omit<Experience, "id">) => void;
   updateExperience: (id: string, experience: Partial<Experience>) => void;
@@ -56,6 +58,9 @@ interface ResumeContextType {
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
   extractSkillsAI: (text: string) => Promise<string[]>;
+  suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
+  suggestResponsibilitiesAI: (jobTitle: string, company?: string) => Promise<string[]>;
+  generateJobDescriptionAI: (jobTitle: string, company?: string) => Promise<string>;
   tailorToJobAI: (jobDescription: string) => Promise<unknown>;
   generatePDF?: (templateId: string) => Promise<void>;
   importedData: ResumeData | null;
@@ -221,6 +226,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setResumes((prev) => [newResume, ...prev]);
         setCurrentResume(newResume);
         setResumeData(dataToUse);
+        toast.success("Resume created successfully!");
         return newResume;
       }
 
@@ -239,6 +245,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setResumes((prev) => [createdResume, ...prev]);
         setCurrentResume(createdResume);
         setResumeData(normalizeResumeData(payload.data));
+        toast.success("Resume created successfully!");
         return createdResume;
       } finally {
         setIsLoading(false);
@@ -395,8 +402,43 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setCurrentResume((prev) => (prev ? { ...prev, template } : prev));
   }, []);
 
+  const togglePublic = useCallback(async () => {
+    if (!currentResume || !session?.user) return false;
+    const newStatus = !currentResume.isPublic;
+    
+    // Optimistic update
+    setCurrentResume(prev => prev ? { ...prev, isPublic: newStatus } : prev);
+    
+    try {
+        await fetch(`/api/resumes/${currentResume.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: currentResume.title,
+                template: currentResume.template,
+                isPublic: newStatus,
+                data: resumeData
+            })
+        });
+        toast.success(newStatus ? "Resume is now public" : "Resume is now private");
+        return newStatus;
+    } catch (error) {
+        // Revert
+        setCurrentResume(prev => prev ? { ...prev, isPublic: !newStatus } : prev);
+        toast.error("Failed to update visibility");
+        return !newStatus;
+    }
+  }, [currentResume, session?.user, resumeData]);
+
   const updateResumeData = useCallback((data: Partial<ResumeData>) => {
     setResumeData((prev) => ({ ...prev, ...data }));
+  }, []);
+
+  const updateMetadata = useCallback((metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
+    setResumeData((prev) => ({
+      ...prev,
+      metadata: { ...(prev.metadata || {}), ...metadata },
+    }));
   }, []);
 
   const updateBasics = useCallback((basics: Partial<ResumeData["basics"]>) => {
@@ -609,6 +651,54 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     [callAI]
   );
 
+  const suggestSkillsAI = useCallback(
+    async (jobTitle: string, description?: string) => {
+      setIsLoading(true);
+      try {
+        const result: any = await callAI("suggestions/skills", { jobTitle, description });
+        return result || { hardSkills: [], softSkills: [] };
+      } catch (error) {
+        console.error("Error suggesting skills:", error);
+        return { hardSkills: [], softSkills: [] };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [callAI]
+  );
+
+  const suggestResponsibilitiesAI = useCallback(
+    async (jobTitle: string, company?: string) => {
+      setIsLoading(true);
+      try {
+        const result: any = await callAI("suggestions/responsibilities", { jobTitle, company });
+        return (result.responsibilities as string[]) || [];
+      } catch (error) {
+        console.error("Error suggesting responsibilities:", error);
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [callAI]
+  );
+
+  const generateJobDescriptionAI = useCallback(
+    async (jobTitle: string, company?: string) => {
+      setIsLoading(true);
+      try {
+        const result: any = await callAI("generate/description", { jobTitle, company });
+        return (result.description as string) || "";
+      } catch (error) {
+        console.error("Error generating description:", error);
+        return "";
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [callAI]
+  );
+
   const tailorToJobAI = useCallback(
     async (jobDescription: string) => {
       setIsLoading(true);
@@ -648,7 +738,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       saveResume,
       syncGuestData,
       updateTemplate,
+      togglePublic,
       updateResumeData,
+      updateMetadata,
       updateBasics,
       addExperience,
       updateExperience,
@@ -668,6 +760,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       rewriteBulletAI,
       generateSummaryAI,
       extractSkillsAI,
+      suggestSkillsAI,
+      suggestResponsibilitiesAI,
+      generateJobDescriptionAI,
       tailorToJobAI,
       importedData,
       setImportedData,
@@ -704,6 +799,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       rewriteBulletAI,
       generateSummaryAI,
       extractSkillsAI,
+      suggestSkillsAI,
+      suggestResponsibilitiesAI,
+      generateJobDescriptionAI,
       tailorToJobAI,
       setImportedData,
       syncGuestData,

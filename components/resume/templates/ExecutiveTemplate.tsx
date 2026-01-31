@@ -17,6 +17,13 @@ const DEFAULT_STRUCTURE: SectionConfig[] = [
 
 export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications, languages } = data;
+  
+  const themeColor = data.metadata?.themeColor || '#7c3aed'; // Default purple-600
+  const fontName = data.metadata?.fontFamily || 'Inter';
+  const fontSize = data.metadata?.fontSize || 'md';
+  
+  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
+  const scale = scaleMap[fontSize] || 1;
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -31,7 +38,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         if (skills.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+            <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+            >
               Skills
             </h2>
             <div className="space-y-2">
@@ -48,7 +58,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         if (education.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+            <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+            >
               Education
             </h2>
             <div className="space-y-3">
@@ -70,7 +83,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         if (certifications.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+            <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+            >
               Certifications
             </h2>
             <div className="space-y-2">
@@ -88,7 +104,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         if (!basics.summary) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+            <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+            >
               Summary
             </h2>
             <p className="text-sm text-gray-700 leading-relaxed">{basics.summary}</p>
@@ -98,7 +117,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         if (experiences.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+            <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+            >
               Experience
             </h2>
             <div className="space-y-4">
@@ -129,7 +151,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         if (projects.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+            <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+            >
               Projects
             </h2>
             <div className="space-y-3">
@@ -164,7 +189,15 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
     <div
       id="resume-executive"
       className={`resume-template bg-white text-gray-900 p-12 font-sans ${className}`}
+      style={{ 
+        fontFamily: `"${fontName}", sans-serif`,
+        zoom: scale
+      }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+      `}</style>
+
       <header className="border-b border-gray-200 pb-4 mb-6">
         <div className="flex items-start justify-between gap-6">
           <div>
@@ -196,7 +229,10 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
 
           {languages.length > 0 && (
             <section className="resume-section">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">
+              <h2 
+                className="text-xs font-semibold uppercase tracking-widest mb-2"
+                style={{ color: themeColor }}
+              >
                 Languages
               </h2>
               <div className="space-y-1 text-xs text-gray-600">

@@ -18,7 +18,7 @@ export default function NewResumePage() {
   const { data: session, status } = useSession();
   const { createResume, importedData } = useResume();
   const [title, setTitle] = useState("Untitled Resume");
-  const [isCreating, setIsCreating] = useState(false);
+  const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     if (importedData?.basics?.name) {
@@ -36,19 +36,18 @@ export default function NewResumePage() {
       toast.error("Upgrade to Pro to unlock this template");
       return;
     }
-    setIsCreating(true);
+    setCreatingTemplateId(templateId);
     try {
       const resume = await createResume(
         title.trim() || "Untitled Resume",
         templateId,
         importedData || placeholderResumeData
       );
-      toast.success("Resume created successfully!");
       router.push(`/resume/${resume.id}`);
     } catch (error) {
       toast.error("Failed to create resume");
     } finally {
-      setIsCreating(false);
+      setCreatingTemplateId(null);
     }
   };
 
@@ -113,10 +112,10 @@ export default function NewResumePage() {
                   </p>
                   <Button
                     className="w-full"
-                    disabled={isCreating || isLocked}
+                    disabled={creatingTemplateId !== null || isLocked}
                     onClick={() => handleSelectTemplate(template.id, template.premium)}
                   >
-                    {isCreating ? "Creating..." : "Use this template"}
+                    {creatingTemplateId === template.id ? "Creating..." : "Use this template"}
                   </Button>
                 </CardContent>
               </Card>

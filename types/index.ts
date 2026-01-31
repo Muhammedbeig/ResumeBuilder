@@ -50,6 +50,13 @@ export interface ResumeData {
   
   // Section Ordering & Visibility
   structure?: SectionConfig[];
+
+  // Design & Appearance
+  metadata?: {
+    themeColor?: string;
+    fontFamily?: string;
+    fontSize?: string;
+  };
 }
 
 export interface SectionConfig {
@@ -182,5 +189,10 @@ export interface CoverLetterData {
     body: string;
     closing: string;
     signature: string;
+  };
+  metadata?: {
+    themeColor?: string;
+    fontFamily?: string;
+    fontSize?: string;
   };
 }

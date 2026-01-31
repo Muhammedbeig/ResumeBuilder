@@ -75,8 +75,30 @@ export async function POST(req: NextRequest) {
 
     const page = await browser.newPage();
     
-    // Set content and wait for Tailwind to load (networkidle0 might be too strict if CDN is slow, but usually fine)
-    await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    // Set content and wait for basic network tasks
+    await page.setContent(fullHtml, { waitUntil: ["networkidle0", "load", "domcontentloaded"] });
+
+    // Ensure all images are fully loaded and decoded
+    await page.evaluate(async () => {
+      const images = Array.from(document.querySelectorAll("img"));
+      await Promise.all(
+        images.map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+        })
+      );
+      // Wait for a short moment after images load for any reflow
+      await new Promise(r => setTimeout(r, 500));
+    });
+
+    // Wait for fonts
+    await page.evaluateHandle('document.fonts.ready');
+
+    // Extra sleep for good measure
+    await new Promise(r => setTimeout(r, 500));
 
     // Generate PDF
     const pdfBuffer = await page.pdf({

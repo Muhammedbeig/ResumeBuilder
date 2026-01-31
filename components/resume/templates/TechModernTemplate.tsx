@@ -18,6 +18,12 @@ const DEFAULT_STRUCTURE: SectionConfig[] = [
 
 export function TechModernTemplate({ data, className = '' }: TechModernTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
+  const themeColor = data.metadata?.themeColor || '#06b6d4'; // Default cyan-500
+  const fontName = data.metadata?.fontFamily || 'Inter';
+  const fontSize = data.metadata?.fontSize || 'md';
+  
+  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
+  const scale = scaleMap[fontSize] || 1;
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -32,7 +38,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
         if (!basics.summary) return null;
         return (
           <div key={section.id}>
-            <h2 className="text-lg font-bold text-slate-900 border-l-4 border-cyan-500 pl-3 mb-3">About Me</h2>
+            <h2 className="text-lg font-bold text-slate-900 border-l-4 pl-3 mb-3" style={{ borderColor: themeColor }}>About Me</h2>
             <p className="text-slate-600 leading-relaxed text-sm">
               {basics.summary}
             </p>
@@ -42,7 +48,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
         if (experiences.length === 0) return null;
         return (
           <div key={section.id}>
-            <h2 className="text-lg font-bold text-slate-900 border-l-4 border-purple-500 pl-3 mb-4">Work Experience</h2>
+            <h2 className="text-lg font-bold text-slate-900 border-l-4 pl-3 mb-4" style={{ borderColor: themeColor }}>Work Experience</h2>
             <div className="space-y-6">
               {experiences.map((exp) => (
                 <div key={exp.id} className="relative">
@@ -52,7 +58,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
                       {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-cyan-700 mb-2">{exp.company} • {exp.location}</p>
+                  <p className="text-sm font-medium mb-2" style={{ color: themeColor }}>{exp.company} • {exp.location}</p>
                   <ul className="list-disc list-outside ml-4 space-y-1">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-sm text-slate-600 pl-1">{bullet}</li>
@@ -67,7 +73,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
         if (projects.length === 0) return null;
         return (
           <div key={section.id}>
-            <h2 className="text-lg font-bold text-slate-900 border-l-4 border-pink-500 pl-3 mb-4">Featured Projects</h2>
+            <h2 className="text-lg font-bold text-slate-900 border-l-4 pl-3 mb-4" style={{ borderColor: themeColor }}>Featured Projects</h2>
             <div className="grid grid-cols-1 gap-4">
               {projects.map((project) => (
                 <div key={project.id}>
@@ -118,7 +124,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
               {education.map((edu) => (
                 <div key={edu.id} className="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
                   <div className="font-bold text-slate-800 text-sm mb-1">{edu.institution}</div>
-                  <div className="text-xs text-cyan-700 font-medium mb-1">{edu.degree}</div>
+                  <div className="text-xs font-medium mb-1" style={{ color: themeColor }}>{edu.degree}</div>
                   <div className="text-[10px] text-slate-400">{edu.startDate} - {edu.endDate}</div>
                 </div>
               ))}
@@ -151,11 +157,18 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
   return (
     <div
       id="resume-tech-modern"
-      className={`resume-template bg-white text-slate-800 font-sans min-h-[1188px] flex flex-col ${className}`}
+      className={`resume-template bg-white text-slate-800 min-h-[1188px] flex flex-col ${className}`}
+      style={{ 
+        fontFamily: `"${fontName}", sans-serif`,
+        zoom: scale
+      }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+      `}</style>
       {/* Header Banner */}
       <div className="bg-slate-900 text-white p-10 pb-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2" style={{ backgroundColor: themeColor }}></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2"></div>
         
         <div className="relative z-10 flex gap-8 items-center">
@@ -173,7 +186,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
                  <h1 className="text-4xl font-bold tracking-tight mb-2 text-white">
                     {basics.name}
                  </h1>
-                 <p className="text-xl text-cyan-400 font-medium mb-4">{basics.title}</p>
+                 <p className="text-xl font-medium mb-4" style={{ color: themeColor }}>{basics.title}</p>
                  
                  <div className="flex flex-wrap gap-4 text-sm text-slate-300">
                      {basics.email && (

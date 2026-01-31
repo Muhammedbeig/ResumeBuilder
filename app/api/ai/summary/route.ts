@@ -5,11 +5,6 @@ import { getGeminiModel } from "@/lib/gemini";
 import type { ResumeData } from "@/types";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = await request.json().catch(() => ({}));
   const resumeData = body?.resumeData as ResumeData | undefined;
   const targetRole = body?.targetRole ? String(body.targetRole) : undefined;
