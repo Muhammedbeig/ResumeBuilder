@@ -92,19 +92,21 @@ export function Navigation() {
     {
       label: "Career Blog",
       items: [
-        { label: "Career Advice", href: "/#features" },
-        { label: "Career Paths", href: "/#how-it-works" },
-        { label: "Career Services", href: "/#pricing" },
-        { label: "Internship", href: "/#features" },
-        { label: "Professional Development", href: "/#faq" },
+        { label: "All Articles", href: "/career-blog" },
+        { label: "Career Advice", href: "/career-blog/category/career-advice" },
+        { label: "Career Paths", href: "/career-blog/category/career-paths" },
+        { label: "Career Services", href: "/career-blog/category/career-services" },
+        { label: "Internships", href: "/career-blog/category/internships" },
+        { label: "Professional Development", href: "/career-blog/category/professional-development" },
       ],
     },
     {
       label: "About",
       items: [
-        { label: "About Us", href: "/#how-it-works" },
-        { label: "Our Story", href: "/#features" },
-        { label: "Press", href: "/#pricing" },
+        { label: "About Us", href: "/about" },
+        { label: "Our Story", href: "/about/story" },
+        { label: "Press", href: "/about/press" },
+        { label: "Careers", href: "/about/careers" },
       ],
     },
   ];

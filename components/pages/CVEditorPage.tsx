@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   User,
   Briefcase,
   GraduationCap,
   Code,
   Award,
-  Languages,
   Save,
   Download,
   Image as ImageIcon,
-  ChevronDown,
-  Sparkles,
   Plus,
   Trash2,
   Layout,
@@ -28,6 +25,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,28 +43,32 @@ import {
 import { useCV } from "@/contexts/CVContext";
 import { cvTemplateMap, cvTemplates } from "@/lib/cv-templates";
 import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
+import {
+  buildMonthYear,
+  buildYearOptions,
+  COMPANY_SUGGESTIONS,
+  JOB_TITLE_SUGGESTIONS,
+  MONTH_OPTIONS,
+} from "@/lib/experience-suggestions";
 import { GenericSectionManager } from "@/components/editor/GenericSectionManager";
 import { toast } from "sonner";
-import type { Experience, Education, Project } from "@/types";
+import type { Experience, Education, Project, SkillGroup } from "@/types";
 
 export function CVEditorPage() {
   const router = useRouter();
   const params = useParams();
   const cvId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session } = useSession();
-  const user = session?.user;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     cvData,
     currentCV,
     updateBasics,
-    generateSummaryAI,
-    rewriteBulletAI,
+    suggestSummaryAI,
     saveCV,
     loadCV,
     updateTemplate,
     updateStructure,
-    isLoading,
     generatePDF: generatePDFContext,
     addExperience,
     updateExperience,
@@ -80,6 +90,83 @@ export function CVEditorPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [zoom, setZoom] = useState([90]);
+  const [draftExperience, setDraftExperience] = useState<Partial<Experience> | null>(null);
+  const [draftSkillGroup, setDraftSkillGroup] = useState<Partial<SkillGroup> | null>(null);
+  const [usedSummarySuggestions, setUsedSummarySuggestions] = useState<string[]>([]);
+  const [summarySuggestions, setSummarySuggestions] = useState<string[]>([]);
+  const summaryKeyRef = useRef("");
+
+  const previewData = useMemo(() => {
+    const nextExperiences = draftExperience
+      ? [
+          ...cvData.experiences,
+          {
+            id: "draft-experience",
+            company: draftExperience.company || "",
+            role: draftExperience.role || "",
+            location: draftExperience.location || "",
+            startDate: draftExperience.startDate || "",
+            endDate: draftExperience.endDate || "",
+            current: draftExperience.current || false,
+            bullets: draftExperience.bullets || [],
+          },
+        ]
+      : cvData.experiences;
+
+    const nextSkills = draftSkillGroup
+      ? [
+          ...cvData.skills,
+          {
+            id: "draft-skill-group",
+            name: draftSkillGroup.name || "",
+            skills: draftSkillGroup.skills || [],
+          },
+        ]
+      : cvData.skills;
+
+    if (!draftExperience && !draftSkillGroup) {
+      return cvData;
+    }
+
+    return {
+      ...cvData,
+      experiences: nextExperiences,
+      skills: nextSkills,
+    };
+  }, [cvData, draftExperience, draftSkillGroup]);
+
+  const availableSummarySuggestions = useMemo(() => {
+    const used = new Set(usedSummarySuggestions.map((item) => item.toLowerCase()));
+    return summarySuggestions.filter((suggestion) => !used.has(suggestion.toLowerCase()));
+  }, [summarySuggestions, usedSummarySuggestions]);
+
+  useEffect(() => {
+    setUsedSummarySuggestions([]);
+  }, [cvData.basics.title, previewData.experiences, previewData.skills]);
+
+  useEffect(() => {
+    if (previewData.experiences.length === 0) {
+      setSummarySuggestions([]);
+      summaryKeyRef.current = "";
+      return;
+    }
+    const experienceText = previewData.experiences
+      .map((exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`)
+      .join(" ")
+      .trim();
+    const skillsText = previewData.skills
+      .flatMap((group) => group.skills)
+      .join(" ")
+      .trim();
+    const key = `${previewData.basics.title}|${experienceText}|${skillsText}`;
+    if (summaryKeyRef.current === key) return;
+    const timer = setTimeout(async () => {
+      const suggestion = await suggestSummaryAI(previewData, previewData.basics.title || undefined);
+      setSummarySuggestions(suggestion ? [suggestion] : []);
+      summaryKeyRef.current = key;
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [previewData, suggestSummaryAI]);
 
   useEffect(() => {
     if (cvId) {
@@ -388,16 +475,6 @@ export function CVEditorPage() {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Professional Summary
                         </label>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => generateSummaryAI()}
-                          disabled={isLoading}
-                          className="text-purple-600 hover:text-purple-700"
-                        >
-                          <Sparkles className="w-4 h-4 mr-1" />
-                          Generate with AI
-                        </Button>
                       </div>
                       <Textarea 
                         value={cvData.basics.summary}
@@ -405,20 +482,69 @@ export function CVEditorPage() {
                         placeholder="Write a brief summary about your professional background and career goals..."
                         rows={4}
                       />
+                      <div className="mt-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                            Summary Suggestion
+                          </p>
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                            Updates automatically from your details
+                          </span>
+                        </div>
+                        {previewData.experiences.length === 0 ? (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Add at least one experience to see summary ideas.
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {availableSummarySuggestions.length === 0 ? (
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Suggestions are generating based on your latest edits.
+                              </p>
+                            ) : (
+                              availableSummarySuggestions.map((suggestion, idx) => (
+                              <div
+                                key={`${suggestion}-${idx}`}
+                                className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2"
+                              >
+                                <Button
+                                  variant="outline"
+                                  size="icon-sm"
+                                  type="button"
+                                  onClick={() => {
+                                    updateBasics({ summary: suggestion });
+                                    setUsedSummarySuggestions((prev) => [...prev, suggestion]);
+                                  }}
+                                  className="shrink-0"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                                <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+                                  {suggestion}
+                                </p>
+                              </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="experience" className="mt-0">
-                    <ExperienceSection />
+                    <ExperienceSection onDraftChange={setDraftExperience} />
                   </TabsContent>
 
                   <TabsContent value="education" className="mt-0">
                     <EducationSection />
                   </TabsContent>
 
-                  <TabsContent value="skills" className="mt-0">
-                    <SkillsSection />
-                  </TabsContent>
+                <TabsContent value="skills" className="mt-0">
+                  <SkillsSection
+                    onDraftChange={setDraftSkillGroup}
+                    experienceSource={previewData.experiences}
+                  />
+                </TabsContent>
 
                   <TabsContent value="projects" className="mt-0">
                     <ProjectsSection />
@@ -453,7 +579,7 @@ export function CVEditorPage() {
               <div id="resume-preview" className="bg-white shadow-2xl min-h-[1056px] w-[816px] text-black">
                 <ActiveTemplate 
                   key={JSON.stringify(cvData.structure)} 
-                  data={cvData} 
+                  data={previewData} 
                 />
               </div>
             </div>
@@ -464,14 +590,17 @@ export function CVEditorPage() {
 }
 
 // Subcomponents
-function ExperienceSection() {
+function ExperienceSection({
+  onDraftChange,
+}: {
+  onDraftChange?: (draft: Partial<Experience> | null) => void;
+}) {
   const {
     cvData,
     addExperience,
     updateExperience,
     removeExperience,
-    rewriteBulletAI,
-    isLoading,
+    suggestResponsibilitiesAI,
   } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newExperience, setNewExperience] = useState<Partial<Experience>>({
@@ -481,22 +610,270 @@ function ExperienceSection() {
     startDate: '',
     endDate: '',
     current: false,
-    bullets: ['']
+    bullets: []
   });
+  const [startMonth, setStartMonth] = useState("");
+  const [startYear, setStartYear] = useState("");
+  const [endMonth, setEndMonth] = useState("");
+  const [endYear, setEndYear] = useState("");
+  const [usedSuggestions, setUsedSuggestions] = useState<string[]>([]);
+  const [aiSuggestedBullets, setAiSuggestedBullets] = useState<string[]>([]);
+  const [editingExperiences, setEditingExperiences] = useState<Record<string, boolean>>({});
+  const [existingSuggestionState, setExistingSuggestionState] = useState<
+    Record<string, { role: string; used: string[] }>
+  >({});
+  const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
+  const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
+
+  const yearOptions = useMemo(
+    () => buildYearOptions(1970, new Date().getFullYear() + 1),
+    []
+  );
+  const jobTitleOptions = useMemo(
+    () => JOB_TITLE_SUGGESTIONS.map((title) => ({ value: title })),
+    []
+  );
+  const companyOptions = useMemo(
+    () => COMPANY_SUGGESTIONS.map((company) => ({ value: company })),
+    []
+  );
+  const normalizeSuggestion = (value: string) => value.trim().toLowerCase();
+  const availableSuggestedBullets = useMemo(() => {
+    const used = new Set(usedSuggestions.map(normalizeSuggestion));
+    const unique = aiSuggestedBullets.filter(
+      (bullet, index) =>
+        aiSuggestedBullets.findIndex((item) => normalizeSuggestion(item) === normalizeSuggestion(bullet)) === index
+    );
+    return unique.filter((bullet) => !used.has(normalizeSuggestion(bullet)));
+  }, [usedSuggestions, aiSuggestedBullets]);
+
+  const toggleExperienceEdit = (id: string) => {
+    setEditingExperiences((prev) => {
+      const next: Record<string, boolean> = {};
+      for (const exp of cvData.experiences) {
+        next[exp.id] = exp.id === id ? !prev[id] : false;
+      }
+      return next;
+    });
+  };
+
+  const getExistingSuggestions = (exp: Experience) => {
+    const unique = (existingAiSuggestions[exp.id] || []).filter(
+      (item, index, arr) => arr.indexOf(item) === index
+    );
+    const state = existingSuggestionState[exp.id];
+    const used = state && state.role === exp.role ? state.used : [];
+    const usedSet = new Set(used.map(normalizeSuggestion));
+    return unique.filter((bullet) => !usedSet.has(normalizeSuggestion(bullet)));
+  };
+
+  const applyExistingSuggestion = (exp: Experience, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const existing = exp.bullets.map((bullet) => bullet.trim().toLowerCase());
+    if (existing.includes(trimmed.toLowerCase())) return;
+    updateExperience(exp.id, { bullets: [...exp.bullets, trimmed] });
+    setExistingSuggestionState((prev) => {
+      const current = prev[exp.id];
+      const nextUsed = current && current.role === exp.role ? current.used : [];
+      return {
+        ...prev,
+        [exp.id]: { role: exp.role, used: [...nextUsed, trimmed] },
+      };
+    });
+  };
+
+  const handleAddExistingBullet = (exp: Experience) => {
+    updateExperience(exp.id, { bullets: [...exp.bullets, ""] });
+  };
+
+  const handleRemoveExistingBullet = (exp: Experience, index: number) => {
+    const nextBullets = exp.bullets.filter((_, idx) => idx !== index);
+    updateExperience(exp.id, { bullets: nextBullets });
+  };
+
+  useEffect(() => {
+    setUsedSuggestions([]);
+    setAiSuggestedBullets([]);
+  }, [newExperience.role]);
+
+  useEffect(() => {
+    if (!isAdding || !newExperience.role) {
+      setAiSuggestedBullets([]);
+      return;
+    }
+    const description = (newExperience.bullets || []).join(" ").trim();
+    const role = newExperience.role.trim();
+    const timer = setTimeout(async () => {
+      try {
+        const bullets = await suggestResponsibilitiesAI(role, description);
+        setAiSuggestedBullets(bullets);
+      } catch (error) {
+        console.error("Auto-suggest failed", error);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
+
+  useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+    cvData.experiences.forEach((exp) => {
+      if (!editingExperiences[exp.id] || !exp.role) return;
+      const description = exp.bullets.join(" ").trim();
+      const key = `${exp.role}|${description}`;
+      if (existingAiKeys[exp.id] === key) return;
+      const timer = setTimeout(async () => {
+        try {
+          const bullets = await suggestResponsibilitiesAI(exp.role, description);
+          setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
+          setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
+        } catch (error) {
+          console.error("Auto-suggest existing failed", error);
+        }
+      }, 500);
+      timers.push(timer);
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [editingExperiences, cvData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
+
+  useEffect(() => {
+    if (!onDraftChange) return;
+    if (!isAdding) {
+      onDraftChange(null);
+      return;
+    }
+    const cleanedBullets = (newExperience.bullets || [])
+      .map((bullet) => bullet.trim())
+      .filter(Boolean);
+    const hasContent = Boolean(
+      newExperience.company ||
+        newExperience.role ||
+        newExperience.location ||
+        newExperience.startDate ||
+        newExperience.endDate ||
+        cleanedBullets.length > 0
+    );
+    if (!hasContent) {
+      onDraftChange(null);
+      return;
+    }
+    onDraftChange({
+      ...newExperience,
+      bullets: cleanedBullets,
+    });
+  }, [isAdding, newExperience, onDraftChange]);
 
   const handleAdd = () => {
     if (newExperience.company && newExperience.role) {
-      addExperience(newExperience as Omit<Experience, 'id'>);
-      setNewExperience({
-        company: '',
-        role: '',
-        location: '',
-        startDate: '',
-        endDate: '',
-        current: false,
-        bullets: ['']
+      const cleanedBullets = (newExperience.bullets || [])
+        .map((bullet) => bullet.trim())
+        .filter(Boolean);
+      addExperience({
+        ...(newExperience as Omit<Experience, "id">),
+        bullets: cleanedBullets,
       });
+      onDraftChange?.(null);
+      setNewExperience({
+        company: "",
+        role: "",
+        location: "",
+        startDate: "",
+        endDate: "",
+        current: false,
+        bullets: [],
+      });
+      setStartMonth("");
+      setStartYear("");
+      setEndMonth("");
+      setEndYear("");
+      setUsedSuggestions([]);
       setIsAdding(false);
+    }
+  };
+
+  const handleAddBulletField = () => {
+    setNewExperience((prev) => ({
+      ...prev,
+      bullets: [...(prev.bullets || []), ""],
+    }));
+  };
+
+  const handleRemoveBullet = (index: number) => {
+    setNewExperience((prev) => {
+      const nextBullets = (prev.bullets || []).filter((_, idx) => idx !== index);
+      return {
+        ...prev,
+        bullets: nextBullets,
+      };
+    });
+  };
+
+  const handleApplySuggestion = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setNewExperience((prev) => {
+      const bullets = [...(prev.bullets || [])];
+      if (bullets.some((bullet) => bullet.trim().toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      const emptyIndex = bullets.findIndex((bullet) => !bullet.trim());
+      if (emptyIndex >= 0) {
+        bullets[emptyIndex] = trimmed;
+      } else {
+        bullets.push(trimmed);
+      }
+      return { ...prev, bullets };
+    });
+    setUsedSuggestions((prev) => {
+      const normalized = trimmed.toLowerCase();
+      if (prev.some((item) => item.toLowerCase() === normalized)) {
+        return prev;
+      }
+      return [...prev, trimmed];
+    });
+  };
+
+  const handleStartMonthChange = (value: string) => {
+    setStartMonth(value);
+    setNewExperience((prev) => ({
+      ...prev,
+      startDate: buildMonthYear(value, startYear),
+    }));
+  };
+
+  const handleStartYearChange = (value: string) => {
+    setStartYear(value);
+    setNewExperience((prev) => ({
+      ...prev,
+      startDate: buildMonthYear(startMonth, value),
+    }));
+  };
+
+  const handleEndMonthChange = (value: string) => {
+    setEndMonth(value);
+    setNewExperience((prev) => ({
+      ...prev,
+      endDate: buildMonthYear(value, endYear),
+    }));
+  };
+
+  const handleEndYearChange = (value: string) => {
+    setEndYear(value);
+    setNewExperience((prev) => ({
+      ...prev,
+      endDate: buildMonthYear(endMonth, value),
+    }));
+  };
+
+  const handleCurrentChange = (checked: boolean) => {
+    setNewExperience((prev) => ({
+      ...prev,
+      current: checked,
+      endDate: checked ? "" : prev.endDate,
+    }));
+    if (checked) {
+      setEndMonth("");
+      setEndYear("");
     }
   };
 
@@ -524,112 +901,446 @@ function ExperienceSection() {
 
       {isAdding && (
         <Card className="border-purple-200 dark:border-purple-800">
-          <CardContent className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <CardContent className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Job Title</Label>
+                <Combobox
+                  options={jobTitleOptions}
+                  value={newExperience.role || ""}
+                  onChange={(value) => setNewExperience({ ...newExperience, role: value })}
+                  placeholder="Select or type a job title"
+                  searchPlaceholder="Search job titles"
+                  allowCustom
+                  showOtherOption
+                  otherLabel="Other (type your own)"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Choose from common roles or type your own.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Company Name</Label>
+                <Combobox
+                  options={companyOptions}
+                  value={newExperience.company || ""}
+                  onChange={(value) => setNewExperience({ ...newExperience, company: value })}
+                  placeholder="Select or type a company"
+                  searchPlaceholder="Search companies"
+                  allowCustom
+                  showOtherOption
+                  otherLabel="Other (type your own)"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Includes major Pakistani and global companies.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Location</Label>
               <Input
-                placeholder="Company Name"
-                value={newExperience.company}
-                onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
-              />
-              <Input
-                placeholder="Job Title"
-                value={newExperience.role}
-                onChange={(e) => setNewExperience({ ...newExperience, role: e.target.value })}
+                placeholder="e.g. Lahore, Punjab, Pakistan (Remote)"
+                value={newExperience.location}
+                onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
               />
             </div>
-            <Input
-              placeholder="Location"
-              value={newExperience.location}
-              onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                placeholder="Start Date (e.g., Jan 2020)"
-                value={newExperience.startDate}
-                onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
-              />
-              <Input
-                placeholder="End Date (e.g., Dec 2022)"
-                value={newExperience.endDate}
-                onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
-                disabled={newExperience.current}
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={startMonth || undefined} onValueChange={handleStartMonthChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTH_OPTIONS.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={startYear || undefined} onValueChange={handleStartYearChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={endMonth || undefined}
+                    onValueChange={handleEndMonthChange}
+                    disabled={newExperience.current}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTH_OPTIONS.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={endYear || undefined}
+                    onValueChange={handleEndYearChange}
+                    disabled={newExperience.current}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
+
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={newExperience.current}
-                onChange={(e) => setNewExperience({ ...newExperience, current: e.target.checked })}
+                onChange={(e) => handleCurrentChange(e.target.checked)}
                 className="rounded"
               />
-              <label className="text-sm text-gray-600 dark:text-gray-400">I currently work here</label>
+              <label className="text-sm text-gray-600 dark:text-gray-400">
+                I currently work here
+              </label>
             </div>
-            <Textarea
-              placeholder="Job description and achievements..."
-              value={newExperience.bullets?.[0] || ''}
-              onChange={(e) => setNewExperience({ ...newExperience, bullets: [e.target.value] })}
-              rows={3}
-            />
+
+            <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Description Builder
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Suggestions update automatically based on the job title and description.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-6">
+                <div className="space-y-4">
+                  <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                      Recommended Points
+                    </p>
+                    <div className="mt-2 space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {availableSuggestedBullets.length === 0 ? (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {newExperience.role
+                            ? "Suggestions will appear as you add details."
+                            : "Enter a job title to see suggestions."}
+                        </p>
+                      ) : (
+                        availableSuggestedBullets.map((bullet, idx) => (
+                          <div
+                            key={`${bullet}-${idx}`}
+                            className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 p-2"
+                          >
+                            <Button
+                              variant="outline"
+                              size="icon-sm"
+                              type="button"
+                              onClick={() => handleApplySuggestion(bullet)}
+                              className="shrink-0"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+                              {bullet}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Job description and achievements</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={handleAddBulletField}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Bullet
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {newExperience.bullets && newExperience.bullets.length > 0 ? (
+                      newExperience.bullets.map((bullet, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Textarea
+                            placeholder="Describe your achievement..."
+                            value={bullet}
+                            onChange={(e) => {
+                              const nextBullets = [...(newExperience.bullets || [])];
+                              nextBullets[idx] = e.target.value;
+                              setNewExperience({ ...newExperience, bullets: nextBullets });
+                            }}
+                            rows={2}
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            type="button"
+                            onClick={() => handleRemoveBullet(idx)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        No bullets yet. Add one or choose a suggested point.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Experience</Button>
-              <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAdding(false);
+                  onDraftChange?.(null);
+                }}
+              >
+                Cancel
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {cvData.experiences.map((exp) => (
-        <Card key={exp.id}>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">{exp.role}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {exp.company} - {exp.location}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
-                  {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeExperience(exp.id)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-2">
-              {exp.bullets.map((bullet, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <Textarea
-                    value={bullet}
-                    onChange={(e) => {
-                      const newBullets = [...exp.bullets];
-                      newBullets[idx] = e.target.value;
-                      updateExperience(exp.id, { bullets: newBullets });
-                    }}
-                    placeholder="Describe your achievement..."
-                    rows={2}
-                    className="flex-1"
-                  />
+      {cvData.experiences.map((exp) => {
+        const isEditing = Boolean(editingExperiences[exp.id]);
+        return (
+          <Card key={exp.id}>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{exp.role}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {exp.company} - {exp.location}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                    {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleExperienceEdit(exp.id)}
+                  >
+                    {isEditing ? "Close" : "Edit"}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => rewriteBulletAI(exp.id, idx)}
-                    disabled={isLoading}
-                    className="text-purple-600 hover:text-purple-700"
+                    onClick={() => removeExperience(exp.id)}
+                    className="text-red-600 hover:text-red-700"
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              </div>
+
+              {isEditing && (
+                <div className="mb-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label>Job Title</Label>
+                      <Input
+                        value={exp.role}
+                        onChange={(e) => updateExperience(exp.id, { role: e.target.value })}
+                        placeholder="Job Title"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Company</Label>
+                      <Input
+                        value={exp.company}
+                        onChange={(e) => updateExperience(exp.id, { company: e.target.value })}
+                        placeholder="Company"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label>Location</Label>
+                      <Input
+                        value={exp.location}
+                        onChange={(e) => updateExperience(exp.id, { location: e.target.value })}
+                        placeholder="Location"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Start Date</Label>
+                      <Input
+                        value={exp.startDate}
+                        onChange={(e) => updateExperience(exp.id, { startDate: e.target.value })}
+                        placeholder="Start Date"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label>End Date</Label>
+                      <Input
+                        value={exp.endDate}
+                        onChange={(e) => updateExperience(exp.id, { endDate: e.target.value })}
+                        placeholder="End Date"
+                        disabled={exp.current}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pt-6">
+                      <input
+                        type="checkbox"
+                        checked={exp.current}
+                        onChange={(e) =>
+                          updateExperience(exp.id, {
+                            current: e.target.checked,
+                            endDate: e.target.checked ? "" : exp.endDate,
+                          })
+                        }
+                        className="rounded"
+                      />
+                      <Label className="text-sm text-gray-600 dark:text-gray-400">
+                        I currently work here
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                          Recommended Points
+                        </h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Suggestions update based on the job title above.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        onClick={() => handleAddExistingBullet(exp)}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Bullet
+                      </Button>
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {getExistingSuggestions(exp).length === 0 ? (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+                          {exp.role
+                            ? "Generating relevant suggestions..."
+                            : "Enter a job title to see suggestions."}
+                        </p>
+                      ) : (
+                        getExistingSuggestions(exp).map((bullet, idx) => (
+                          <div
+                            key={`${exp.id}-suggestion-${idx}`}
+                            className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 p-2"
+                          >
+                            <Button
+                              variant="outline"
+                              size="icon-sm"
+                              type="button"
+                              onClick={() => applyExistingSuggestion(exp, bullet)}
+                              className="shrink-0"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+                              {bullet}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                {isEditing && (
+                  <div className="flex items-center justify-between">
+                    <Label>Job description and achievements</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => handleAddExistingBullet(exp)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Bullet
+                    </Button>
+                  </div>
+                )}
+                {exp.bullets.map((bullet, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <Textarea
+                      value={bullet}
+                      onChange={(e) => {
+                        const newBullets = [...exp.bullets];
+                        newBullets[idx] = e.target.value;
+                        updateExperience(exp.id, { bullets: newBullets });
+                      }}
+                      placeholder="Describe your achievement..."
+                      rows={2}
+                      className="flex-1"
+                    />
+                    {isEditing && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        onClick={() => handleRemoveExistingBullet(exp, idx)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </motion.div>
   );
 }
@@ -784,10 +1495,59 @@ function EducationSection() {
   );
 }
 
-function SkillsSection() {
-  const { cvData, addSkillGroup, updateSkillGroup, removeSkillGroup } = useCV();
+function SkillsSection({
+  onDraftChange,
+  experienceSource,
+}: {
+  onDraftChange?: (draft: Partial<SkillGroup> | null) => void;
+  experienceSource?: Experience[];
+}) {
+  const { cvData, addSkillGroup, updateSkillGroup, removeSkillGroup, suggestSkillsAI } = useCV();
   const [isAdding, setIsAdding] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', skills: '' });
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [editingSkillGroups, setEditingSkillGroups] = useState<Record<string, boolean>>({});
+  const [skillDrafts, setSkillDrafts] = useState<Record<string, string>>({});
+  const [existingSkillSuggestions, setExistingSkillSuggestions] = useState<Record<string, string[]>>({});
+  const [existingSkillKeys, setExistingSkillKeys] = useState<Record<string, string>>({});
+
+  const experiencesForSuggestions = experienceSource || cvData.experiences;
+
+  const parsedSkills = useMemo(
+    () =>
+      newGroup.skills
+        .split(',')
+        .map((skill) => skill.trim())
+        .filter(Boolean),
+    [newGroup.skills]
+  );
+
+  const availableSuggestions = useMemo(() => {
+    const existing = new Set(parsedSkills.map((skill) => skill.toLowerCase()));
+    const unique = aiSuggestions.filter(
+      (skill, index, arr) =>
+        arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+    );
+    return unique.filter((skill) => !existing.has(skill.toLowerCase())).slice(0, 24);
+  }, [aiSuggestions, parsedSkills]);
+
+  useEffect(() => {
+    if (!onDraftChange) return;
+    if (!isAdding) {
+      onDraftChange(null);
+      return;
+    }
+    const skills = newGroup.skills
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    const name = newGroup.name.trim();
+    if (!name && skills.length === 0) {
+      onDraftChange(null);
+      return;
+    }
+    onDraftChange({ name, skills });
+  }, [isAdding, newGroup, onDraftChange]);
 
   const handleAdd = () => {
     if (newGroup.name && newGroup.skills) {
@@ -795,9 +1555,110 @@ function SkillsSection() {
         name: newGroup.name,
         skills: newGroup.skills.split(',').map(s => s.trim()).filter(s => s)
       });
+      onDraftChange?.(null);
       setNewGroup({ name: '', skills: '' });
+      setAiSuggestions([]);
       setIsAdding(false);
     }
+  };
+
+  const startSkillEdit = (group: SkillGroup) => {
+    setEditingSkillGroups(() => {
+      const next: Record<string, boolean> = {};
+      cvData.skills.forEach((item) => {
+        next[item.id] = item.id === group.id;
+      });
+      return next;
+    });
+    setSkillDrafts((prev) => ({ ...prev, [group.id]: group.skills.join(", ") }));
+  };
+
+  const cancelSkillEdit = (id: string) => {
+    setEditingSkillGroups((prev) => ({ ...prev, [id]: false }));
+    setSkillDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const saveSkillEdit = (id: string) => {
+    const draft = (skillDrafts[id] || "").trim();
+    const skills = draft
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    updateSkillGroup(id, { skills });
+    setEditingSkillGroups((prev) => ({ ...prev, [id]: false }));
+    setSkillDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!isAdding) {
+      setAiSuggestions([]);
+      return;
+    }
+    const experienceText = experiencesForSuggestions
+      .map((exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`)
+      .join(" ")
+      .trim();
+    const context = [newGroup.name, newGroup.skills, experienceText].join(" ").trim();
+    if (!cvData.basics.title && !context) {
+      setAiSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const result = await suggestSkillsAI(cvData.basics.title, context);
+      const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+      const nextAi = combined.filter(
+        (skill, index, arr) =>
+          arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+      );
+      setAiSuggestions(nextAi.slice(0, 24));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isAdding, newGroup.name, newGroup.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
+
+  useEffect(() => {
+    const activeId = Object.keys(editingSkillGroups).find((id) => editingSkillGroups[id]);
+    if (!activeId) return;
+    const group = cvData.skills.find((item) => item.id === activeId);
+    if (!group) return;
+    const experienceText = experiencesForSuggestions
+      .map((exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`)
+      .join(" ")
+      .trim();
+    const key = `${group.name}|${group.skills.join(",")}|${experienceText}`;
+    if (existingSkillKeys[activeId] === key) return;
+    const timer = setTimeout(async () => {
+      const result = await suggestSkillsAI(
+        cvData.basics.title,
+        `${group.name} ${group.skills.join(" ")} ${experienceText}`
+      );
+      const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+      const nextAi = combined.filter(
+        (skill, index, arr) =>
+          arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+      );
+      setExistingSkillSuggestions((prev) => ({ ...prev, [activeId]: nextAi.slice(0, 24) }));
+      setExistingSkillKeys((prev) => ({ ...prev, [activeId]: key }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [editingSkillGroups, cvData.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
+
+  const handleAddSkillSuggestion = (skill: string) => {
+    const existing = new Set(parsedSkills.map((item) => item.toLowerCase()));
+    if (existing.has(skill.toLowerCase())) return;
+    const nextSkills = [...parsedSkills, skill];
+    setNewGroup((prev) => ({ ...prev, skills: nextSkills.join(", ") }));
   };
 
   return (
@@ -825,6 +1686,32 @@ function SkillsSection() {
       {isAdding && (
         <Card className="border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                Suggested Skills
+              </p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Suggestions update automatically. Click to add.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {availableSuggestions.length === 0 ? (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Add details to see suggestions.
+                </p>
+              ) : (
+                availableSuggestions.map((skill) => (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => handleAddSkillSuggestion(skill)}
+                    className="rounded-full border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition"
+                  >
+                    {skill}
+                  </button>
+                ))
+              )}
+            </div>
             <Input
               placeholder="Category Name (e.g., Programming Languages)"
               value={newGroup.name}
@@ -838,7 +1725,15 @@ function SkillsSection() {
             />
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Skills</Button>
-              <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAdding(false);
+                  onDraftChange?.(null);
+                }}
+              >
+                Cancel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -854,25 +1749,90 @@ function SkillsSection() {
                 className="font-semibold max-w-xs"
                 placeholder="Category Name"
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeSkillGroup(group.id)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {group.skills.map((skill, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    editingSkillGroups[group.id]
+                      ? cancelSkillEdit(group.id)
+                      : startSkillEdit(group)
+                  }
                 >
-                  {skill}
-                </span>
-              ))}
+                  {editingSkillGroups[group.id] ? "Close" : "Edit Skills"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeSkillGroup(group.id)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
+            {editingSkillGroups[group.id] ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={skillDrafts[group.id] ?? group.skills.join(", ")}
+                  onChange={(e) =>
+                    setSkillDrafts((prev) => ({ ...prev, [group.id]: e.target.value }))
+                  }
+                  rows={3}
+                  placeholder="Enter skills separated by commas"
+                />
+                <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                    Suggested Skills
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(existingSkillSuggestions[group.id] || []).length === 0 ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Add details to see suggestions.
+                      </p>
+                    ) : (
+                      (existingSkillSuggestions[group.id] || []).map((skill) => (
+                        <button
+                          key={`${group.id}-${skill}`}
+                          type="button"
+                          onClick={() => {
+                            const current = (skillDrafts[group.id] ?? group.skills.join(", "))
+                              .split(",")
+                              .map((item) => item.trim())
+                              .filter(Boolean);
+                            if (current.some((item) => item.toLowerCase() === skill.toLowerCase())) {
+                              return;
+                            }
+                            const next = [...current, skill].join(", ");
+                            setSkillDrafts((prev) => ({ ...prev, [group.id]: next }));
+                          }}
+                          className="rounded-full border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition"
+                        >
+                          {skill}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={() => saveSkillEdit(group.id)}>Save</Button>
+                  <Button variant="outline" onClick={() => cancelSkillEdit(group.id)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {group.skills.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}

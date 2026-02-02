@@ -24,7 +24,7 @@ export default async function SharedResumePage({ params }: SharedResumePageProps
     },
   });
 
-  if (!resume || !resume.isPublic || resume.versions.length === 0) {
+  if (!resume || resume.versions.length === 0) {
     notFound();
   }
 

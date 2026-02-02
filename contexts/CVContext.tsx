@@ -58,8 +58,9 @@ interface CVContextType {
   updateStructure: (structure: import("@/types").SectionConfig[]) => void;
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
-  extractSkillsAI: (text: string) => Promise<string[]>;
-  tailorToJobAI: (jobDescription: string) => Promise<unknown>;
+  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string>;
+  suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
+  suggestResponsibilitiesAI: (jobTitle: string, description?: string) => Promise<string[]>;
   generatePDF?: (templateId: string) => Promise<void>;
   importedData: ResumeData | null;
   setImportedData: (data: ResumeData | null) => void;
@@ -510,6 +511,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const notifyAiLimit = useCallback(() => {
+    toast.error("Free AI limit reached. Redirecting to pricing...");
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        window.location.href = "/pricing";
+      }, 1200);
+    }
+  }, []);
+
   const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
     const response = await fetch(`/api/ai/${path}`, {
       method: "POST",
@@ -525,18 +535,29 @@ export function CVProvider({ children }: { children: ReactNode }) {
         data && typeof data === "object" && "error" in data && typeof data.error === "string"
           ? data.error
           : "AI request failed";
+      if (
+        response.status === 429 ||
+        response.status === 402 ||
+        /quota|limit|resource exhausted|billing|payment/i.test(message)
+      ) {
+        notifyAiLimit();
+      }
       throw new Error(message);
     }
     return data;
-  }, []);
+  }, [notifyAiLimit]);
 
   const rewriteBulletAI = useCallback(
     async (experienceId: string, bulletIndex: number) => {
-      setIsLoading(true);
       try {
         const experience = cvData.experiences.find((exp) => exp.id === experienceId);
         if (!experience) return;
-        const bullet = experience.bullets[bulletIndex];
+        const bullet = (experience.bullets[bulletIndex] || "").trim();
+        if (!bullet) {
+          toast.info("Add text to the bullet before using AI.");
+          return;
+        }
+        setIsLoading(true);
         const context = `Role: ${experience.role} at ${experience.company}`;
         const result = await callAI("rewrite", { bullet, context });
         const rewritten = result.rewritten as string;
@@ -583,17 +604,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
     [cvData, callAI]
   );
 
-  const extractSkillsAI = useCallback(
-    async (text: string) => {
+  const suggestSummaryAI = useCallback(
+    async (data: ResumeData, targetRole?: string) => {
       setIsLoading(true);
       try {
-        const result = await callAI("skills", { text });
-        return (result.skills as string[]) || [];
+        const result: any = await callAI("summary", { resumeData: data, targetRole });
+        return typeof result?.summary === "string" ? result.summary : "";
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
-        toast.error(message);
-        console.error("Error extracting skills:", error);
-        return [];
+        console.error("Error suggesting summary:", error);
+        return "";
       } finally {
         setIsLoading(false);
       }
@@ -601,30 +620,36 @@ export function CVProvider({ children }: { children: ReactNode }) {
     [callAI]
   );
 
-  const tailorToJobAI = useCallback(
-    async (jobDescription: string) => {
+  const suggestSkillsAI = useCallback(
+    async (jobTitle: string, description?: string) => {
       setIsLoading(true);
       try {
-        const result = await callAI("tailor", {
-          resumeData: cvData,
-          jobDescription,
-        });
-        return result;
+        const result: any = await callAI("suggestions/skills", { jobTitle, description });
+        return result || { hardSkills: [], softSkills: [] };
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
-        toast.error(message);
-        console.error("Error tailoring CV:", error);
-        return {
-          matchScore: 0,
-          matchedKeywords: [],
-          missingKeywords: [],
-          suggestions: [],
-        };
+        console.error("Error suggesting skills:", error);
+        return { hardSkills: [], softSkills: [] };
       } finally {
         setIsLoading(false);
       }
     },
-    [cvData, callAI]
+    [callAI]
+  );
+
+  const suggestResponsibilitiesAI = useCallback(
+    async (jobTitle: string, description?: string) => {
+      setIsLoading(true);
+      try {
+        const result: any = await callAI("suggestions/responsibilities", { jobTitle, description });
+        return (result.responsibilities as string[]) || [];
+      } catch (error) {
+        console.error("Error suggesting responsibilities:", error);
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [callAI]
   );
 
   const value = useMemo(
@@ -659,8 +684,9 @@ export function CVProvider({ children }: { children: ReactNode }) {
       updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
-      extractSkillsAI,
-      tailorToJobAI,
+      suggestSummaryAI,
+      suggestSkillsAI,
+      suggestResponsibilitiesAI,
       importedData,
       setImportedData,
     }),
@@ -696,8 +722,9 @@ export function CVProvider({ children }: { children: ReactNode }) {
       updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
-      extractSkillsAI,
-      tailorToJobAI,
+      suggestSummaryAI,
+      suggestSkillsAI,
+      suggestResponsibilitiesAI,
       setImportedData,
     ]
   );

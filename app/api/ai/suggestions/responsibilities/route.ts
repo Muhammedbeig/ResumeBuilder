@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const jobTitle = String(body?.jobTitle || "").trim();
-  const company = String(body?.company || "").trim();
+  const description = String(body?.description || "").trim();
 
   if (!jobTitle) {
     return NextResponse.json({ error: "Job title is required" }, { status: 400 });
@@ -18,7 +16,7 @@ export async function POST(request: Request) {
     const prompt = `You are a professional resume writer. Generate a list of impactful resume bullet points for the following role.
 
 Role: ${jobTitle}
-${company ? `Company: ${company}` : ""}
+${description ? `Description/Notes: ${description}` : ""}
 
 Rules:
 - Generate 5-7 bullet points.
@@ -38,15 +36,24 @@ Format:
     const response = await result.response;
     const text = response.text();
     
-    let data = { responsibilities: [] };
+    let data = { responsibilities: [] as string[] };
     try {
       data = extractJson(text);
     } catch (e) {
       console.error("Failed to parse AI response", text);
-       return NextResponse.json({ error: "Failed to parse AI response" }, { status: 502 });
+      return NextResponse.json({ responsibilities: [] });
     }
 
-    return NextResponse.json(data);
+    const cleaned = Array.isArray(data.responsibilities)
+      ? data.responsibilities
+          .map((item) => (typeof item === "string" ? item.trim() : ""))
+          .filter((item) => item.length > 0)
+      : [];
+    if (cleaned.length === 0) {
+      return NextResponse.json({ responsibilities: [] });
+    }
+
+    return NextResponse.json({ responsibilities: cleaned });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });

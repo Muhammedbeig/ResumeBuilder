@@ -8,15 +8,15 @@ const footerLinks = {
     { name: 'ATS Checker', href: '/ats-checker' },
   ],
   company: [
-    { name: 'About Us', href: '#how-it-works' },
-    { name: 'Careers', href: '#features' },
-    { name: 'Blog', href: '#faq' },
-    { name: 'Press', href: '#pricing' },
+    { name: 'About Us', href: '/about' },
+    { name: 'Careers', href: '/about/careers' },
+    { name: 'Blog', href: '/career-blog' },
+    { name: 'Press', href: '/about/press' },
   ],
   resources: [
-    { name: 'Help Center', href: '#faq' },
+    { name: 'Help Center', href: '/#faq' },
     { name: 'Resume Examples', href: '/templates' },
-    { name: 'Career Advice', href: '#how-it-works' },
+    { name: 'Career Advice', href: '/career-blog/category/career-advice' },
     { name: 'API Docs', href: '#' },
   ],
   legal: [

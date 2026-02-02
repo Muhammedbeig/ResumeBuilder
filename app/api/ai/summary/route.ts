@@ -15,10 +15,14 @@ export async function POST(request: Request) {
 
   try {
     const model = getGeminiModel();
-    const experiences = resumeData.experiences
+    const experienceSummaries = resumeData.experiences
       .slice(0, 3)
-      .map((exp) => `${exp.role} at ${exp.company}`)
-      .join(", ");
+      .map((exp) => {
+        const bullets = exp.bullets?.filter((bullet) => bullet.trim()).slice(0, 3) || [];
+        const bulletText = bullets.length > 0 ? ` Highlights: ${bullets.join(" | ")}` : "";
+        return `${exp.role} at ${exp.company}.${bulletText}`;
+      })
+      .join("\n");
     const skills = resumeData.skills
       .flatMap((group) => group.skills)
       .slice(0, 8)
@@ -29,7 +33,7 @@ export async function POST(request: Request) {
 Background:
 - Name: ${resumeData.basics.name}
 - Title: ${resumeData.basics.title}
-- Recent Experience: ${experiences}
+- Recent Experience:\n${experienceSummaries || "None provided"}
 - Key Skills: ${skills}
 ${targetRole ? `- Target Role: ${targetRole}` : ""}
 

@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
 
@@ -34,16 +32,26 @@ Format:
     const response = await result.response;
     const text = response.text();
     
-    let suggestions = { hardSkills: [], softSkills: [] };
+    let suggestions: any = { hardSkills: [], softSkills: [] };
     try {
       suggestions = extractJson(text);
     } catch (e) {
       console.error("Failed to parse AI response", text);
-      // Fallback if JSON parsing fails (simple split if AI returns plain text, but we asked for JSON)
-      return NextResponse.json({ error: "Failed to parse AI response" }, { status: 502 });
+      return NextResponse.json({ hardSkills: [], softSkills: [] });
     }
 
-    return NextResponse.json(suggestions);
+    const hardSkills = Array.isArray(suggestions.hardSkills)
+      ? (suggestions.hardSkills as unknown[])
+          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+          .filter((item) => item.length > 0)
+      : [];
+    const softSkills = Array.isArray(suggestions.softSkills)
+      ? (suggestions.softSkills as unknown[])
+          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+          .filter((item) => item.length > 0)
+      : [];
+
+    return NextResponse.json({ hardSkills, softSkills });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });

@@ -280,29 +280,19 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     toast.info("AI features are disabled in this phase.");
   }, []);
 
-  const extractSkillsAI = useCallback(async (text: string) => {
-    toast.info("AI features are disabled in this phase.");
-    return [];
-  }, []);
-
   const suggestSkillsAI = useCallback(async (jobTitle: string, description?: string) => {
     toast.info("AI features are disabled in this phase.");
     return { hardSkills: [], softSkills: [] };
   }, []);
 
-  const suggestResponsibilitiesAI = useCallback(async (jobTitle: string, company?: string) => {
+  const suggestResponsibilitiesAI = useCallback(async (jobTitle: string, description?: string) => {
     toast.info("AI features are disabled in this phase.");
     return [];
   }, []);
 
-  const generateJobDescriptionAI = useCallback(async (jobTitle: string, company?: string) => {
+  const suggestSummaryAI = useCallback(async (data: ResumeData, targetRole?: string) => {
     toast.info("AI features are disabled in this phase.");
     return "";
-  }, []);
-
-  const tailorToJobAI = useCallback(async (jobDescription: string) => {
-    toast.info("AI features are disabled in this phase.");
-    return {};
   }, []);
 
   // New PDF Generation using our HTML-to-PDF service
@@ -374,11 +364,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
-      extractSkillsAI,
+      suggestSummaryAI,
       suggestSkillsAI,
       suggestResponsibilitiesAI,
-      generateJobDescriptionAI,
-      tailorToJobAI,
       generatePDF, 
       importedData,
       setImportedData,
@@ -414,11 +402,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       removeCertification,
       rewriteBulletAI,
       generateSummaryAI,
-      extractSkillsAI,
+      suggestSummaryAI,
       suggestSkillsAI,
       suggestResponsibilitiesAI,
-      generateJobDescriptionAI,
-      tailorToJobAI,
       generatePDF,
       setImportedData,
     ]

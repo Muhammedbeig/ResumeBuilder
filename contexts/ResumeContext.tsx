@@ -57,11 +57,9 @@ interface ResumeContextType {
   updateStructure: (structure: import("@/types").SectionConfig[]) => void;
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
-  extractSkillsAI: (text: string) => Promise<string[]>;
   suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
-  suggestResponsibilitiesAI: (jobTitle: string, company?: string) => Promise<string[]>;
-  generateJobDescriptionAI: (jobTitle: string, company?: string) => Promise<string>;
-  tailorToJobAI: (jobDescription: string) => Promise<unknown>;
+  suggestResponsibilitiesAI: (jobTitle: string, description?: string) => Promise<string[]>;
+  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string>;
   generatePDF?: (templateId: string) => Promise<void>;
   importedData: ResumeData | null;
   setImportedData: (data: ResumeData | null) => void;
@@ -560,6 +558,15 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const notifyAiLimit = useCallback(() => {
+    toast.error("Free AI limit reached. Redirecting to pricing...");
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        window.location.href = "/pricing";
+      }, 1200);
+    }
+  }, []);
+
   const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
     const response = await fetch(`/api/ai/${path}`, {
       method: "POST",
@@ -575,18 +582,29 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         data && typeof data === "object" && "error" in data && typeof data.error === "string"
           ? data.error
           : "AI request failed";
+      if (
+        response.status === 429 ||
+        response.status === 402 ||
+        /quota|limit|resource exhausted|billing|payment/i.test(message)
+      ) {
+        notifyAiLimit();
+      }
       throw new Error(message);
     }
     return data;
-  }, []);
+  }, [notifyAiLimit]);
 
   const rewriteBulletAI = useCallback(
     async (experienceId: string, bulletIndex: number) => {
-      setIsLoading(true);
       try {
         const experience = resumeData.experiences.find((exp) => exp.id === experienceId);
         if (!experience) return;
-        const bullet = experience.bullets[bulletIndex];
+        const bullet = (experience.bullets[bulletIndex] || "").trim();
+        if (!bullet) {
+          toast.info("Add text to the bullet before using AI.");
+          return;
+        }
+        setIsLoading(true);
         const context = `Role: ${experience.role} at ${experience.company}`;
         const result = await callAI("rewrite", { bullet, context });
         const rewritten = result.rewritten as string;
@@ -633,24 +651,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     [resumeData, callAI]
   );
 
-  const extractSkillsAI = useCallback(
-    async (text: string) => {
-      setIsLoading(true);
-      try {
-        const result = await callAI("skills", { text });
-        return (result.skills as string[]) || [];
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
-        toast.error(message);
-        console.error("Error extracting skills:", error);
-        return [];
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [callAI]
-  );
-
   const suggestSkillsAI = useCallback(
     async (jobTitle: string, description?: string) => {
       setIsLoading(true);
@@ -668,10 +668,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   );
 
   const suggestResponsibilitiesAI = useCallback(
-    async (jobTitle: string, company?: string) => {
+    async (jobTitle: string, description?: string) => {
       setIsLoading(true);
       try {
-        const result: any = await callAI("suggestions/responsibilities", { jobTitle, company });
+        const result: any = await callAI("suggestions/responsibilities", { jobTitle, description });
         return (result.responsibilities as string[]) || [];
       } catch (error) {
         console.error("Error suggesting responsibilities:", error);
@@ -683,46 +683,20 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     [callAI]
   );
 
-  const generateJobDescriptionAI = useCallback(
-    async (jobTitle: string, company?: string) => {
+  const suggestSummaryAI = useCallback(
+    async (data: ResumeData, targetRole?: string) => {
       setIsLoading(true);
       try {
-        const result: any = await callAI("generate/description", { jobTitle, company });
-        return (result.description as string) || "";
+        const result: any = await callAI("summary", { resumeData: data, targetRole });
+        return typeof result?.summary === "string" ? result.summary : "";
       } catch (error) {
-        console.error("Error generating description:", error);
+        console.error("Error suggesting summary:", error);
         return "";
       } finally {
         setIsLoading(false);
       }
     },
     [callAI]
-  );
-
-  const tailorToJobAI = useCallback(
-    async (jobDescription: string) => {
-      setIsLoading(true);
-      try {
-        const result = await callAI("tailor", {
-          resumeData,
-          jobDescription,
-        });
-        return result;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
-        toast.error(message);
-        console.error("Error tailoring resume:", error);
-        return {
-          matchScore: 0,
-          matchedKeywords: [],
-          missingKeywords: [],
-          suggestions: [],
-        };
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [resumeData, callAI]
   );
 
   const value = useMemo(
@@ -759,11 +733,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
-      extractSkillsAI,
+      suggestSummaryAI,
       suggestSkillsAI,
       suggestResponsibilitiesAI,
-      generateJobDescriptionAI,
-      tailorToJobAI,
       importedData,
       setImportedData,
     }),
@@ -798,11 +770,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       updateStructure,
       rewriteBulletAI,
       generateSummaryAI,
-      extractSkillsAI,
+      suggestSummaryAI,
       suggestSkillsAI,
       suggestResponsibilitiesAI,
-      generateJobDescriptionAI,
-      tailorToJobAI,
       setImportedData,
       syncGuestData,
     ]
