@@ -46,6 +46,9 @@ export function DesignControls({
   defaultFontLabel,
   advancedFormattingEnabled,
   onAdvancedFormattingChange,
+  watermarkEnabled,
+  onWatermarkToggle,
+  watermarkLocked,
 }: DesignControlsProps) {
   const selectedFont = metadata?.fontFamily || "";
   const selectedFontSize = normalizeFontSizeValue(metadata?.fontSize);
