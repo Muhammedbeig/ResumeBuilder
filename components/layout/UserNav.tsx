@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { User, Settings, LogOut, Lock, User as UserIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Settings, LogOut, CreditCard, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 export function UserNav() {
+  const router = useRouter();
   const { data: session, update } = useSession();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newName, setNewName] = useState(session?.user?.name || "");
@@ -149,6 +151,24 @@ export function UserNav() {
                   <span>Profile Settings</span>
                 </DropdownMenuItem>
               </DialogTrigger>
+              <DropdownMenuItem
+                onClick={() => {
+                  window.location.href = `/api/stripe/portal?returnUrl=${encodeURIComponent(
+                    window.location.pathname
+                  )}`;
+                }}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Billing & Subscriptions</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/billing/receipts");
+                }}
+              >
+                <Receipt className="mr-2 h-4 w-4" />
+                <span>Receipts</span>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => signOut({ callbackUrl: "/" })}>

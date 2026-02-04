@@ -5,8 +5,19 @@ import Link from "next/link";
 import { FileText, FileCode, Mail, Upload, Sparkles, ChevronRight, Zap, Target, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { useSession } from "next-auth/react";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { useState } from "react";
 
 export default function ChooseBuilderPage() {
+  const { data: session } = useSession();
+  const { planChoice, isLoaded } = usePlanChoice();
+  const isAuthenticated = !!session?.user;
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
+  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+
   const builders = [
     {
       title: "Resume",
@@ -45,6 +56,11 @@ export default function ChooseBuilderPage() {
 
   return (
     <div className="min-h-screen pt-32 pb-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
+      <PlanChoiceModal
+        open={shouldShowPlanModal}
+        onOpenChange={setIsPlanModalOpen}
+        forceChoice={forcePlanChoice}
+      />
       {/* Background Decor */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]" />

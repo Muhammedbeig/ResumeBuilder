@@ -16,12 +16,13 @@ export default function StartCVPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const { setImportedData } = useCV();
-  const { planChoice } = usePlanChoice();
+  const { planChoice, isLoaded } = usePlanChoice();
   const [isUploading, setIsUploading] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   const isAuthenticated = !!session?.user;
-  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
+  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
 
   const openPlanModal = () => {
     if (!isAuthenticated) return;
@@ -116,7 +117,11 @@ export default function StartCVPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
-      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={shouldShowPlanModal}
+        onOpenChange={setIsPlanModalOpen}
+        forceChoice={forcePlanChoice}
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">

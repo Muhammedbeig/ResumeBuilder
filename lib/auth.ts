@@ -46,6 +46,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           subscription: (user.subscription as "free" | "pro" | "business") ?? "free",
+          subscriptionPlanId: user.subscriptionPlanId ?? null,
           hasPassword: true,
         };
       },
@@ -56,6 +57,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.subscription = user.subscription;
+        token.subscriptionPlanId = user.subscriptionPlanId ?? null;
         // Check if user has password (for OAuth users who haven't set one yet)
         if (user.hasPassword !== undefined) {
           token.hasPassword = user.hasPassword;
@@ -71,6 +73,7 @@ export const authOptions: NextAuthOptions = {
       if (trigger === "update" && session) {
         if (session.name) token.name = session.name;
         if (session.subscription) token.subscription = session.subscription;
+        if (session.subscriptionPlanId) token.subscriptionPlanId = session.subscriptionPlanId;
         if (session.user?.subscription) token.subscription = session.user.subscription;
       }
       
@@ -80,6 +83,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.subscription = token.subscription ?? "free";
+        session.user.subscriptionPlanId = token.subscriptionPlanId ?? null;
         session.user.hasPassword = token.hasPassword;
       }
       return session;

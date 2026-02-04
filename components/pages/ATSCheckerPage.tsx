@@ -38,11 +38,12 @@ export function ATSCheckerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
-  const { planChoice } = usePlanChoice();
+  const { planChoice, isLoaded } = usePlanChoice();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   const isAuthenticated = !!session?.user;
-  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
+  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
 
   const openPlanModal = () => {
     if (!isAuthenticated) return;
@@ -119,7 +120,11 @@ export function ATSCheckerPage() {
   if (analysis) {
     return (
       <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
-        <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
+        <PlanChoiceModal
+          open={shouldShowPlanModal}
+          onOpenChange={setIsPlanModalOpen}
+          forceChoice={forcePlanChoice}
+        />
         <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
                 <div>
@@ -302,7 +307,11 @@ export function ATSCheckerPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={shouldShowPlanModal}
+        onOpenChange={setIsPlanModalOpen}
+        forceChoice={forcePlanChoice}
+      />
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center space-y-4">
           <motion.h1 

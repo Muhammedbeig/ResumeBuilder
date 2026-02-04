@@ -5,11 +5,13 @@ declare module "next-auth" {
     user?: DefaultSession["user"] & {
       id: string;
       subscription?: "free" | "pro" | "business";
+      subscriptionPlanId?: string | null;
       hasPassword?: boolean;
     };
   }
 
   interface User {
     subscription?: "free" | "pro" | "business";
+    subscriptionPlanId?: string | null;
   }
 }

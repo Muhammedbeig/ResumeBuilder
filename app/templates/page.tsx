@@ -7,6 +7,9 @@ import { Sparkles, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { resumeTemplates } from '@/lib/resume-templates';
 import { previewResumeData } from '@/lib/resume-samples';
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { useSession } from "next-auth/react";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 
 function RescaleContainer({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,8 +55,20 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
 }
 
 export default function TemplatesPage() {
+  const { data: session } = useSession();
+  const { planChoice, isLoaded } = usePlanChoice();
+  const isAuthenticated = !!session?.user;
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
+  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+      <PlanChoiceModal
+        open={shouldShowPlanModal}
+        onOpenChange={setIsPlanModalOpen}
+        forceChoice={forcePlanChoice}
+      />
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
         <motion.div

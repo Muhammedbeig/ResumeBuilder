@@ -42,7 +42,8 @@ export function Navigation() {
     "/cover-letter",
     "/ats-checker",
     "/editor",
-    "/ai-resume-optimizer"
+    "/ai-resume-optimizer",
+    "/career-management"
   ];
 
   const isSimplified = simplifiedPaths.some(path => pathname?.startsWith(path));
@@ -99,6 +100,7 @@ export function Navigation() {
         { label: "Cover Letter Builder", href: "/cover-letter/start" },
         { label: "ATS Checker", href: "/ats-checker" },
         { label: "AI Resume Optimizer", href: "/ai-resume-optimizer" },
+        { label: "Career Management", href: "/career-management" },
         { label: "Cover Letter Templates", href: "/cover-letter/templates" },
       ],
     },

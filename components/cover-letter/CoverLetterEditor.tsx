@@ -54,6 +54,37 @@ export function CoverLetterEditor() {
     }
   }, [planChoice]);
 
+  const syncSubscription = async () => {
+    try {
+      const response = await fetch("/api/user/subscription");
+      if (!response.ok) return;
+      const data = await response.json();
+      if (updateSession) {
+        await updateSession({
+          subscription: data.subscription ?? "free",
+          subscriptionPlanId: data.subscriptionPlanId ?? null,
+        });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("stripe");
+    if (!status) return;
+    if (status === "success") {
+      setIsDownloadModalOpen(true);
+      syncSubscription();
+      toast.success("Payment successful.");
+    } else if (status === "cancel") {
+      toast.info("Payment canceled.");
+    }
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
+
   if (!currentCoverLetter) return null;
 
   const TemplateComponent = coverLetterTemplates.find(t => t.id === currentCoverLetter.template)?.component || coverLetterTemplates[0].component;
@@ -132,28 +163,13 @@ export function CoverLetterEditor() {
 
   const openDownloadModal = () => {
     if (!ensurePlanChosen()) return;
-    setIsDownloadModalOpen(true);
-  };
-
-  const handlePurchase = async () => {
-    if (!session?.user) {
-      toast.error("Please sign in to complete purchase");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
+    if (planChoice === "paid" && !hasSubscription) {
+      router.push(
+        `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
+      );
       return;
     }
-    try {
-      const response = await fetch("/api/user/upgrade", { method: "POST" });
-      if (!response.ok) {
-        throw new Error("Upgrade failed");
-      }
-      const data = await response.json();
-      if (updateSession) {
-        await updateSession({ subscription: data.subscription || "pro" });
-      }
-      toast.success("Purchase successful!");
-    } catch (error) {
-      toast.error("Purchase failed. Please try again.");
-    }
+    setIsDownloadModalOpen(true);
   };
 
   const handleSave = async () => {
@@ -190,7 +206,6 @@ export function CoverLetterEditor() {
         onOpenChange={setIsDownloadModalOpen}
         planChoice={planChoice}
         hasSubscription={!!hasSubscription}
-        onPurchase={handlePurchase}
       />
       <div className="flex h-full flex-col lg:flex-row overflow-hidden relative">
       {/* Editor Side (Left) */}

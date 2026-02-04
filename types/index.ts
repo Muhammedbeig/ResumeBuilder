@@ -155,6 +155,18 @@ export interface ExportJob {
   completedAt?: Date;
 }
 
+export interface MarketValueReport {
+  id: string;
+  userId: string;
+  resumeId?: string | null;
+  source: 'upload' | 'resume';
+  periodLabel: string;
+  reportJson: Record<string, unknown>;
+  resumeJson?: Record<string, unknown> | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CoverLetter {
   id: string;
   userId: string;

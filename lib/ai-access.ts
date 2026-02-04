@@ -20,3 +20,22 @@ export async function requirePaidAiAccess() {
 
   return null;
 }
+
+export async function requireAnnualAccess() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const isAnnual = session.user.subscriptionPlanId === "annual";
+  const isBusiness = session.user.subscription === "business";
+
+  if (!isAnnual && !isBusiness) {
+    return NextResponse.json(
+      { error: "Annual plan required for Career Management reports." },
+      { status: 402 }
+    );
+  }
+
+  return null;
+}

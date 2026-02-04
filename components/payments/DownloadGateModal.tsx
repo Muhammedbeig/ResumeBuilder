@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { APP_DOWNLOAD_URL } from "@/lib/app-links";
 import { createQrDataUrl } from "@/lib/qr";
 import type { PlanChoice } from "@/contexts/PlanChoiceContext";
-import { Crown, Lock, QrCode } from "lucide-react";
+import { Crown, QrCode } from "lucide-react";
 
 interface DownloadGateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   planChoice: PlanChoice | null;
   hasSubscription: boolean;
-  onPurchase?: () => Promise<void>;
 }
 
 export function DownloadGateModal({
@@ -21,9 +20,7 @@ export function DownloadGateModal({
   onOpenChange,
   planChoice,
   hasSubscription,
-  onPurchase,
 }: DownloadGateModalProps) {
-  const [isPurchasing, setIsPurchasing] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
   const isPaidSelected = planChoice === "paid";
@@ -48,21 +45,11 @@ export function DownloadGateModal({
     };
   }, [open, hasAccess]);
 
-  const handlePurchase = async () => {
-    if (!onPurchase) return;
-    setIsPurchasing(true);
-    try {
-      await onPurchase();
-    } finally {
-      setIsPurchasing(false);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl border-slate-800 bg-slate-950 text-white">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Download via Mobile App</DialogTitle>
+      <DialogContent className="max-w-6xl border-slate-800 bg-slate-950 text-white">
+        <DialogHeader className="text-center">
+          <DialogTitle className="text-2xl">Download via Mobile App</DialogTitle>
           <DialogDescription className="text-slate-300">
             {isPaidSelected
               ? "Complete your setup to unlock watermark-free downloads and access the mobile app."
@@ -70,56 +57,45 @@ export function DownloadGateModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-6 md:grid-cols-[1.3fr_1fr]">
-          <div className="space-y-4">
-            {isPaidSelected && (
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/80">
-                <Crown className="h-3.5 w-3.5" />
-                Paid Plan
+        <div className="space-y-6">
+          {!hasAccess && (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-slate-300">
+              Choose a paid plan to unlock mobile app downloads.
+            </div>
+          )}
+
+          {hasAccess && (
+            <div className="grid gap-6 md:grid-cols-[1.3fr_1fr]">
+              <div className="space-y-4">
+                {isPaidSelected && (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/80">
+                    <Crown className="h-3.5 w-3.5" />
+                    Paid Plan
+                  </div>
+                )}
+
+                {!isPaidSelected && (
+                  <p className="text-sm text-slate-300">
+                    Free plan downloads are delivered from the mobile app. Scan the QR or use the button
+                    to install the app.
+                  </p>
+                )}
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm text-slate-200">
+                    {isPaidSelected
+                      ? "Watermark removed. Download your file from the app."
+                      : "Download your file from the app."}
+                  </p>
+                  <Button asChild className="mt-4 w-full bg-white text-slate-900 hover:bg-white/90">
+                    <a href={APP_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                      Download the App
+                    </a>
+                  </Button>
+                </div>
               </div>
-            )}
 
-            {!isPaidSelected && (
-              <p className="text-sm text-slate-300">
-                Free plan downloads are delivered from the mobile app. Scan the QR or use the button
-                to install the app.
-              </p>
-            )}
-
-            {isPaidSelected && !hasSubscription && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm text-slate-200">
-                  Purchase to remove the watermark and unlock app downloads.
-                </p>
-                <Button
-                  onClick={handlePurchase}
-                  disabled={isPurchasing}
-                  className="mt-4 w-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
-                >
-                  {isPurchasing ? "Processing..." : "Purchase & Continue"}
-                </Button>
-              </div>
-            )}
-
-            {hasAccess && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm text-slate-200">
-                  {isPaidSelected
-                    ? "Watermark removed. Download your file from the app."
-                    : "Download your file from the app."}
-                </p>
-                <Button asChild className="mt-4 w-full bg-white text-slate-900 hover:bg-white/90">
-                  <a href={APP_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
-                    Download the App
-                  </a>
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-4">
-            {hasAccess ? (
-              <>
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-4">
                 <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/70">
                   <QrCode className="h-4 w-4" />
                   Scan to Download
@@ -135,22 +111,9 @@ export function DownloadGateModal({
                 <p className="mt-3 text-xs text-slate-300">
                   Open your camera and scan the code.
                 </p>
-              </>
-            ) : (
-              <>
-                <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/70">
-                  <Lock className="h-4 w-4" />
-                  Locked
-                </div>
-                <div className="flex h-44 w-44 items-center justify-center rounded-2xl border border-dashed border-white/30 bg-white/5">
-                  <Lock className="h-10 w-10 text-white/60" />
-                </div>
-                <p className="mt-3 text-xs text-slate-300">
-                  Complete purchase to unlock the QR code.
-                </p>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

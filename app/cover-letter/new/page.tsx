@@ -46,12 +46,13 @@ export default function NewCoverLetterPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { createCoverLetter, importedData } = useCoverLetter();
-  const { planChoice } = usePlanChoice();
+  const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Cover Letter");
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const isAuthenticated = !!session?.user;
-  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
+  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
 
   useEffect(() => {
     if (importedData?.personalInfo?.fullName) {
@@ -117,7 +118,11 @@ export default function NewCoverLetterPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
-      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={shouldShowPlanModal}
+        onOpenChange={setIsPlanModalOpen}
+        forceChoice={forcePlanChoice}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

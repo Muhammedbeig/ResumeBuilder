@@ -23,9 +23,12 @@ import {
   Plus,
   PenTool,
   CheckCheck,
-  File
+  File,
+  Link2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +47,7 @@ export default function AIResumeOptimizerPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const { createResume } = useResume();
-  const { planChoice } = usePlanChoice();
+  const { planChoice, isLoaded } = usePlanChoice();
   
   // State
   const [step, setStep] = useState(1);
@@ -53,6 +56,8 @@ export default function AIResumeOptimizerPage() {
   const [resumeText, setResumeText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState("");
+  const [jobUrl, setJobUrl] = useState("");
+  const [isJobUrlLoading, setIsJobUrlLoading] = useState(false);
   const [inputType, setInputType] = useState<"paste" | "upload">("paste");
   const [isUploading, setIsUploading] = useState(false);
   const [isKeywordsExpanded, setIsKeywordsExpanded] = useState(false);
@@ -76,7 +81,12 @@ export default function AIResumeOptimizerPage() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = !!session?.user;
-  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
+  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+  const hasJobUrlAccess =
+    session?.user?.subscription === "business" ||
+    session?.user?.subscriptionPlanId === "monthly" ||
+    session?.user?.subscriptionPlanId === "annual";
 
   const openPlanModal = () => setIsPlanModalOpen(true);
 
@@ -266,6 +276,59 @@ export default function AIResumeOptimizerPage() {
     }
   };
 
+  const handleFetchJobUrl = async () => {
+    if (!jobUrl.trim()) {
+      toast.error("Please enter a job URL");
+      return;
+    }
+
+    if (!session) {
+      toast.info("Please sign in to use Auto-Tailor from job URL", {
+        action: {
+          label: "Sign In",
+          onClick: () => router.push("/login?callbackUrl=/ai-resume-optimizer"),
+        },
+      });
+      router.push("/login?callbackUrl=/ai-resume-optimizer");
+      return;
+    }
+
+    if (!hasJobUrlAccess) {
+      toast.info("Auto-Tailor from job URL is available in Monthly and Annual plans.");
+      return;
+    }
+
+    setIsJobUrlLoading(true);
+    try {
+      const response = await fetch("/api/ai/job-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: jobUrl }),
+      });
+      if (response.status === 402) {
+        toast.info("Auto-Tailor from job URL is available in the Paid plan.");
+        openPlanModal();
+        return;
+      }
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to fetch job description");
+      }
+      const data = await response.json();
+      if (data?.text) {
+        setJobDescription(data.text);
+        toast.success("Job description extracted from URL");
+      } else {
+        throw new Error("No job description found");
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to fetch job description";
+      toast.error(msg);
+    } finally {
+      setIsJobUrlLoading(false);
+    }
+  };
+
   const handleApplySuggestion = (suggestionIndex: number) => {
     if (!parsedResume || !analysisResults) return;
     
@@ -399,7 +462,11 @@ export default function AIResumeOptimizerPage() {
 
   return (
     <>
-      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={shouldShowPlanModal}
+        onOpenChange={setIsPlanModalOpen}
+        forceChoice={forcePlanChoice}
+      />
       <div ref={containerRef} className="relative min-h-screen pt-24 pb-20 overflow-hidden bg-gray-50 dark:bg-gray-950 flex flex-col">
       
       {/* Magical Loading Overlay */}
@@ -581,6 +648,43 @@ export default function AIResumeOptimizerPage() {
                         </div>
                         </div>
                     </div>
+                    {hasJobUrlAccess && (
+                    <div className="mb-4 space-y-3">
+                        <Label htmlFor="job-url" className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Auto-Tailor from Job URL
+                        </Label>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <div className="relative flex-1">
+                            <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                            <Input
+                              id="job-url"
+                              placeholder="Paste job URL (LinkedIn, Indeed, Google Jobs, etc.)"
+                              className="pl-9"
+                              value={jobUrl}
+                              onChange={(e) => setJobUrl(e.target.value)}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={handleFetchJobUrl}
+                            disabled={isJobUrlLoading}
+                            className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
+                          >
+                            {isJobUrlLoading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Fetching
+                              </>
+                            ) : (
+                              "Fetch from URL"
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Works with most job boards. Paste any public job link to auto-extract the description.
+                        </p>
+                    </div>
+                    )}
                     <Textarea placeholder="Paste the job description here..." className="min-h-[300px] resize-none bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 focus:ring-purple-500" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} />
                     <div className="mt-4 flex justify-between text-xs text-gray-400">
                         <span>{jobDescription.length > 0 ? `${jobDescription.length} chars` : "No content yet"}</span>

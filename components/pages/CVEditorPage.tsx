@@ -61,6 +61,7 @@ import {
 import { GenericSectionManager } from "@/components/editor/GenericSectionManager";
 import { DesignControls } from "@/components/editor/DesignControls";
 import { RichTextarea } from "@/components/editor/RichTextarea";
+import { FormattingToolbar } from "@/components/editor/FormattingToolbar";
 import { CV_TEMPLATE_DEFAULT_FONTS } from "@/lib/template-defaults";
 import { useElementSize } from "@/hooks/use-element-size";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
@@ -188,6 +189,37 @@ export function CVEditorPage() {
     }
   }, [planChoice]);
 
+  const syncSubscription = async () => {
+    try {
+      const response = await fetch("/api/user/subscription");
+      if (!response.ok) return;
+      const data = await response.json();
+      if (updateSession) {
+        await updateSession({
+          subscription: data.subscription ?? "free",
+          subscriptionPlanId: data.subscriptionPlanId ?? null,
+        });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("stripe");
+    if (!status) return;
+    if (status === "success") {
+      setIsDownloadModalOpen(true);
+      syncSubscription();
+      toast.success("Payment successful.");
+    } else if (status === "cancel") {
+      toast.info("Payment canceled.");
+    }
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
+
   useEffect(() => {
     if (previewData.experiences.length === 0) {
       setSummarySuggestions([]);
@@ -214,6 +246,7 @@ export function CVEditorPage() {
     }, 600);
     return () => clearTimeout(timer);
   }, [previewData, suggestSummaryAI]);
+
 
   useEffect(() => {
     if (cvId) {
@@ -307,28 +340,13 @@ export function CVEditorPage() {
 
   const openDownloadModal = () => {
     if (!ensurePlanChosen()) return;
-    setIsDownloadModalOpen(true);
-  };
-
-  const handlePurchase = async () => {
-    if (!session?.user) {
-      toast.error("Please sign in to complete purchase");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
+    if (planChoice === "paid" && !hasSubscription) {
+      router.push(
+        `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
+      );
       return;
     }
-    try {
-      const response = await fetch("/api/user/upgrade", { method: "POST" });
-      if (!response.ok) {
-        throw new Error("Upgrade failed");
-      }
-      const data = await response.json();
-      if (updateSession) {
-        await updateSession({ subscription: data.subscription || "pro" });
-      }
-      toast.success("Purchase successful!");
-    } catch (error) {
-      toast.error("Purchase failed. Please try again.");
-    }
+    setIsDownloadModalOpen(true);
   };
 
   const exportPaidPDF = async () => {
@@ -418,7 +436,6 @@ export function CVEditorPage() {
         onOpenChange={setIsDownloadModalOpen}
         planChoice={planChoice}
         hasSubscription={hasSubscription}
-        onPurchase={handlePurchase}
       />
       <div
         className="relative overflow-hidden box-border"
@@ -838,12 +855,88 @@ function ExperienceSection({
     const [aiSuggestedBullets, setAiSuggestedBullets] = useState<string[]>([]);
     const [isNewSuggestionsLoading, setIsNewSuggestionsLoading] = useState(false);
     const [editingExperiences, setEditingExperiences] = useState<Record<string, boolean>>({});
-    const [existingSuggestionState, setExistingSuggestionState] = useState<
-      Record<string, { role: string; used: string[] }>
-    >({});
-    const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
-    const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
-    const [existingSuggestionsLoading, setExistingSuggestionsLoading] = useState<Record<string, boolean>>({});
+  const [existingSuggestionState, setExistingSuggestionState] = useState<
+    Record<string, { role: string; used: string[] }>
+  >({});
+  const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
+  const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
+  const [existingSuggestionsLoading, setExistingSuggestionsLoading] = useState<Record<string, boolean>>({});
+  const activeBulletRef = useRef<HTMLTextAreaElement | null>(null);
+  const [activeBulletContext, setActiveBulletContext] = useState<{
+    scope: "new" | "existing";
+    expId?: string;
+    index: number;
+  } | null>(null);
+
+  const applyToActiveBullet = (
+    updater: (value: string, start: number, end: number) => {
+      value: string;
+      selectionStart?: number;
+      selectionEnd?: number;
+    }
+  ) => {
+    if (!activeBulletContext || !activeBulletRef.current) return;
+    const input = activeBulletRef.current;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    const result = updater(input.value, start, end);
+
+    if (activeBulletContext.scope === "new") {
+      const nextBullets = [...(newExperience.bullets || [])];
+      nextBullets[activeBulletContext.index] = result.value;
+      setNewExperience({ ...newExperience, bullets: nextBullets });
+    } else if (activeBulletContext.scope === "existing" && activeBulletContext.expId) {
+      const exp = cvData.experiences.find((item) => item.id === activeBulletContext.expId);
+      if (!exp) return;
+      const nextBullets = [...exp.bullets];
+      nextBullets[activeBulletContext.index] = result.value;
+      updateExperience(exp.id, { bullets: nextBullets });
+    }
+
+    requestAnimationFrame(() => {
+      if (!activeBulletRef.current) return;
+      activeBulletRef.current.focus();
+      if (
+        typeof result.selectionStart === "number" &&
+        typeof result.selectionEnd === "number"
+      ) {
+        activeBulletRef.current.setSelectionRange(result.selectionStart, result.selectionEnd);
+      }
+    });
+  };
+
+  const wrapActiveSelection = (prefix: string, suffix: string) => {
+    applyToActiveBullet((value, start, end) => {
+      const before = value.slice(0, start);
+      const selection = value.slice(start, end);
+      const after = value.slice(end);
+      const nextValue = `${before}${prefix}${selection}${suffix}${after}`;
+      return {
+        value: nextValue,
+        selectionStart: start + prefix.length,
+        selectionEnd: end + prefix.length,
+      };
+    });
+  };
+
+  const insertActiveBullets = () => {
+    applyToActiveBullet((value, start, end) => {
+      const before = value.slice(0, start);
+      const selection = value.slice(start, end);
+      const after = value.slice(end);
+      const lines = selection ? selection.split(/\r?\n/) : [""];
+      const updatedLines = lines.map((line) => {
+        if (!line.trim()) return line;
+        return line.startsWith("- ") || line.startsWith("* ") ? line : `- ${line}`;
+      });
+      const updated = updatedLines.join("\n");
+      return {
+        value: `${before}${updated}${after}`,
+        selectionStart: start,
+        selectionEnd: start + updated.length,
+      };
+    });
+  };
 
   const yearOptions = useMemo(
     () => buildYearOptions(1970, new Date().getFullYear() + 1),
@@ -1345,22 +1438,34 @@ function ExperienceSection({
                       Add Bullet
                     </Button>
                   </div>
+                  <FormattingToolbar
+                    className="mb-1"
+                    onBold={() => wrapActiveSelection("**", "**")}
+                    onItalic={() => wrapActiveSelection("*", "*")}
+                    onUnderline={() => wrapActiveSelection("__", "__")}
+                    onList={insertActiveBullets}
+                  />
                   <div className="space-y-3">
                     {newExperience.bullets && newExperience.bullets.length > 0 ? (
                       newExperience.bullets.map((bullet, idx) => (
                         <div key={idx} className="flex gap-2">
-                          <RichTextarea
-                            placeholder="Describe your achievement..."
-                            value={bullet}
-                            onValueChange={(value) => {
-                              const nextBullets = [...(newExperience.bullets || [])];
-                              nextBullets[idx] = value;
-                              setNewExperience({ ...newExperience, bullets: nextBullets });
-                            }}
-                            rows={2}
-                            className="flex-1"
-                            enableFormatting
-                          />
+                          <div className="flex-1">
+                            <RichTextarea
+                              placeholder="Describe your achievement..."
+                              value={bullet}
+                              onValueChange={(value) => {
+                                const nextBullets = [...(newExperience.bullets || [])];
+                                nextBullets[idx] = value;
+                                setNewExperience({ ...newExperience, bullets: nextBullets });
+                              }}
+                              onFocus={(event) => {
+                                activeBulletRef.current = event.currentTarget;
+                                setActiveBulletContext({ scope: "new", index: idx });
+                              }}
+                              rows={2}
+                              className="w-full"
+                            />
+                          </div>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1583,20 +1688,38 @@ function ExperienceSection({
                     </Button>
                   </div>
                 )}
+                {exp.bullets.length > 0 && (
+                  <FormattingToolbar
+                    className="mb-1"
+                    onBold={() => wrapActiveSelection("**", "**")}
+                    onItalic={() => wrapActiveSelection("*", "*")}
+                    onUnderline={() => wrapActiveSelection("__", "__")}
+                    onList={insertActiveBullets}
+                  />
+                )}
                 {exp.bullets.map((bullet, idx) => (
                   <div key={idx} className="flex gap-2">
-                    <RichTextarea
-                      value={bullet}
-                      onValueChange={(value) => {
-                        const newBullets = [...exp.bullets];
-                        newBullets[idx] = value;
-                        updateExperience(exp.id, { bullets: newBullets });
-                      }}
-                      placeholder="Describe your achievement..."
-                      rows={2}
-                      className="flex-1"
-                      enableFormatting
-                    />
+                    <div className="flex-1">
+                      <RichTextarea
+                        value={bullet}
+                        onValueChange={(value) => {
+                          const newBullets = [...exp.bullets];
+                          newBullets[idx] = value;
+                          updateExperience(exp.id, { bullets: newBullets });
+                        }}
+                        onFocus={(event) => {
+                          activeBulletRef.current = event.currentTarget;
+                          setActiveBulletContext({
+                            scope: "existing",
+                            expId: exp.id,
+                            index: idx,
+                          });
+                        }}
+                        placeholder="Describe your achievement..."
+                        rows={2}
+                        className="w-full"
+                      />
+                    </div>
                     {isEditing && (
                       <Button
                         variant="ghost"
