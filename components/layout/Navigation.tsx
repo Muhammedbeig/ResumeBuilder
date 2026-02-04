@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sun, Moon, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
+import { RESUME_TEMPLATE_CATEGORIES } from "@/lib/resume-template-catalog";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -93,6 +94,13 @@ export function Navigation() {
   }, []);
 
   const navDropdowns = [
+    {
+      label: "Templates",
+      items: RESUME_TEMPLATE_CATEGORIES.map((category) => ({
+        label: category.label,
+        href: `/templates/${category.slug}`,
+      })),
+    },
     {
       label: "Tools",
       items: [
@@ -191,22 +199,41 @@ export function Navigation() {
                       <NavigationMenuTrigger className="h-auto bg-transparent px-2 py-1 text-sm font-medium text-gray-700 hover:bg-transparent hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400 data-[state=open]:bg-transparent">
                         {group.label}
                       </NavigationMenuTrigger>
-                      <NavigationMenuContent className="w-64 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-900/95">
-                        <ul className="space-y-1">
-                          {group.items.map((item) => (
-                            <li key={item.label}>
-                              <NavigationMenuLink asChild>
-                                <Link
-                                  href={item.href}
-                                  className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-purple-400"
-                                >
-                                  {item.label}
-                                </Link>
-                              </NavigationMenuLink>
-                            </li>
-                          ))}
-                        </ul>
-                      </NavigationMenuContent>
+                      {group.label === "Templates" ? (
+                        <NavigationMenuContent className="min-w-[560px] w-[560px] rounded-2xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-900/95">
+                          <ul className="grid grid-cols-2 gap-1 max-h-[60vh] overflow-y-auto">
+                            {group.items.map((item) => (
+                              <li key={item.label}>
+                                <NavigationMenuLink asChild>
+                                  <Link
+                                    href={item.href}
+                                    className="block w-full whitespace-nowrap rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-purple-400"
+                                  >
+                                    {item.label}
+                                  </Link>
+                                </NavigationMenuLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      ) : (
+                        <NavigationMenuContent className="w-64 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-900/95">
+                          <ul className="space-y-1">
+                            {group.items.map((item) => (
+                              <li key={item.label}>
+                                <NavigationMenuLink asChild>
+                                  <Link
+                                    href={item.href}
+                                    className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-purple-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-purple-400"
+                                  >
+                                    {item.label}
+                                  </Link>
+                                </NavigationMenuLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      )}
                     </NavigationMenuItem>
                   ))}
                 </NavigationMenuList>

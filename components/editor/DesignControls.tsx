@@ -22,6 +22,9 @@ type DesignControlsProps = {
   defaultFontLabel?: string;
   advancedFormattingEnabled?: boolean;
   onAdvancedFormattingChange?: (value: boolean) => void;
+  watermarkEnabled?: boolean;
+  onWatermarkToggle?: (value: boolean) => void;
+  watermarkLocked?: boolean;
 };
 
 const COLOR_OPTIONS = [
@@ -153,6 +156,30 @@ export function DesignControls({
               <Switch
                 checked={advancedFormattingEnabled}
                 onCheckedChange={onAdvancedFormattingChange}
+                className="data-[state=checked]:bg-purple-600"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {typeof watermarkEnabled === "boolean" && onWatermarkToggle && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-gray-900 dark:text-white">
+                  Preview Watermark
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {watermarkLocked
+                    ? "Free plan keeps the watermark on. Upgrade to remove it."
+                    : "Toggle the watermark in your preview."}
+                </p>
+              </div>
+              <Switch
+                checked={watermarkEnabled}
+                onCheckedChange={onWatermarkToggle}
                 className="data-[state=checked]:bg-purple-600"
               />
             </div>

@@ -114,6 +114,7 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
 const DYNAMIC_ROUTES: Array<{ pattern: RegExp; key: string; param: string }> = [
   { pattern: /^\/career-blog\/category\/([^/]+)$/, key: "/career-blog/category/[slug]", param: "slug" },
   { pattern: /^\/career-blog\/([^/]+)$/, key: "/career-blog/[slug]", param: "slug" },
+  { pattern: /^\/templates\/([^/]+)$/, key: "/templates/[category]", param: "category" },
   { pattern: /^\/resume\/([^/]+)$/, key: "/resume/[id]", param: "id" },
   { pattern: /^\/cv\/([^/]+)$/, key: "/cv/[id]", param: "id" },
   { pattern: /^\/cover-letter\/([^/]+)$/, key: "/cover-letter/[id]", param: "id" },
@@ -128,6 +129,10 @@ const DYNAMIC_SEO: Record<string, SeoConfig> = {
   "/career-blog/[slug]": {
     title: "{slug} | ResuPro Career Blog",
     description: "Read {slug} on the ResuPro career blog.",
+  },
+  "/templates/[category]": {
+    title: "{category} Resume Templates | ResuPro",
+    description: "Browse {category} resume templates and start building in minutes.",
   },
   "/resume/[id]": {
     title: "Resume Editor | ResuPro",

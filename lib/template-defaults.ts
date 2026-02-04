@@ -1,3 +1,9 @@
+import { RESUME_TEMPLATE_CATALOG } from "./resume-template-catalog";
+
+const CATALOG_DEFAULT_FONTS = Object.fromEntries(
+  RESUME_TEMPLATE_CATALOG.map((template) => [template.id, template.bodyFont])
+);
+
 export const RESUME_TEMPLATE_DEFAULT_FONTS: Record<string, string> = {
   classic: "Inter",
   modern: "Inter",
@@ -10,6 +16,7 @@ export const RESUME_TEMPLATE_DEFAULT_FONTS: Record<string, string> = {
   professional: "Merriweather",
   creative: "Inter",
   "minimalist-professional": "Poppins",
+  ...CATALOG_DEFAULT_FONTS,
 };
 
 export const CV_TEMPLATE_DEFAULT_FONTS: Record<string, string> = {

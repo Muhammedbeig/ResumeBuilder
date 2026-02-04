@@ -1,13 +1,23 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Star, Sparkles } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { RESUME_TEMPLATE_CATEGORIES } from "@/lib/resume-template-catalog";
 
 export function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
@@ -130,6 +140,35 @@ export function Hero() {
                   Import Resume
                 </Button>
               </Link>
+              <div
+                onMouseEnter={() => setIsTemplateMenuOpen(true)}
+                onMouseLeave={() => setIsTemplateMenuOpen(false)}
+              >
+                <DropdownMenu open={isTemplateMenuOpen} onOpenChange={setIsTemplateMenuOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="rounded-full px-8 py-6 text-lg font-semibold border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      Templates
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[360px] max-h-[60vh] overflow-y-auto p-2">
+                    <div className="grid grid-cols-2 gap-1">
+                      {RESUME_TEMPLATE_CATEGORIES.map((category) => (
+                        <DropdownMenuItem
+                          key={category.slug}
+                          className="text-sm text-gray-700 dark:text-gray-200"
+                          onSelect={() => router.push(`/templates/${category.slug}`)}
+                        >
+                          {category.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </motion.div>
 
             {/* Social Proof */}

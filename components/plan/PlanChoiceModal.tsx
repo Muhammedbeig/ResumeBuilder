@@ -36,7 +36,7 @@ export function PlanChoiceModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={!forceChoice}
-        className="!left-0 !top-0 !translate-x-0 !translate-y-0 !h-screen !w-screen !max-w-none !rounded-none !border-0 overflow-y-auto bg-slate-950/70 text-white shadow-none backdrop-blur-md p-8 sm:p-10"
+        className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-800 bg-slate-950/95 text-white shadow-2xl backdrop-blur-md p-6 sm:p-8 custom-scrollbar"
       >
         <div className="w-full">
           <DialogHeader className="text-left">
@@ -44,8 +44,8 @@ export function PlanChoiceModal({
             <DialogDescription className="text-slate-300">{description}</DialogDescription>
           </DialogHeader>
 
-          <div className="mt-6 grid w-full gap-6 md:grid-cols-4">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl">
+          <div className="mt-6 flex w-full gap-4 overflow-x-auto snap-x snap-mandatory flex-nowrap scrollbar-hide">
+            <div className="flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31%] snap-start rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 shadow-2xl flex flex-col">
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Freemium</p>
                 <span className="text-lg font-semibold text-white">$0/mo</span>
@@ -85,13 +85,13 @@ export function PlanChoiceModal({
               <Button
                 variant="outline"
                 onClick={() => handleSelect("free")}
-                className="mt-8 w-full border-slate-700 text-slate-100 hover:bg-slate-800"
+                className="mt-auto w-full border-slate-700 text-slate-100 hover:bg-slate-800"
               >
                 Get Started Free
               </Button>
             </div>
 
-            <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-indigo-600/70 to-cyan-500/70 p-8 shadow-2xl">
+            <div className="flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31%] snap-start relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-indigo-600/70 to-cyan-500/70 p-6 sm:p-8 shadow-2xl flex flex-col">
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.3em] text-white/80">Weekly</p>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
@@ -124,13 +124,13 @@ export function PlanChoiceModal({
 
               <Button
                 onClick={() => handleSelect("paid")}
-                className="mt-8 w-full bg-white text-slate-900 hover:bg-white/90"
+                className="mt-auto w-full bg-white text-slate-900 hover:bg-white/90"
               >
                 Start Weekly Pass
               </Button>
             </div>
 
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl">
+            <div className="flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31%] snap-start rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 shadow-2xl flex flex-col">
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Monthly</p>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800">
@@ -153,19 +153,23 @@ export function PlanChoiceModal({
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
+                  LinkedIn Sync
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
                   All Job Hunt Pass features
                 </li>
               </ul>
 
               <Button
                 onClick={() => handleSelect("paid")}
-                className="mt-8 w-full border border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
+                className="mt-auto w-full border border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
               >
                 Start Monthly Pass
               </Button>
             </div>
 
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl">
+            <div className="flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31%] snap-start rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 shadow-2xl flex flex-col">
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Annual</p>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800">
@@ -198,7 +202,7 @@ export function PlanChoiceModal({
 
               <Button
                 onClick={() => handleSelect("paid")}
-                className="mt-8 w-full border border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
+                className="mt-auto w-full border border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
               >
                 Start Annual Pass
               </Button>

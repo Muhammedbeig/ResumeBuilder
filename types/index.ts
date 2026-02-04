@@ -56,6 +56,7 @@ export interface ResumeData {
     themeColor?: string;
     fontFamily?: string;
     fontSize?: string;
+    watermarkEnabled?: boolean;
   };
 }
 
@@ -206,5 +207,6 @@ export interface CoverLetterData {
     themeColor?: string;
     fontFamily?: string;
     fontSize?: string;
+    watermarkEnabled?: boolean;
   };
 }

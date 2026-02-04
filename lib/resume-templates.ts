@@ -9,6 +9,17 @@ import { TechModernTemplate } from "@/components/resume/templates/TechModernTemp
 import { ImpactTemplate } from "@/components/resume/templates/ImpactTemplate";
 import { MinimalTemplate } from "@/components/resume/templates/MinimalTemplate";
 import { MinimalistProfessionalTemplate } from "@/components/resume/templates/MinimalistProfessionalTemplate";
+import { RESUME_TEMPLATE_CATALOG } from "@/lib/resume-template-catalog";
+import { catalogTemplateMap } from "@/components/resume/templates/catalog";
+import type { ComponentType } from "react";
+
+const catalogTemplates = RESUME_TEMPLATE_CATALOG.map((template) => ({
+  id: template.id,
+  name: template.name,
+  premium: false,
+  description: template.description,
+  component: catalogTemplateMap[template.id],
+}));
 
 export const resumeTemplates = [
   {
@@ -88,9 +99,10 @@ export const resumeTemplates = [
     description: "Bold two-column design with a dark sidebar.",
     component: CreativeTemplate,
   },
-] as const;
+  ...catalogTemplates,
+];
 
-export const resumeTemplateMap = {
+export const resumeTemplateMap: Record<string, ComponentType<{ data: any; className?: string }>> = {
   classic: ClassicTemplate,
   modern: ModernTemplate,
   ats: ATSTemplate,
@@ -102,4 +114,5 @@ export const resumeTemplateMap = {
   "tech-modern": TechModernTemplate,
   "minimalist-photo": MinimalistPhotoTemplate,
   "minimalist-professional": MinimalistProfessionalTemplate,
-} as const;
+  ...catalogTemplateMap,
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
@@ -33,8 +33,14 @@ export function CoverLetterEditor() {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [zoom, setZoom] = useState([80]);
   const [advancedFormatting, setAdvancedFormatting] = useState(false);
-  const hasSubscription =
-    session?.user?.subscription === "pro" || session?.user?.subscription === "business";
+  const hasSubscription = useMemo(
+    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
+    [session?.user?.subscription]
+  );
+  const canUsePaid = useMemo(
+    () => planChoice === "paid" || hasSubscription,
+    [planChoice, hasSubscription]
+  );
   const { ref: previewContainerRef, size: previewContainerSize } =
     useElementSize<HTMLDivElement>();
   const { ref: mobilePreviewRef, size: mobilePreviewSize } =
@@ -53,6 +59,11 @@ export function CoverLetterEditor() {
       setIsPlanModalOpen(false);
     }
   }, [planChoice]);
+
+  const watermarkEnabled = useMemo(() => {
+    if (!canUsePaid) return true;
+    return coverLetterData.metadata?.watermarkEnabled ?? false;
+  }, [canUsePaid, coverLetterData.metadata?.watermarkEnabled]);
 
   const syncSubscription = async () => {
     try {
@@ -138,8 +149,19 @@ export function CoverLetterEditor() {
               : undefined
           }
         >
-          <div ref={contentRef} id={elementId} className="bg-white shadow-2xl min-h-[1056px] w-[816px]">
+          <div
+            ref={contentRef}
+            id={elementId}
+            className="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+          >
             <TemplateComponent data={coverLetterData} />
+            {watermarkEnabled && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="select-none text-5xl font-bold uppercase tracking-[0.45em] text-white/25 mix-blend-soft-light rotate-[-25deg]">
+                  ResuPro.com
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -149,6 +171,15 @@ export function CoverLetterEditor() {
   const openPlanModal = () => {
     if (!session?.user) return;
     setIsPlanModalOpen(true);
+  };
+
+  const handleWatermarkToggle = (nextValue: boolean) => {
+    if (!canUsePaid && nextValue === false) {
+      toast.info("Upgrade to remove the watermark.");
+      openPlanModal();
+      return;
+    }
+    updateMetadata({ watermarkEnabled: nextValue });
   };
 
   const ensurePlanChosen = () => {
@@ -244,6 +275,18 @@ export function CoverLetterEditor() {
                 </div>
               </SheetContent>
             </Sheet>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleWatermarkToggle(!watermarkEnabled)}
+              className={
+                !watermarkEnabled
+                  ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
+                  : undefined
+              }
+            >
+              Watermark {watermarkEnabled ? "On" : "Off"}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? "Saving..." : "Save"}
@@ -452,6 +495,9 @@ export function CoverLetterEditor() {
                   templateId={currentCoverLetter.template}
                   advancedFormatting={advancedFormatting}
                   onAdvancedFormattingChange={setAdvancedFormatting}
+                  watermarkEnabled={watermarkEnabled}
+                  onWatermarkToggle={handleWatermarkToggle}
+                  watermarkLocked={!canUsePaid}
                 />
               </div>
             </ScrollArea>
@@ -493,10 +539,16 @@ function DesignSection({
   templateId,
   advancedFormatting,
   onAdvancedFormattingChange,
+  watermarkEnabled,
+  onWatermarkToggle,
+  watermarkLocked,
 }: {
   templateId: string;
   advancedFormatting: boolean;
   onAdvancedFormattingChange: (value: boolean) => void;
+  watermarkEnabled: boolean;
+  onWatermarkToggle: (value: boolean) => void;
+  watermarkLocked: boolean;
 }) {
   const { coverLetterData, updateMetadata } = useCoverLetter();
   const defaultFont = COVER_LETTER_DEFAULT_FONTS[templateId] || "Inter";
@@ -513,6 +565,9 @@ function DesignSection({
           defaultFontLabel={defaultFont}
           advancedFormattingEnabled={advancedFormatting}
           onAdvancedFormattingChange={onAdvancedFormattingChange}
+          watermarkEnabled={watermarkEnabled}
+          onWatermarkToggle={onWatermarkToggle}
+          watermarkLocked={watermarkLocked}
         />
       </div>
     </div>

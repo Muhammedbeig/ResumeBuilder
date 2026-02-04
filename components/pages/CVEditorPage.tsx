@@ -88,6 +88,7 @@ export function CVEditorPage() {
     cvData,
     currentCV,
     updateBasics,
+    updateMetadata,
     suggestSummaryAI,
     saveCV,
     loadCV,
@@ -173,6 +174,11 @@ export function CVEditorPage() {
       skills: nextSkills,
     };
   }, [cvData, draftExperience, draftSkillGroup]);
+
+  const watermarkEnabled = useMemo(() => {
+    if (!canUsePaid) return true;
+    return cvData.metadata?.watermarkEnabled ?? false;
+  }, [canUsePaid, cvData.metadata?.watermarkEnabled]);
 
   const availableSummarySuggestions = useMemo(() => {
     const used = new Set(usedSummarySuggestions.map((item) => item.toLowerCase()));
@@ -308,8 +314,19 @@ export function CVEditorPage() {
               : undefined
           }
         >
-          <div ref={contentRef} id={elementId} className="bg-white shadow-2xl min-h-[1056px] w-[816px]">
+          <div
+            ref={contentRef}
+            id={elementId}
+            className="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+          >
             <ActiveTemplate key={JSON.stringify(cvData.structure)} data={previewData} />
+            {watermarkEnabled && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="select-none text-5xl font-bold uppercase tracking-[0.45em] text-white/25 mix-blend-soft-light rotate-[-25deg]">
+                  ResuPro.com
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -326,6 +343,15 @@ export function CVEditorPage() {
   const openPlanModal = () => {
     if (!session?.user) return;
     setIsPlanModalOpen(true);
+  };
+
+  const handleWatermarkToggle = (nextValue: boolean) => {
+    if (!canUsePaid && nextValue === false) {
+      toast.info("Upgrade to remove the watermark.");
+      openPlanModal();
+      return;
+    }
+    updateMetadata({ watermarkEnabled: nextValue });
   };
 
   const ensurePlanChosen = () => {
@@ -482,6 +508,18 @@ export function CVEditorPage() {
                   </div>
                 </SheetContent>
               </Sheet>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleWatermarkToggle(!watermarkEnabled)}
+                className={
+                  !watermarkEnabled
+                    ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
+                    : undefined
+                }
+              >
+                Watermark {watermarkEnabled ? "On" : "Off"}
+              </Button>
               <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? "Saving..." : "Save"}
@@ -771,6 +809,9 @@ export function CVEditorPage() {
                     templateId={activeTemplateId}
                     advancedFormatting={advancedFormatting}
                     onAdvancedFormattingChange={setAdvancedFormatting}
+                    watermarkEnabled={watermarkEnabled}
+                    onWatermarkToggle={handleWatermarkToggle}
+                    watermarkLocked={!canUsePaid}
                   />
                 </TabsContent>
 
@@ -2497,10 +2538,16 @@ function DesignSection({
   templateId,
   advancedFormatting,
   onAdvancedFormattingChange,
+  watermarkEnabled,
+  onWatermarkToggle,
+  watermarkLocked,
 }: {
   templateId: string;
   advancedFormatting: boolean;
   onAdvancedFormattingChange: (value: boolean) => void;
+  watermarkEnabled: boolean;
+  onWatermarkToggle: (value: boolean) => void;
+  watermarkLocked: boolean;
 }) {
   const { cvData, updateMetadata } = useCV();
   const defaultFont = CV_TEMPLATE_DEFAULT_FONTS[templateId] || "Inter";
@@ -2523,6 +2570,9 @@ function DesignSection({
           defaultFontLabel={defaultFont}
           advancedFormattingEnabled={advancedFormatting}
           onAdvancedFormattingChange={onAdvancedFormattingChange}
+          watermarkEnabled={watermarkEnabled}
+          onWatermarkToggle={onWatermarkToggle}
+          watermarkLocked={watermarkLocked}
         />
       </div>
     </motion.div>

@@ -40,6 +40,7 @@ export const emptyCoverLetterData: CoverLetterData = {
     closing: "Sincerely,",
     signature: "",
   },
+  metadata: {},
 };
 
 interface CoverLetterContextType {
