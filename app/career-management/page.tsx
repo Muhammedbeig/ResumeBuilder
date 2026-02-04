@@ -262,21 +262,44 @@ export default function CareerManagementPage() {
   return (
     <div className="min-h-screen pt-24 pb-20 bg-gray-50 dark:bg-gray-950">
       <div className="max-w-6xl mx-auto px-6 space-y-8">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-4 py-1 text-xs uppercase tracking-wider">
-            Annual Plan
+        <div className="relative overflow-hidden rounded-3xl border border-purple-200/50 dark:border-purple-800/40 bg-gradient-to-br from-purple-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-950 dark:to-purple-900/20 p-8">
+          <div className="absolute -top-20 right-0 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
+          <div className="absolute -bottom-20 left-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+          <div className="relative space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full bg-purple-600/10 text-purple-700 dark:bg-purple-500/20 dark:text-purple-200 px-4 py-1 text-xs uppercase tracking-wider">
+              Premium Suite • Annual Plan
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Career Management
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mt-2">
+                Advanced quarterly intelligence that tracks your market value, competitive positioning, and skill momentum.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4">
+                <p className="text-xs uppercase tracking-wider text-gray-400">Insight cadence</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">Quarterly</p>
+                <p className="text-xs text-gray-500">Recalibrated market value</p>
+              </div>
+              <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4">
+                <p className="text-xs uppercase tracking-wider text-gray-400">Signal coverage</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">Salary + Skills</p>
+                <p className="text-xs text-gray-500">Demand shifts & gaps</p>
+              </div>
+              <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4">
+                <p className="text-xs uppercase tracking-wider text-gray-400">Positioning</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">Competitive Edge</p>
+                <p className="text-xs text-gray-500">Benchmarked to peers</p>
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Career Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
-            Generate your Quarterly Market Value report to track salary trends, skill demand, and competitive positioning.
-          </p>
         </div>
 
         <Card className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
           <CardHeader>
-            <CardTitle>Import Resume</CardTitle>
+            <CardTitle>Import Resume Snapshot</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <Tabs value={source} onValueChange={(value) => setSource(value as "resume" | "upload")}>
@@ -314,7 +337,7 @@ export default function CareerManagementPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {file ? file.name : "Choose a PDF to upload"}
                       </p>
-                      <p className="text-xs text-gray-500">PDF only • Max 10MB</p>
+                      <p className="text-xs text-gray-500">PDF only - Max 10MB</p>
                     </div>
                     <Label
                       htmlFor="resume-upload"

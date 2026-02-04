@@ -153,10 +153,6 @@ export function PlanChoiceModal({
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  LinkedIn Sync
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
                   All Job Hunt Pass features
                 </li>
               </ul>

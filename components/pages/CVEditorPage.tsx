@@ -1221,10 +1221,12 @@ function ExperienceSection({
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Work Experience
-        </h2>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Work Experience
+          </h2>
+        </div>
         <Button 
           size="sm"
           onClick={() => setIsAdding(true)}
@@ -1273,9 +1275,6 @@ function ExperienceSection({
                   contentClassName="rounded-2xl"
                   itemClassName="rounded-lg py-2"
                 />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Includes major GCC, EU, UK, US, Canada, and Austria companies.
-                  </p>
                 </div>
               </div>
 

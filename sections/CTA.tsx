@@ -168,9 +168,6 @@ export function CTA() {
               <span>Export anytime</span>
             </div>
           </motion.div>
-          <p className="mt-4 text-xs text-gray-500">
-            Available in GCC, EU, UK, US, Canada, Austria, and select regions. Not available in most Asian countries.
-          </p>
         </motion.div>
       </div>
     </section>

@@ -65,7 +65,6 @@ export const PRICING_PLANS: PricingPlan[] = [
       "All Job Hunt Pass features",
       "Resume Roast (AI audit)",
       "Auto-Tailor from job URL",
-      "LinkedIn Sync",
     ],
     cta: "Go Pro Monthly",
     isPaid: true,
