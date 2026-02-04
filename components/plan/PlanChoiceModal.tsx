@@ -36,14 +36,15 @@ export function PlanChoiceModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={!forceChoice}
-        className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-6xl overflow-y-auto border-slate-800 bg-slate-950 text-white"
+        className="!left-0 !top-0 !translate-x-0 !translate-y-0 !h-screen !w-screen !max-w-none !rounded-none !border-0 overflow-y-auto bg-slate-950 text-white p-8 sm:p-10"
       >
-        <DialogHeader className="text-left">
-          <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
-          <DialogDescription className="text-slate-300">{description}</DialogDescription>
-        </DialogHeader>
+        <div className="mx-auto w-full max-w-6xl">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
+            <DialogDescription className="text-slate-300">{description}</DialogDescription>
+          </DialogHeader>
 
-        <div className="grid gap-6 md:grid-cols-2">
+          <div className="mt-6 grid gap-6 md:grid-cols-3">
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl">
             <div className="flex items-center justify-between">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Freemium</p>
@@ -80,19 +81,54 @@ export function PlanChoiceModal({
             </Button>
           </div>
 
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Weekly</p>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800">
+                <Crown className="h-5 w-5 text-slate-200" />
+              </div>
+            </div>
+            <h3 className="mt-5 text-2xl font-semibold text-white">Job Hunt Pass</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Short bursts for active job search weeks.
+            </p>
+
+            <ul className="mt-6 space-y-3 text-sm text-slate-200">
+              <li className="flex items-start gap-3">
+                <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
+                All AI features unlocked
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
+                Premium templates & layouts
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
+                Watermark-free exports via app
+              </li>
+            </ul>
+
+            <Button
+              onClick={() => handleSelect("paid")}
+              className="mt-8 w-full border border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
+            >
+              Start Weekly Pass
+            </Button>
+          </div>
+
           <div className="relative overflow-hidden rounded-3xl border border-purple-500/40 bg-gradient-to-br from-purple-600/70 via-indigo-600/60 to-cyan-500/60 p-8 shadow-[0_25px_60px_rgba(76,29,149,0.35)]">
             <div className="absolute right-6 top-6 rounded-full bg-white/15 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-white">
               Most Popular
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.3em] text-white/70">Paid Plan</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">Monthly</p>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
                 <Crown className="h-5 w-5 text-white" />
               </div>
             </div>
             <h3 className="mt-5 text-2xl font-semibold text-white">Job Hunt Pass</h3>
             <p className="mt-2 text-sm text-white/85">
-              Unlock AI + premium templates for faster results.
+              Best value for consistent applications.
             </p>
 
             <ul className="mt-6 space-y-3 text-sm text-white/90">
@@ -114,14 +150,15 @@ export function PlanChoiceModal({
               onClick={() => handleSelect("paid")}
               className="mt-8 w-full bg-white text-slate-900 hover:bg-white/90"
             >
-              Start Job Hunt Pass
+              Start Monthly Pass
             </Button>
           </div>
-        </div>
+          </div>
 
-        <p className="text-center text-xs text-slate-400">
-          No payment required right now. You can change your plan anytime.
-        </p>
+          <p className="mt-6 text-center text-xs text-slate-400">
+            No payment required right now. You can change your plan anytime.
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );
