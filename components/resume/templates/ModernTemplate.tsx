@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface ModernTemplateProps {
   data: ResumeData;
@@ -21,10 +23,8 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications, structure } = data;
   const themeColor = data.metadata?.themeColor || '#000000';
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   // 1. Resolve the active structure
   const activeStructure = useMemo(() => {
@@ -56,7 +56,7 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
         return (
           <div key={id} className="mb-6">
             <h2 className="text-lg font-bold mb-2 uppercase tracking-wide" style={{ color: themeColor }}>Professional Summary</h2>
-            <p className="text-gray-700 leading-relaxed">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-gray-700 leading-relaxed" />
           </div>
         );
       case 'experience':
@@ -79,7 +79,7 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
                   {exp.bullets.map((bullet, bIdx) => (
                     <li key={bIdx} className="text-gray-700 pl-4 relative">
                       <span className="absolute left-0 top-2 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }}></span>
-                      {bullet}
+                      <RichText inline text={bullet} />
                     </li>
                   ))}
                 </ul>
@@ -134,7 +134,7 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
                     <a href={project.link} className="text-sm" style={{ color: themeColor }}>View Project</a>
                   )}
                 </div>
-                <p className="text-gray-700 text-sm mt-1">{project.description}</p>
+                <RichText text={project.description} className="text-gray-700 text-sm mt-1" />
                 {project.technologies.length > 0 && (
                   <p className="text-sm text-gray-600 mt-1">
                     <span className="font-medium">Technologies:</span> {project.technologies.join(', ')}

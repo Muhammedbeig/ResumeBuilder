@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Upload, FileText, CheckCircle, AlertTriangle, XCircle, ArrowRight, Loader2, Sparkles, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { useSession } from "next-auth/react";
 
 interface ATSAnalysis {
   score: number;
@@ -29,9 +33,27 @@ interface ATSAnalysis {
 }
 
 export function ATSCheckerPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
+  const { planChoice } = usePlanChoice();
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+
+  const isAuthenticated = !!session?.user;
+  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+
+  const openPlanModal = () => {
+    if (!isAuthenticated) return;
+    setIsPlanModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (planChoice) {
+      setIsPlanModalOpen(false);
+    }
+  }, [planChoice]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -47,6 +69,16 @@ export function ATSCheckerPage() {
   };
 
   const handleUpload = async () => {
+    if (!session?.user) {
+      toast.error("Please sign in to use AI features");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
+    if (!planChoice || planChoice !== "paid") {
+      toast.info("AI features are available in the Paid plan.");
+      openPlanModal();
+      return;
+    }
     if (!file) return;
 
     setIsAnalyzing(true);
@@ -87,6 +119,7 @@ export function ATSCheckerPage() {
   if (analysis) {
     return (
       <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
+        <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
         <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
                 <div>
@@ -269,6 +302,7 @@ export function ATSCheckerPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center space-y-4">
           <motion.h1 

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
+import { requirePaidAiAccess } from "@/lib/ai-access";
 import type { CoverLetterData } from "@/types";
 
 export async function POST(request: Request) {
@@ -10,6 +11,8 @@ export async function POST(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const access = await requirePaidAiAccess();
+  if (access) return access;
 
   const body = await request.json().catch(() => ({}));
   const text = String(body?.text || "").trim();

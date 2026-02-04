@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Plus, FileText, Eye, File, FileCode, CheckSquare, LayoutTemplate, MoreVertical, Trash, Loader2 } from "lucide-react";
+import { Plus, FileText, Eye, File, FileCode, CheckSquare, LayoutTemplate, MoreVertical, Trash, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -92,6 +92,7 @@ export function DashboardPage() {
 
               <SidebarGroup title="Tools">
                 <SidebarItem href="/ats-checker" icon={CheckSquare} label="ATS Checker" />
+                <SidebarItem href="/ai-resume-optimizer" icon={Sparkles} label="AI Resume Optimizer" />
               </SidebarGroup>
             </div>
           </div>

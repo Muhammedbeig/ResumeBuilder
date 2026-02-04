@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface ModernCVTemplateProps {
   data: ResumeData;
@@ -28,10 +30,8 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
 
   const themeColor = data.metadata?.themeColor || '#134e4a'; // Default teal-900
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -56,7 +56,7 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
             >
                 Profile
             </h2>
-            <p className="text-slate-600 leading-relaxed text-md">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-slate-600 leading-relaxed text-md" />
           </div>
         );
       case 'experience':
@@ -88,7 +88,7 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
                   <ul className="space-y-1.5">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-slate-600 text-sm">
-                        {bullet}
+                        <RichText inline text={bullet} />
                       </li>
                     ))}
                   </ul>
@@ -116,7 +116,7 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
                       <a href={project.link} className="text-xs hover:underline" style={{ color: themeColor }}>View</a>
                     )}
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">{project.description}</p>
+                  <RichText text={project.description} className="text-sm text-slate-600 mb-2" />
                   {project.technologies.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {project.technologies.map((t, i) => (

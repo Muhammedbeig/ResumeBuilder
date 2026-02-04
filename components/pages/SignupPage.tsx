@@ -29,7 +29,6 @@ export function SignupPage() {
     password: "",
     confirmPassword: "",
   });
-
   useEffect(() => {
     if (status === "authenticated") {
       router.replace(callbackUrl);
@@ -148,6 +147,7 @@ export function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -160,6 +160,7 @@ export function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -172,6 +173,7 @@ export function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -184,6 +186,7 @@ export function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
 

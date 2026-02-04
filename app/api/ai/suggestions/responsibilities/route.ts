@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
+import { requirePaidAiAccess } from "@/lib/ai-access";
 
 export async function POST(request: Request) {
+  const access = await requirePaidAiAccess();
+  if (access) return access;
+
   const body = await request.json().catch(() => ({}));
   const jobTitle = String(body?.jobTitle || "").trim();
   const description = String(body?.description || "").trim();

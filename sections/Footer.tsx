@@ -3,7 +3,7 @@ import { Sparkles, Twitter, Github, Linkedin, Mail } from 'lucide-react';
 const footerLinks = {
   product: [
     { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' },
+    // { name: 'Pricing', href: '#pricing' },
     { name: 'Templates', href: '/templates' },
     { name: 'ATS Checker', href: '/ats-checker' },
   ],

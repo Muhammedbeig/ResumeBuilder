@@ -19,6 +19,7 @@ import type {
 import { ResumeContext } from "@/contexts/ResumeContext";
 import { MOCK_RESUME } from "@/lib/mock-resume";
 import { normalizeResumeData, emptyResumeData } from "@/lib/resume-data";
+import { getSuggestedBullets } from "@/lib/experience-suggestions";
 import { toast } from "sonner";
 import { generateImage, downloadImage } from "@/lib/pdf";
 
@@ -286,13 +287,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const suggestResponsibilitiesAI = useCallback(async (jobTitle: string, description?: string) => {
-    toast.info("AI features are disabled in this phase.");
-    return [];
+    return getSuggestedBullets(jobTitle, 8);
   }, []);
 
   const suggestSummaryAI = useCallback(async (data: ResumeData, targetRole?: string) => {
     toast.info("AI features are disabled in this phase.");
-    return "";
+    return [];
   }, []);
 
   // New PDF Generation using our HTML-to-PDF service

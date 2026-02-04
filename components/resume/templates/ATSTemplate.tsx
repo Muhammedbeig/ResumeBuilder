@@ -1,5 +1,7 @@
-import type { ResumeData, SectionConfig } from '@/types';
+﻿import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface ATSTemplateProps {
   data: ResumeData;
@@ -19,10 +21,8 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#000000';
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -38,7 +38,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         return (
           <div key={section.id} className="mb-5">
             <h2 className="text-base font-bold mb-2 uppercase tracking-widest border-b pb-1" style={{ color: themeColor, borderColor: themeColor }}>Summary</h2>
-            <p className="text-sm text-gray-700 leading-normal">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-sm text-gray-700 leading-normal" />
           </div>
         );
       case 'experience':
@@ -54,13 +54,13 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
                     <p className="text-sm text-gray-700 italic">{exp.company}</p>
                   </div>
                   <p className="text-xs text-gray-600 font-medium">
-                    {exp.startDate} – {exp.current ? 'Present' : exp.endDate}
+                    {exp.startDate} â€“ {exp.current ? 'Present' : exp.endDate}
                   </p>
                 </div>
                 <ul className="mt-1 space-y-0.5">
                   {exp.bullets.map((bullet, idx) => (
                     <li key={idx} className="text-sm text-gray-700 pl-3">
-                      • {bullet}
+                      â€¢ <RichText inline text={bullet} />
                     </li>
                   ))}
                 </ul>
@@ -82,7 +82,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
                     {edu.gpa && <p className="text-xs text-gray-600">GPA: {edu.gpa}</p>}
                   </div>
                   <p className="text-xs text-gray-600 font-medium">
-                    {edu.startDate} – {edu.endDate}
+                    {edu.startDate} â€“ {edu.endDate}
                   </p>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
                 <div className="flex justify-between items-baseline">
                   <h3 className="font-bold text-gray-900 text-sm">{project.name}</h3>
                 </div>
-                <p className="text-sm text-gray-700">{project.description}</p>
+                <RichText text={project.description} className="text-sm text-gray-700" />
                 {project.technologies.length > 0 && (
                   <p className="text-xs text-gray-600 mt-0.5">
                     Tech: {project.technologies.join(', ')}
@@ -131,7 +131,7 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
             {certifications.map((cert, idx) => (
               <div key={cert.id || idx} className="mb-1">
                 <p className="text-sm font-medium text-gray-900">{cert.name}</p>
-                <p className="text-xs text-gray-600">{cert.issuer} • {cert.date}</p>
+                <p className="text-xs text-gray-600">{cert.issuer} â€¢ {cert.date}</p>
               </div>
             ))}
           </div>
@@ -159,10 +159,10 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
         <p className="text-lg text-gray-700 mb-2">{basics.title || 'Professional Title'}</p>
         <div className="flex flex-wrap justify-center gap-3 text-sm text-gray-600">
           {basics.location && <span>{basics.location}</span>}
-          {basics.email && <span>• {basics.email}</span>}
-          {basics.phone && <span>• {basics.phone}</span>}
-          {basics.linkedin && <span>• LinkedIn</span>}
-          {basics.github && <span>• GitHub</span>}
+          {basics.email && <span>â€¢ {basics.email}</span>}
+          {basics.phone && <span>â€¢ {basics.phone}</span>}
+          {basics.linkedin && <span>â€¢ LinkedIn</span>}
+          {basics.github && <span>â€¢ GitHub</span>}
         </div>
       </div>
 
@@ -173,3 +173,4 @@ export function ATSTemplate({ data, className = '' }: ATSTemplateProps) {
     </div>
   );
 }
+

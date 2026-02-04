@@ -118,7 +118,7 @@ export function CTA() {
             className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto"
           >
             Join 50,000+ job seekers who have landed their dream jobs with AI-powered resumes.
-            Start your free trial today.
+            Start building in minutes.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -161,13 +161,16 @@ export function CTA() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span>14-day free trial</span>
+              <span>Free to use</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span>Cancel anytime</span>
+              <span>Export anytime</span>
             </div>
           </motion.div>
+          <p className="mt-4 text-xs text-gray-500">
+            Available in GCC, EU, UK, US, Canada, Austria, and select regions. Not available in most Asian countries.
+          </p>
         </motion.div>
       </div>
     </section>

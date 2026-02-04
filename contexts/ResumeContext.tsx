@@ -21,6 +21,9 @@ import type {
   SkillGroup,
 } from "@/types";
 import { emptyResumeData, normalizeResumeData } from "@/lib/resume-data";
+import { getSuggestedBullets } from "@/lib/experience-suggestions";
+import { extractSummarySuggestions } from "@/lib/summary-suggestions";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { toast } from "sonner";
 
 interface ResumeContextType {
@@ -59,7 +62,7 @@ interface ResumeContextType {
   generateSummaryAI: (targetRole?: string) => Promise<void>;
   suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
   suggestResponsibilitiesAI: (jobTitle: string, description?: string) => Promise<string[]>;
-  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string>;
+  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string[]>;
   generatePDF?: (templateId: string) => Promise<void>;
   importedData: ResumeData | null;
   setImportedData: (data: ResumeData | null) => void;
@@ -83,6 +86,7 @@ function normalizeResumeList(resumes: Resume[]): Resume[] {
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
+  const { planChoice } = usePlanChoice();
   const router = useRouter();
   const params = useParams();
   const currentPathId = params?.id as string;
@@ -92,6 +96,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData);
   const [importedData, setImportedData] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const hasSubscription = useMemo(
+    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
+    [session?.user?.subscription]
+  );
+  const canUsePaid = useMemo(
+    () => planChoice === "paid" || hasSubscription,
+    [planChoice, hasSubscription]
+  );
 
   const getLocalResumes = useCallback(() => {
     const guestResumes: Resume[] = [];
@@ -121,7 +133,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch("/api/resumes");
       if (!response.ok) {
-        throw new Error("Failed to load resumes");
+        console.error("Failed to load resumes", response.status);
+        setResumes(localResumes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+        return;
       }
       const data = await response.json();
       const remoteResumes = normalizeResumeList(data.resumes || []);
@@ -129,6 +143,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       // Combine remote and local (local will be synced soon)
       // Filter out local resumes that might have already been synced (redundant but safe)
       setResumes([...remoteResumes, ...localResumes].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+    } catch (error) {
+      console.error("Failed to load resumes", error);
+      setResumes(localResumes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
     } finally {
       setIsLoading(false);
     }
@@ -559,12 +576,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const notifyAiLimit = useCallback(() => {
-    toast.error("Free AI limit reached. Redirecting to pricing...");
-    if (typeof window !== "undefined") {
-      setTimeout(() => {
-        window.location.href = "/pricing";
-      }, 1200);
-    }
+    toast.error("AI limit has done.");
   }, []);
 
   const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
@@ -582,11 +594,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         data && typeof data === "object" && "error" in data && typeof data.error === "string"
           ? data.error
           : "AI request failed";
-      if (
-        response.status === 429 ||
-        response.status === 402 ||
-        /quota|limit|resource exhausted|billing|payment/i.test(message)
-      ) {
+      const isLimit = /quota|limit|resource exhausted|billing|payment/i.test(message);
+      if (response.status === 429 || (response.status === 402 && isLimit)) {
         notifyAiLimit();
       }
       throw new Error(message);
@@ -596,6 +605,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const rewriteBulletAI = useCallback(
     async (experienceId: string, bulletIndex: number) => {
+      if (!canUsePaid) {
+        toast.info("AI tools are not available in this version.");
+        return;
+      }
       try {
         const experience = resumeData.experiences.find((exp) => exp.id === experienceId);
         if (!experience) return;
@@ -627,15 +640,20 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [resumeData.experiences, callAI]
+    [resumeData.experiences, callAI, canUsePaid]
   );
 
   const generateSummaryAI = useCallback(
     async (targetRole?: string) => {
+      if (!canUsePaid) {
+        toast.info("AI tools are not available in this version.");
+        return;
+      }
       setIsLoading(true);
       try {
         const result = await callAI("summary", { resumeData, targetRole });
-        const summary = result.summary as string;
+        const suggestions = extractSummarySuggestions(result);
+        const summary = suggestions[0] ?? "";
         setResumeData((prev) => ({
           ...prev,
           basics: { ...prev.basics, summary },
@@ -648,11 +666,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [resumeData, callAI]
+    [resumeData, callAI, canUsePaid]
   );
 
   const suggestSkillsAI = useCallback(
     async (jobTitle: string, description?: string) => {
+      if (!canUsePaid) {
+        return { hardSkills: [], softSkills: [] };
+      }
       setIsLoading(true);
       try {
         const result: any = await callAI("suggestions/skills", { jobTitle, description });
@@ -664,11 +685,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI]
+    [callAI, canUsePaid]
   );
 
   const suggestResponsibilitiesAI = useCallback(
     async (jobTitle: string, description?: string) => {
+      if (!canUsePaid) {
+        return getSuggestedBullets(jobTitle, 8);
+      }
       setIsLoading(true);
       try {
         const result: any = await callAI("suggestions/responsibilities", { jobTitle, description });
@@ -680,23 +704,26 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI]
+    [callAI, canUsePaid]
   );
 
   const suggestSummaryAI = useCallback(
     async (data: ResumeData, targetRole?: string) => {
+      if (!canUsePaid) {
+        return [];
+      }
       setIsLoading(true);
       try {
         const result: any = await callAI("summary", { resumeData: data, targetRole });
-        return typeof result?.summary === "string" ? result.summary : "";
+        return extractSummarySuggestions(result).slice(0, 3);
       } catch (error) {
         console.error("Error suggesting summary:", error);
-        return "";
+        return [];
       } finally {
         setIsLoading(false);
       }
     },
-    [callAI]
+    [callAI, canUsePaid]
   );
 
   const value = useMemo(

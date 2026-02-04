@@ -6,19 +6,22 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ResumeProvider } from "@/contexts/ResumeContext";
 import { CVProvider } from "@/contexts/CVContext";
 import { CoverLetterProvider } from "@/contexts/CoverLetterContext";
+import { PlanChoiceProvider } from "@/contexts/PlanChoiceContext";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
-      <ThemeProvider>
-        <ResumeProvider>
-          <CVProvider>
-            <CoverLetterProvider>
-              {children}
-            </CoverLetterProvider>
-          </CVProvider>
-        </ResumeProvider>
-      </ThemeProvider>
+      <PlanChoiceProvider>
+        <ThemeProvider>
+          <ResumeProvider>
+            <CVProvider>
+              <CoverLetterProvider>
+                {children}
+              </CoverLetterProvider>
+            </CVProvider>
+          </ResumeProvider>
+        </ThemeProvider>
+      </PlanChoiceProvider>
     </SessionProvider>
   );
 }

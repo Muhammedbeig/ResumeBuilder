@@ -1,0 +1,90 @@
+
+
+## 1. Core AI Engine & Architecture
+
+**Underlying Model:**
+The application utilizes Google's **Gemini 2.5 Flash** model. This model is chosen for its balance of speed and reasoning capability, allowing for near-instant feedback during the resume editing process.
+
+**Integration Strategy:**
+AI features are implemented as server-side API endpoints (`/api/ai/...`). This ensures security (API keys are never exposed to the client) and allows for centralized logic where prompts can be tuned and strict output formats (JSON) can be enforced before data reaches the user interface.
+
+---
+
+## 2. AI Resume Optimizer (The "Tailor")
+
+This is the flagship feature designed to help users target specific job applications. It functions as an automated career coach and strict ATS (Applicant Tracking System) auditor.
+
+### How It Works:
+1.  **Input:** The user provides their current resume (via text paste or PDF upload) and the specific Job Description (JD) they are applying for.
+2.  **Strict Auditing (Task 1):**
+    *   The AI acts as an impartial auditor. It extracts all relevant keywords from the Job Description.
+    *   It performs a strict comparison against the user's resume content.
+    *   Crucially, it is instructed to have **ZERO hallucinations**—it only marks a keyword as "matched" if the exact term (or a very close variant) exists in the resume.
+3.  **Optimization & Rewriting (Task 2):**
+    *   The system calculates a "Match Score" (0-100) based on keyword coverage.
+    *   It identifies "Missing Keywords"—critical terms found in the JD but absent from the resume.
+    *   **Intelligent Injection:** The AI doesn't just list missing keywords; it actively looks for existing experience bullet points that can be rewritten to include them.
+    *   **Strict Constraints:** To ensure the resume remains readable and fits 1-2 pages, the AI is enforced to keep suggestions under **220 characters** and **30 words**.
+    *   **Output:** The user receives a tailored list of specific text replacements ("Change this bullet to this new version") that naturally incorporate the missing skills.
+
+---
+
+## 3. Smart Resume Parsing
+
+This feature solves the "blank page" problem by allowing users to import existing resumes.
+
+### How It Works:
+1.  **Extraction:** When a user uploads a PDF, the system first extracts the raw text content using a PDF parsing library.
+2.  **Structuring:** This unstructured block of text is sent to the AI with a schema definition.
+3.  **Semantic Mapping:** The AI analyzes the text to identify distinct sections (Contact Info, Experience, Education, Skills). It intelligently separates:
+    *   Dates (Start/End)
+    *   Role Titles vs. Company Names
+    *   Bullet points vs. Paragraphs
+4.  **Result:** The output is a structured JSON object that populates the editor fields automatically, saving the user from manual data entry.
+
+---
+
+## 4. Intelligent Content Generation
+
+The application assists users in writing professional content from scratch using several specialized sub-agents.
+
+### A. Professional Summary Generator
+*   **Context:** The AI reads the user's entire profile (Experience, Skills, Current Title).
+*   **Goal:** Create a "Elevator Pitch" for the candidate.
+*   **Output:** It generates **3 distinct options**, each 2-3 sentences long. These options vary in tone and focus (e.g., one might highlight leadership, another technical expertise) so the user can choose the best fit.
+
+### B. "STAR" Method Bullet Rewriter
+*   **Trigger:** When a user clicks to "improve" a specific bullet point.
+*   **Methodology:** The AI applies the **STAR method** (Situation, Task, Action, Result).
+*   **Transformation:** It takes a weak or passive sentence (e.g., "Responsible for sales") and transforms it into an impact-driven statement (e.g., "Spearheaded sales initiatives resulting in a 20% revenue increase").
+*   **Quantification:** It is trained to look for opportunities to insert metrics (numbers, percentages) to add credibility.
+
+### C. Experience Suggestions
+*   **Trigger:** When a user adds a new job and types a Job Title.
+*   **Context:** The AI analyzes the specific Job Title (and optional description).
+*   **Output:** It generates a list of 5-7 professional, standard responsibilities associated with that role.
+*   **Benefit:** This helps users who "know what they did but don't know how to say it" by providing professional-sounding starting points they can edit.
+
+### D. Skill Suggestions
+*   **Trigger:** Based on Job Title or general profile context.
+*   **Output:** The AI categorizes suggestions into:
+    *   **Hard Skills:** Technical tools, software, languages (e.g., Python, React, Project Management).
+    *   **Soft Skills:** Interpersonal attributes (e.g., Leadership, Communication).
+*   **Relevance:** It filters out generic skills and focuses on those highly relevant to the user's specific career path.
+
+---
+
+## 5. ATS Checker (Standalone Tool)
+
+Distinct from the "Optimizer" (which targets a specific job), the ATS Checker provides a general health check of the resume.
+
+### How It Works:
+*   **Analysis:** It scans the resume against general best practices for Applicant Tracking Systems.
+*   **Scoring:** It provides an overall score (0-100) based on readability and completeness.
+*   **Breakdown:** It provides granular feedback on:
+    *   **Formatting Issues:** Detecting complex tables, graphics, or fonts that might confuse scanning software.
+    *   **Section Completeness:** Verifying if Contact Info, Summary, or Education sections are present and properly formatted.
+    *   **Keyword Density:** Checking for common industry keywords.
+    *   **Strengths & Weaknesses:** A summarized list of what the user did well and what needs improvement.
+
+---

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
+import { requirePaidAiAccess } from "@/lib/ai-access";
+import { extractSummarySuggestions } from "@/lib/summary-suggestions";
 import type { ResumeData } from "@/types";
 
 export async function POST(request: Request) {
+  const access = await requirePaidAiAccess();
+  if (access) return access;
+
   const body = await request.json().catch(() => ({}));
   const resumeData = body?.resumeData as ResumeData | undefined;
   const targetRole = body?.targetRole ? String(body.targetRole) : undefined;
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
       .slice(0, 8)
       .join(", ");
 
-    const prompt = `Write a professional summary for a resume.
+    const prompt = `Write 3 distinct professional summary options for a resume.
 
 Background:
 - Name: ${resumeData.basics.name}
@@ -37,13 +40,36 @@ Background:
 - Key Skills: ${skills}
 ${targetRole ? `- Target Role: ${targetRole}` : ""}
 
-Write a compelling 2-3 sentence summary that highlights key achievements and value proposition. Focus on results and expertise. Make it engaging and professional.`;
+Requirements:
+- Each option should be 2-3 sentences.
+- Highlight key achievements and value proposition.
+- Focus on results and expertise.
+- Vary wording between options.
+
+Return JSON only in this exact shape:
+{"summaries":["...","...","..."]}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const summary = response.text().trim();
+    const rawText = response.text().trim();
+    const jsonCandidate = rawText
+      .replace(/^```json/i, "")
+      .replace(/^```/i, "")
+      .replace(/```$/i, "")
+      .trim();
+    let summaries: string[] = [];
 
-    return NextResponse.json({ summary });
+    try {
+      const parsed = JSON.parse(jsonCandidate);
+      summaries = extractSummarySuggestions(parsed);
+    } catch {
+      summaries = extractSummarySuggestions(rawText);
+    }
+
+    const limitedSummaries = summaries.slice(0, 3);
+    const summary = limitedSummaries[0] ?? rawText;
+
+    return NextResponse.json({ summary, summaries: limitedSummaries });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });

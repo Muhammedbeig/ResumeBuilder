@@ -37,11 +37,14 @@ import type { ResumeData, TailoringResult } from "@/types";
 import { resumeTemplates } from "@/lib/resume-templates";
 import { ResumePreviewComponent } from "@/components/resume/ResumePreviewComponent";
 import { useResume } from "@/contexts/ResumeContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 
 export default function AIResumeOptimizerPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const { createResume } = useResume();
+  const { planChoice } = usePlanChoice();
   
   // State
   const [step, setStep] = useState(1);
@@ -53,6 +56,7 @@ export default function AIResumeOptimizerPage() {
   const [inputType, setInputType] = useState<"paste" | "upload">("paste");
   const [isUploading, setIsUploading] = useState(false);
   const [isKeywordsExpanded, setIsKeywordsExpanded] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   
   // Analysis Results
   const [parsedResume, setParsedResume] = useState<ResumeData | null>(null);
@@ -71,6 +75,16 @@ export default function AIResumeOptimizerPage() {
   ];
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = !!session?.user;
+  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+
+  const openPlanModal = () => setIsPlanModalOpen(true);
+
+  useEffect(() => {
+    if (planChoice) {
+      setIsPlanModalOpen(false);
+    }
+  }, [planChoice]);
 
   // Rotate loading messages
   useEffect(() => {
@@ -171,6 +185,12 @@ export default function AIResumeOptimizerPage() {
         },
       });
       router.push("/login?callbackUrl=/ai-resume-optimizer");
+      return;
+    }
+
+    if (!planChoice || planChoice !== "paid") {
+      toast.info("AI features are available in the Paid plan.");
+      openPlanModal();
       return;
     }
 
@@ -378,7 +398,9 @@ export default function AIResumeOptimizerPage() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen pt-24 pb-20 overflow-hidden bg-gray-50 dark:bg-gray-950 flex flex-col">
+    <>
+      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
+      <div ref={containerRef} className="relative min-h-screen pt-24 pb-20 overflow-hidden bg-gray-50 dark:bg-gray-950 flex flex-col">
       
       {/* Magical Loading Overlay */}
       <AnimatePresence>
@@ -916,5 +938,6 @@ export default function AIResumeOptimizerPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

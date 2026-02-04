@@ -1,55 +1,74 @@
-﻿import type { Experience, SkillGroup } from "@/types";
+const BULLET_PREFIX = /^(?:\d+[\).:-]|[-*\u2022])\s+/;
 
-const uniqueList = (items: string[]) => {
+export function parseSummarySuggestions(text: string): string[] {
+  const cleaned = text.replace(/\r\n/g, "\n").trim();
+  if (!cleaned) return [];
+
+  const lines = cleaned
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const bulletLines = lines.filter((line) => BULLET_PREFIX.test(line));
+  if (lines.length > 1 && bulletLines.length >= 2) {
+    return lines
+      .map((line) => line.replace(BULLET_PREFIX, "").trim())
+      .filter(Boolean);
+  }
+
+  const inlineNumbered = cleaned
+    .split(/(?:^|\s)\d+[\).:-]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (inlineNumbered.length > 1) {
+    return inlineNumbered;
+  }
+
+  const inlineBullets = cleaned
+    .split(/(?:^|\s)[-*\u2022]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (inlineBullets.length > 1) {
+    return inlineBullets;
+  }
+
+  return [cleaned];
+}
+
+export function normalizeSummarySuggestions(items: string[]): string[] {
   const seen = new Set<string>();
-  return items.filter((item) => {
-    const key = item.trim();
-    if (!key) return false;
-    const normalized = key.toLowerCase();
-    if (seen.has(normalized)) return false;
-    seen.add(normalized);
-    return true;
-  });
-};
+  const result: string[] = [];
+  for (const item of items) {
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(trimmed);
+  }
+  return result;
+}
 
-const toSentenceList = (items: string[]) => {
-  if (items.length === 0) return "";
-  if (items.length === 1) return items[0];
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
-};
+export function extractSummarySuggestions(input: unknown): string[] {
+  if (Array.isArray(input)) {
+    return normalizeSummarySuggestions(input.map((item) => String(item)));
+  }
 
-export const getSummarySuggestions = (
-  title: string,
-  experiences: Experience[],
-  skills: SkillGroup[],
-  limit = 3
-) => {
-  const cleanTitle = title?.trim() || "professional";
-  const roleCompany = uniqueList(
-    experiences
-      .map((exp) => {
-        const role = exp.role?.trim();
-        const company = exp.company?.trim();
-        if (role && company) return `${role} at ${company}`;
-        return role || company || "";
-      })
-      .filter(Boolean)
-  ).slice(0, 3);
+  if (typeof input === "string") {
+    return normalizeSummarySuggestions(parseSummarySuggestions(input));
+  }
 
-  const roleText = roleCompany.length > 0 ? toSentenceList(roleCompany) : "diverse roles";
+  if (input && typeof input === "object") {
+    const maybeSummaries = (input as { summaries?: unknown }).summaries;
+    if (Array.isArray(maybeSummaries)) {
+      return normalizeSummarySuggestions(maybeSummaries.map((item) => String(item)));
+    }
 
-  const skillList = uniqueList(
-    skills.flatMap((group) => group.skills.map((skill) => skill.trim()))
-  ).slice(0, 6);
+    const maybeSummary = (input as { summary?: unknown }).summary;
+    if (typeof maybeSummary === "string") {
+      return normalizeSummarySuggestions(parseSummarySuggestions(maybeSummary));
+    }
+  }
 
-  const skillText = skillList.length > 0 ? toSentenceList(skillList) : "core tools and best practices";
-
-  const suggestions = [
-    `Results-driven ${cleanTitle} with experience in ${roleText}. Skilled in ${skillText} with a focus on measurable impact.`,
-    `Detail-oriented ${cleanTitle} contributing across ${roleText}. Known for collaboration, problem-solving, and consistent delivery.`,
-    `Versatile ${cleanTitle} delivering outcomes across ${roleText}. Brings strengths in ${skillText} and continuous improvement.`,
-  ];
-
-  return uniqueList(suggestions).slice(0, limit);
-};
+  return [];
+}

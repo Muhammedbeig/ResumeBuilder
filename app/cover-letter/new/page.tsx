@@ -6,10 +6,12 @@ import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
 import { coverLetterTemplates } from "@/lib/cover-letter-templates";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
 
 // Placeholder data for preview
@@ -44,8 +46,12 @@ export default function NewCoverLetterPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { createCoverLetter, importedData } = useCoverLetter();
+  const { planChoice } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Cover Letter");
   const [isCreating, setIsCreating] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const isAuthenticated = !!session?.user;
+  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
 
   useEffect(() => {
     if (importedData?.personalInfo?.fullName) {
@@ -53,14 +59,35 @@ export default function NewCoverLetterPage() {
     }
   }, [importedData]);
 
-  const hasPremium = useMemo(
+  const hasSubscription = useMemo(
     () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
     [session?.user?.subscription]
   );
+  const canUsePaid = useMemo(
+    () => planChoice === "paid" || hasSubscription,
+    [planChoice, hasSubscription]
+  );
+
+  useEffect(() => {
+    if (planChoice) {
+      setIsPlanModalOpen(false);
+    }
+  }, [planChoice]);
+
+  const openPlanModal = () => {
+    if (!isAuthenticated) return;
+    setIsPlanModalOpen(true);
+  };
 
   const handleSelectTemplate = async (templateId: string, premium: boolean) => {
-    if (premium && !hasPremium) {
-      toast.error("Upgrade to Pro to unlock this template");
+    if (premium && !canUsePaid) {
+      if (!isAuthenticated) {
+        toast.error("Please sign in to unlock premium templates");
+        router.push(`/login?callbackUrl=${window.location.pathname}`);
+        return;
+      }
+      toast.info("Premium templates are available in the Paid plan.");
+      openPlanModal();
       return;
     }
     setIsCreating(true);
@@ -90,6 +117,7 @@ export default function NewCoverLetterPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
+      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -114,7 +142,7 @@ export default function NewCoverLetterPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {coverLetterTemplates.map((template) => {
             const Preview = template.component;
-            const isLocked = template.premium && !hasPremium;
+            const isLocked = template.premium && !canUsePaid;
             return (
               <Card key={template.id} className="overflow-hidden border-gray-200 dark:border-gray-800">
                 <div className="relative bg-gray-50 dark:bg-gray-900/50 p-4">

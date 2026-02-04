@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
+import { requirePaidAiAccess } from "@/lib/ai-access";
 
 export async function POST(request: Request) {
+  const access = await requirePaidAiAccess();
+  if (access) return access;
+
   const body = await request.json().catch(() => ({}));
   const bullet = String(body?.bullet || "").trim();
   const context = body?.context ? String(body.context) : "";

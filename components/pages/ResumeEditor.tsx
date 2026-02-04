@@ -14,15 +14,17 @@ import {
   Save,
   Download,
   Image as ImageIcon,
+  FileText,
   Plus,
   Trash2,
   Layout,
   MoreHorizontal,
-  Palette,
   Share2,
   Copy,
   Globe,
-  Check
+  Check,
+  Sparkles,
+  Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +34,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import {
   Select,
@@ -41,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Popover,
   PopoverContent,
@@ -53,8 +57,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useResume } from "@/contexts/ResumeContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { resumeTemplateMap, resumeTemplates } from "@/lib/resume-templates";
 import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
+import { buildResumeText, downloadTextFile } from "@/lib/resume-text";
+import { createQrDataUrl } from "@/lib/qr";
 import {
   buildMonthYear,
   buildYearOptions,
@@ -63,6 +70,12 @@ import {
   MONTH_OPTIONS,
 } from "@/lib/experience-suggestions";
 import { SectionManager } from "@/components/editor/SectionManager";
+import { DesignControls } from "@/components/editor/DesignControls";
+import { RichTextarea } from "@/components/editor/RichTextarea";
+import { RESUME_TEMPLATE_DEFAULT_FONTS } from "@/lib/template-defaults";
+import { useElementSize } from "@/hooks/use-element-size";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
@@ -70,7 +83,16 @@ export function ResumeEditorPage() {
   const router = useRouter();
   const params = useParams();
   const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const { planChoice } = usePlanChoice();
+  const hasSubscription = useMemo(
+    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
+    [session?.user?.subscription]
+  );
+  const canUsePaid = useMemo(
+    () => planChoice === "paid" || hasSubscription,
+    [planChoice, hasSubscription]
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     resumeData,
@@ -98,14 +120,29 @@ export function ResumeEditorPage() {
   } = useResume();
 
   const [activeTab, setActiveTab] = useState("basics");
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [zoom, setZoom] = useState([90]);
+  const [advancedFormatting, setAdvancedFormatting] = useState(false);
   const [draftExperience, setDraftExperience] = useState<Partial<Experience> | null>(null);
   const [draftSkillGroup, setDraftSkillGroup] = useState<Partial<SkillGroup> | null>(null);
   const [usedSummarySuggestions, setUsedSummarySuggestions] = useState<string[]>([]);
   const [summarySuggestions, setSummarySuggestions] = useState<string[]>([]);
   const summaryKeyRef = useRef("");
+  const { ref: previewContainerRef, size: previewContainerSize } =
+    useElementSize<HTMLDivElement>();
+  const { ref: mobilePreviewRef, size: mobilePreviewSize } =
+    useElementSize<HTMLDivElement>();
+
+  const PAGE_WIDTH = 816;
+  const PAGE_HEIGHT = 1056;
+
+  const getPreviewScale = (availableWidth?: number) => {
+    const zoomScale = zoom[0] / 100;
+    return zoomScale;
+  };
 
   const previewData = useMemo(() => {
     const nextExperiences = draftExperience
@@ -156,6 +193,12 @@ export function ResumeEditorPage() {
   }, [resumeData.basics.title, previewData.experiences, previewData.skills]);
 
   useEffect(() => {
+    if (planChoice) {
+      setIsPlanModalOpen(false);
+    }
+  }, [planChoice]);
+
+  useEffect(() => {
     if (previewData.experiences.length === 0) {
       setSummarySuggestions([]);
       summaryKeyRef.current = "";
@@ -172,8 +215,11 @@ export function ResumeEditorPage() {
     const key = `${previewData.basics.title}|${experienceText}|${skillsText}`;
     if (summaryKeyRef.current === key) return;
     const timer = setTimeout(async () => {
-      const suggestion = await suggestSummaryAI(previewData, previewData.basics.title || undefined);
-      setSummarySuggestions(suggestion ? [suggestion] : []);
+      const suggestions = await suggestSummaryAI(
+        previewData,
+        previewData.basics.title || undefined
+      );
+      setSummarySuggestions(suggestions);
       summaryKeyRef.current = key;
     }, 600);
     return () => clearTimeout(timer);
@@ -189,50 +235,154 @@ export function ResumeEditorPage() {
   const ActiveTemplate =
     resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap] ||
     resumeTemplateMap.modern;
+  const exportElementId = "resume-preview-export";
 
-  const handleExportPDF = async () => {
+  const PreviewDocument = ({
+    elementId,
+    withScale = true,
+    maxWidth,
+  }: {
+    elementId: string;
+    withScale?: boolean;
+    maxWidth?: number;
+  }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [contentHeight, setContentHeight] = useState(PAGE_HEIGHT);
+
+    useEffect(() => {
+      if (!withScale) return;
+      const element = contentRef.current;
+      if (!element) return;
+
+      const updateHeight = () => {
+        setContentHeight(element.scrollHeight || PAGE_HEIGHT);
+      };
+
+      updateHeight();
+      const observer = new ResizeObserver(() => updateHeight());
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, [withScale]);
+
+    const scale = withScale ? getPreviewScale(maxWidth) : 1;
+    const scaledWidth = PAGE_WIDTH * scale;
+    const scaledHeight = contentHeight * scale;
+
+    return (
+      <div
+        className={withScale ? "overflow-hidden" : undefined}
+        style={withScale ? { width: scaledWidth, height: scaledHeight } : undefined}
+      >
+        <div
+          className={withScale ? "transition-transform duration-200" : undefined}
+          style={
+            withScale
+              ? {
+                  transform: `scale(${scale})`,
+                  transformOrigin: "top left",
+                  width: PAGE_WIDTH,
+                }
+              : undefined
+          }
+        >
+          <div
+            ref={contentRef}
+            id={elementId}
+            className="bg-white shadow-2xl min-h-[1056px] w-[816px] text-black"
+          >
+            <ActiveTemplate key={JSON.stringify(resumeData.structure)} data={previewData} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const buildShareUrl = () => {
+    if (typeof window === "undefined") return "";
+    const origin = window.location.origin;
+    if (currentResume?.id) return `${origin}/shared/${currentResume.id}`;
+    return origin;
+  };
+
+  const openPlanModal = () => {
+    if (!session?.user) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!session?.user) return true;
+    if (!planChoice) {
+      toast.info("Select a plan to continue.");
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
+
+  const openDownloadModal = () => {
+    if (!ensurePlanChosen()) return;
+    setIsDownloadModalOpen(true);
+  };
+
+  const handlePurchase = async () => {
     if (!session?.user) {
-      toast.error("Please sign in to export your resume");
+      toast.error("Please sign in to complete purchase");
       router.push(`/login?callbackUrl=${window.location.pathname}`);
       return;
     }
-    setIsExporting(true);
     try {
-      if (generatePDFContext) {
-        await generatePDFContext(activeTemplateId);
-      } else {
-        const pdfUrl = await generatePDF('resume-preview', 'resume.pdf');
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = 'resume.pdf';
-        link.click();
+      const response = await fetch("/api/user/upgrade", { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Upgrade failed");
       }
-      toast.success('Resume exported successfully!');
+      const data = await response.json();
+      if (updateSession) {
+        await updateSession({ subscription: data.subscription || "pro" });
+      }
+      toast.success("Purchase successful!");
     } catch (error) {
-      console.error('Export PDF failed:', error);
-      toast.error('Failed to export resume');
-    } finally {
-      setIsExporting(false);
+      toast.error("Purchase failed. Please try again.");
     }
   };
 
-  const handleExportImage = async () => {
-    if (!session?.user) {
-      toast.error("Please sign in to export your resume");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
+  const exportPaidPDF = async () => {
+    if (generatePDFContext) {
+      await generatePDFContext(activeTemplateId);
       return;
     }
-    setIsExporting(true);
-    try {
-      const imageUrl = await generateImage('resume-preview');
-      downloadImage(imageUrl, 'resume.png');
-      toast.success('Resume exported successfully!');
-    } catch (error) {
-      console.error('Export Image failed:', error);
-      toast.error('Failed to export resume');
-    } finally {
-      setIsExporting(false);
-    }
+    const pdfUrl = await generatePDF(exportElementId, 'resume.pdf');
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = 'resume.pdf';
+    link.click();
+  };
+
+  const exportFreePDF = async () => {
+    const shareUrl = buildShareUrl();
+    const qrDataUrl = shareUrl ? await createQrDataUrl(shareUrl, 160) : undefined;
+    const footerText = shareUrl ? `View online: ${shareUrl}` : "Created with ResuPro";
+    const pdfUrl = await generatePDF(exportElementId, 'resume.pdf', {
+      watermarkText: "ResuPro.com",
+      footerText,
+      qrDataUrl,
+      qrSizeMm: 18,
+    });
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = 'resume.pdf';
+    link.click();
+  };
+
+  const handleExportPDF = () => {
+    openDownloadModal();
+  };
+
+  const handleExportImage = () => {
+    openDownloadModal();
+  };
+
+  const handleExportTxt = () => {
+    openDownloadModal();
   };
 
   const handleSave = async () => {
@@ -275,18 +425,68 @@ export function ResumeEditorPage() {
   ];
 
   return (
-    <div className="pt-24">
-      <div className="flex h-[calc(100vh-96px)] overflow-hidden">
+    <>
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <DownloadGateModal
+        open={isDownloadModalOpen}
+        onOpenChange={setIsDownloadModalOpen}
+        planChoice={planChoice}
+        hasSubscription={hasSubscription}
+        onPurchase={handlePurchase}
+      />
+      <div
+        className="relative overflow-hidden box-border"
+        style={{
+          paddingTop:
+            "calc(var(--app-header-offset, var(--app-header-height)) + var(--app-header-gap, 0px))",
+          height: "100vh",
+        }}
+      >
+        <div className="flex h-full flex-col lg:flex-row overflow-hidden">
         {/* Editor Side (Left) */}
-        <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
+        <div className="w-full lg:w-1/2 lg:border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
           {/* Toolbar */}
           <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
             <h2 className="font-semibold text-gray-900 dark:text-white">Editor</h2>
             <div className="flex items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="lg:hidden">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-none p-0">
+                  <div className="h-full bg-gray-100 dark:bg-gray-950 overflow-y-auto overflow-x-auto">
+                    <div
+                      ref={mobilePreviewRef}
+                      className="w-full flex flex-col p-4"
+                    >
+                      <div className="w-full max-w-[816px] mx-auto flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+                        <span className="text-xs font-medium text-gray-500 px-2">Preview Zoom</span>
+                        <div className="flex items-center gap-4 w-48 px-2">
+                          <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
+                          <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+                        </div>
+                      </div>
+                      <div className="min-w-max w-full flex justify-center">
+                        <PreviewDocument
+                          elementId="resume-preview-mobile"
+                          maxWidth={mobilePreviewSize.width}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
               <SharePopover />
               <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? "Saving..." : "Save"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportTxt} disabled={isExporting}>
+                <FileText className="w-4 h-4 mr-2" />
+                TXT
               </Button>
               <Button variant="outline" size="sm" onClick={handleExportImage} disabled={isExporting}>
                 <ImageIcon className="w-4 h-4 mr-2" />
@@ -332,8 +532,8 @@ export function ResumeEditorPage() {
               </div>
             </div>
 
-                      <ScrollArea className="flex-1 h-full">
-                        <div className="p-6 pb-32">
+                      <ScrollArea className="flex-1 min-h-0">
+                        <div className="p-6 pb-10">
                           <TabsContent value="basics" className="mt-0 space-y-6">                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                       Basic Information
                     </h2>
@@ -473,22 +673,27 @@ export function ResumeEditorPage() {
                       <div className="flex items-center justify-between mb-2">
                         <Label>Professional Summary</Label>
                       </div>
-                      <Textarea 
+                      <RichTextarea
                         value={resumeData.basics.summary}
-                        onChange={(e) => updateBasics({ summary: e.target.value })}
+                        onValueChange={(value) => updateBasics({ summary: value })}
                         placeholder="Write a brief summary about your professional background and career goals..."
                         rows={4}
+                        enableFormatting
                       />
                       <div className="mt-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-3">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                            Summary Suggestion
+                            Summary Suggestions
                           </p>
                           <span className="text-[10px] text-gray-500 dark:text-gray-400">
                             Updates automatically from your details
                           </span>
                         </div>
-                        {previewData.experiences.length === 0 ? (
+                        {!canUsePaid ? (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            AI features are available in the Paid plan.
+                          </p>
+                        ) : previewData.experiences.length === 0 ? (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             Add at least one experience to see summary ideas.
                           </p>
@@ -500,26 +705,26 @@ export function ResumeEditorPage() {
                               </p>
                             ) : (
                               availableSummarySuggestions.map((suggestion, idx) => (
-                              <div
-                                key={`${suggestion}-${idx}`}
-                                className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2"
-                              >
-                                <Button
-                                  variant="outline"
-                                  size="icon-sm"
-                                  type="button"
-                                  onClick={() => {
-                                    updateBasics({ summary: suggestion });
-                                    setUsedSummarySuggestions((prev) => [...prev, suggestion]);
-                                  }}
-                                  className="shrink-0"
+                                <div
+                                  key={`${suggestion}-${idx}`}
+                                  className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2"
                                 >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                                <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
-                                  {suggestion}
-                                </p>
-                              </div>
+                                  <Button
+                                    variant="outline"
+                                    size="icon-sm"
+                                    type="button"
+                                    onClick={() => {
+                                      updateBasics({ summary: suggestion });
+                                      setUsedSummarySuggestions((prev) => [...prev, suggestion]);
+                                    }}
+                                    className="shrink-0"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                  <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+                                    {suggestion}
+                                  </p>
+                                </div>
                               ))
                             )}
                           </div>
@@ -544,11 +749,15 @@ export function ResumeEditorPage() {
                 </TabsContent>
 
                 <TabsContent value="design" className="mt-0">
-                  <DesignSection />
+                <DesignSection
+                  templateId={activeTemplateId}
+                  advancedFormatting={advancedFormatting}
+                  onAdvancedFormattingChange={setAdvancedFormatting}
+                />
                 </TabsContent>
 
                 <TabsContent value="projects" className="mt-0">
-                  <ProjectsSection />
+                  <ProjectsSection advancedFormatting={advancedFormatting} />
                 </TabsContent>
 
                 <TabsContent value="certifications" className="mt-0">
@@ -564,26 +773,36 @@ export function ResumeEditorPage() {
         </div>
 
         {/* Preview Side (Right) */}
-        <div className="w-1/2 bg-gray-100 dark:bg-gray-950 p-8 overflow-auto flex flex-col items-center">
-          <div className="w-full max-w-[816px] flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-              <span className="text-xs font-medium text-gray-500 px-2">Preview Zoom</span>
-              <div className="flex items-center gap-4 w-48 px-2">
-                  <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
-                  <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
-              </div>
+        <div className="hidden lg:flex w-1/2 bg-gray-100 dark:bg-gray-950 flex-col">
+          <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Preview</span>
+            <div className="flex items-center gap-4 w-48">
+              <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
+              <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+            </div>
           </div>
-          
-          <div className="transition-transform duration-200" style={{ transform: `scale(${zoom[0] / 100})`, transformOrigin: "top center" }}>
-            <div id="resume-preview" className="bg-white shadow-2xl min-h-[1056px] w-[816px] text-black">
-                <ActiveTemplate 
-                key={JSON.stringify(resumeData.structure)} 
-                data={previewData} 
-              />
+          <div className="flex-1 w-full overflow-y-auto overflow-x-auto p-8">
+            <div ref={previewContainerRef} className="w-full">
+              <div className="min-w-max w-full flex justify-center">
+                <PreviewDocument
+                  elementId="resume-preview-view"
+                  maxWidth={previewContainerSize.width}
+                />
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Offscreen preview for mobile export */}
+        <div 
+          className="fixed top-0 left-0 w-0 h-0 overflow-hidden opacity-0 pointer-events-none -z-50"
+          aria-hidden="true"
+        >
+          <PreviewDocument elementId={exportElementId} withScale={false} />
+        </div>
       </div>
     </div>
+    </>
   );
 }
 
@@ -612,16 +831,18 @@ function ExperienceSection({
   });
   const [startMonth, setStartMonth] = useState("");
   const [startYear, setStartYear] = useState("");
-  const [endMonth, setEndMonth] = useState("");
-  const [endYear, setEndYear] = useState("");
-  const [usedSuggestions, setUsedSuggestions] = useState<string[]>([]);
-  const [aiSuggestedBullets, setAiSuggestedBullets] = useState<string[]>([]);
-  const [editingExperiences, setEditingExperiences] = useState<Record<string, boolean>>({});
-  const [existingSuggestionState, setExistingSuggestionState] = useState<
-    Record<string, { role: string; used: string[] }>
-  >({});
-  const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
-  const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
+    const [endMonth, setEndMonth] = useState("");
+    const [endYear, setEndYear] = useState("");
+    const [usedSuggestions, setUsedSuggestions] = useState<string[]>([]);
+    const [aiSuggestedBullets, setAiSuggestedBullets] = useState<string[]>([]);
+    const [isNewSuggestionsLoading, setIsNewSuggestionsLoading] = useState(false);
+    const [editingExperiences, setEditingExperiences] = useState<Record<string, boolean>>({});
+    const [existingSuggestionState, setExistingSuggestionState] = useState<
+      Record<string, { role: string; used: string[] }>
+    >({});
+    const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
+    const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
+    const [existingSuggestionsLoading, setExistingSuggestionsLoading] = useState<Record<string, boolean>>({});
 
   const yearOptions = useMemo(
     () => buildYearOptions(1970, new Date().getFullYear() + 1),
@@ -691,49 +912,72 @@ function ExperienceSection({
     updateExperience(exp.id, { bullets: nextBullets });
   };
 
-  useEffect(() => {
-    setUsedSuggestions([]);
-    setAiSuggestedBullets([]);
-  }, [newExperience.role]);
-
-  useEffect(() => {
-    if (!isAdding || !newExperience.role) {
+    useEffect(() => {
+      setUsedSuggestions([]);
       setAiSuggestedBullets([]);
-      return;
-    }
-    const description = (newExperience.bullets || []).join(" ").trim();
-    const role = newExperience.role.trim();
-    const timer = setTimeout(async () => {
-      try {
-        const bullets = await suggestResponsibilitiesAI(role, description);
-        setAiSuggestedBullets(bullets);
-      } catch (error) {
-        console.error("Auto-suggest failed", error);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
+      setIsNewSuggestionsLoading(false);
+    }, [newExperience.role]);
 
-  useEffect(() => {
-    const timers: NodeJS.Timeout[] = [];
-    resumeData.experiences.forEach((exp) => {
-      if (!editingExperiences[exp.id] || !exp.role) return;
-      const description = exp.bullets.join(" ").trim();
-      const key = `${exp.role}|${description}`;
-      if (existingAiKeys[exp.id] === key) return;
+    useEffect(() => {
+      if (!isAdding || !newExperience.role) {
+        setAiSuggestedBullets([]);
+        setIsNewSuggestionsLoading(false);
+        return;
+      }
+      const description = (newExperience.bullets || []).join(" ").trim();
+      const role = newExperience.role.trim();
+      let isActive = true;
+      setIsNewSuggestionsLoading(true);
       const timer = setTimeout(async () => {
         try {
-          const bullets = await suggestResponsibilitiesAI(exp.role, description);
-          setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
-          setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
+          const bullets = await suggestResponsibilitiesAI(role, description);
+          if (!isActive) return;
+          setAiSuggestedBullets(bullets);
         } catch (error) {
-          console.error("Auto-suggest existing failed", error);
+          console.error("Auto-suggest failed", error);
+        } finally {
+          if (isActive) setIsNewSuggestionsLoading(false);
         }
       }, 500);
-      timers.push(timer);
-    });
-    return () => timers.forEach(clearTimeout);
-  }, [editingExperiences, resumeData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
+      return () => {
+        isActive = false;
+        clearTimeout(timer);
+      };
+    }, [isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
+
+    useEffect(() => {
+      const timers: NodeJS.Timeout[] = [];
+      let isActive = true;
+      resumeData.experiences.forEach((exp) => {
+        if (!editingExperiences[exp.id] || !exp.role) {
+          setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
+          return;
+        }
+        const description = exp.bullets.join(" ").trim();
+        const key = `${exp.role}|${description}`;
+        if (existingAiKeys[exp.id] === key) return;
+        setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: true }));
+        const timer = setTimeout(async () => {
+          try {
+            const bullets = await suggestResponsibilitiesAI(exp.role, description);
+            if (!isActive) return;
+            setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
+            setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
+          } catch (error) {
+            console.error("Auto-suggest existing failed", error);
+          } finally {
+            if (isActive) {
+              setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
+            }
+          }
+        }, 500);
+        timers.push(timer);
+      });
+      return () => {
+        isActive = false;
+        timers.forEach(clearTimeout);
+      };
+    }, [editingExperiences, resumeData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
 
   useEffect(() => {
     if (!onDraftChange) return;
@@ -913,6 +1157,9 @@ function ExperienceSection({
                   allowCustom
                   showOtherOption
                   otherLabel="Other (type your own)"
+                  className="h-12 text-sm"
+                  contentClassName="rounded-2xl"
+                  itemClassName="rounded-lg py-2"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Choose from common roles or type your own.
@@ -929,17 +1176,20 @@ function ExperienceSection({
                   allowCustom
                   showOtherOption
                   otherLabel="Other (type your own)"
+                  className="h-12 text-sm"
+                  contentClassName="rounded-2xl"
+                  itemClassName="rounded-lg py-2"
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Includes major Pakistani and global companies.
-                </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Includes major GCC, EU, UK, US, Canada, and Austria companies.
+                  </p>
+                </div>
               </div>
-            </div>
 
             <div className="space-y-2">
               <Label>Location</Label>
               <Input
-                placeholder="e.g. Lahore, Punjab, Pakistan (Remote)"
+                placeholder="e.g. Dubai, UAE (Remote)"
                 value={newExperience.location}
                 onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
               />
@@ -1040,12 +1290,18 @@ function ExperienceSection({
 
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-6">
                 <div className="space-y-4">
-                  <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                      Recommended Points
-                    </p>
-                    <div className="mt-2 space-y-2 max-h-64 overflow-y-auto pr-1">
-                      {availableSuggestedBullets.length === 0 ? (
+                    <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                        Recommended Points
+                      </p>
+                      <div className="mt-2 space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {isNewSuggestionsLoading ? (
+                        <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300">
+                          <Spinner className="h-3 w-3" />
+                          <Sparkles className="h-3 w-3 animate-pulse" />
+                          <span>Summoning suggestions...</span>
+                        </div>
+                      ) : availableSuggestedBullets.length === 0 ? (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {newExperience.role
                             ? "Suggestions will appear as you add details."
@@ -1072,8 +1328,8 @@ function ExperienceSection({
                           </div>
                         ))
                       )}
+                      </div>
                     </div>
-                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -1093,16 +1349,17 @@ function ExperienceSection({
                     {newExperience.bullets && newExperience.bullets.length > 0 ? (
                       newExperience.bullets.map((bullet, idx) => (
                         <div key={idx} className="flex gap-2">
-                          <Textarea
+                          <RichTextarea
                             placeholder="Describe your achievement..."
                             value={bullet}
-                            onChange={(e) => {
+                            onValueChange={(value) => {
                               const nextBullets = [...(newExperience.bullets || [])];
-                              nextBullets[idx] = e.target.value;
+                              nextBullets[idx] = value;
                               setNewExperience({ ...newExperience, bullets: nextBullets });
                             }}
                             rows={2}
                             className="flex-1"
+                            enableFormatting
                           />
                           <Button
                             variant="ghost"
@@ -1262,14 +1519,31 @@ function ExperienceSection({
                       </Button>
                     </div>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                      {getExistingSuggestions(exp).length === 0 ? (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
-                          {exp.role
-                            ? "Generating relevant suggestions..."
-                            : "Enter a job title to see suggestions."}
-                        </p>
-                      ) : (
-                        getExistingSuggestions(exp).map((bullet, idx) => (
+                      {(() => {
+                        const suggestions = getExistingSuggestions(exp);
+                        const isLoading = existingSuggestionsLoading[exp.id];
+
+                        if (isLoading) {
+                          return (
+                            <div className="flex items-center justify-center gap-2 text-xs text-purple-600 dark:text-purple-300 py-4">
+                              <Spinner className="h-3 w-3" />
+                              <Sparkles className="h-3 w-3 animate-pulse" />
+                              <span>Generating suggestions...</span>
+                            </div>
+                          );
+                        }
+
+                        if (suggestions.length === 0) {
+                          return (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+                              {exp.role
+                                ? "Suggestions will update as you edit the role."
+                                : "Enter a job title to see suggestions."}
+                            </p>
+                          );
+                        }
+
+                        return suggestions.map((bullet, idx) => (
                           <div
                             key={`${exp.id}-suggestion-${idx}`}
                             className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 p-2"
@@ -1287,8 +1561,8 @@ function ExperienceSection({
                               {bullet}
                             </p>
                           </div>
-                        ))
-                      )}
+                        ));
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1311,16 +1585,17 @@ function ExperienceSection({
                 )}
                 {exp.bullets.map((bullet, idx) => (
                   <div key={idx} className="flex gap-2">
-                    <Textarea
+                    <RichTextarea
                       value={bullet}
-                      onChange={(e) => {
+                      onValueChange={(value) => {
                         const newBullets = [...exp.bullets];
-                        newBullets[idx] = e.target.value;
+                        newBullets[idx] = value;
                         updateExperience(exp.id, { bullets: newBullets });
                       }}
                       placeholder="Describe your achievement..."
                       rows={2}
                       className="flex-1"
+                      enableFormatting
                     />
                     {isEditing && (
                       <Button
@@ -1860,7 +2135,7 @@ function SkillsSection({
   );
 }
 
-function ProjectsSection() {
+function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }) {
   const { resumeData, addProject, updateProject, removeProject } = useResume();
   const [isAdding, setIsAdding] = useState(false);
   const [newProject, setNewProject] = useState<Partial<Project>>({
@@ -1915,11 +2190,12 @@ function ProjectsSection() {
               value={newProject.name}
               onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
             />
-            <Textarea
+            <RichTextarea
               placeholder="Project Description"
-              value={newProject.description}
-              onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+              value={newProject.description || ""}
+              onValueChange={(value) => setNewProject({ ...newProject, description: value })}
               rows={3}
+              enableFormatting={advancedFormatting}
             />
             <Input
               placeholder="Technologies (comma separated)"
@@ -1959,12 +2235,13 @@ function ProjectsSection() {
                   onChange={(e) => updateProject(project.id, { name: e.target.value })}
                   className="font-semibold mb-2"
                 />
-                <Textarea
+                <RichTextarea
                   value={project.description}
-                  onChange={(e) => updateProject(project.id, { description: e.target.value })}
+                  onValueChange={(value) => updateProject(project.id, { description: value })}
                   placeholder="Project description"
                   rows={3}
                   className="mb-4"
+                  enableFormatting={advancedFormatting}
                 />
                 <Input
                   placeholder="Technologies (comma separated)"
@@ -2121,38 +2398,17 @@ function CertificationsSection() {
   );
 }
 
-function DesignSection() {
+function DesignSection({
+  templateId,
+  advancedFormatting,
+  onAdvancedFormattingChange,
+}: {
+  templateId: string;
+  advancedFormatting: boolean;
+  onAdvancedFormattingChange: (value: boolean) => void;
+}) {
   const { resumeData, updateMetadata } = useResume();
-  
-  const colors = [
-    "#000000", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6", 
-    "#f59e0b", "#ec4899", "#0ea5e9", "#6366f1", "#14b8a6",
-  ];
-
-  const fonts = [
-    "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Raleway", 
-    "Poppins", "Merriweather", "Playfair Display", "Ubuntu", "Nunito", 
-    "Rubik", "Lora", "PT Sans", "PT Serif", "Quicksand", "Work Sans", 
-    "Fira Sans", "Inconsolata", "Oswald"
-  ];
-
-  const fontSizes = [
-    { id: "sm", label: "Small" },
-    { id: "md", label: "Medium" },
-    { id: "lg", label: "Large" },
-  ];
-
-  // Dynamically load font
-  useEffect(() => {
-    const font = resumeData.metadata?.fontFamily || "Inter";
-    const link = document.createElement("link");
-    link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}:wght@300;400;500;700&display=swap`;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, [resumeData.metadata?.fontFamily]);
+  const defaultFont = RESUME_TEMPLATE_DEFAULT_FONTS[templateId] || "Inter";
 
   return (
     <motion.div
@@ -2166,88 +2422,13 @@ function DesignSection() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Design & Appearance
         </h2>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Palette className="w-4 h-4 text-purple-600" />
-                <h3 className="font-medium text-gray-900 dark:text-white">Accent Color</h3>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => updateMetadata({ themeColor: color })}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
-                      resumeData.metadata?.themeColor === color 
-                        ? "border-gray-900 dark:border-white scale-110" 
-                        : "border-transparent hover:scale-105"
-                    }`}
-                    style={{ backgroundColor: color }}
-                    aria-label={`Select color ${color}`}
-                  />
-                ))}
-                <div className="relative">
-                    <input 
-                        type="color" 
-                        value={resumeData.metadata?.themeColor || "#000000"}
-                        onChange={(e) => updateMetadata({ themeColor: e.target.value })}
-                        className="w-8 h-8 rounded-full overflow-hidden cursor-pointer opacity-0 absolute inset-0"
-                    />
-                    <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center pointer-events-none">
-                        <span className="text-xs">+</span>
-                    </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-               <div className="flex items-center gap-2 mb-4">
-                 <h3 className="font-medium text-gray-900 dark:text-white">Font Size</h3>
-               </div>
-               <div className="flex gap-2">
-                 {fontSizes.map((size) => (
-                    <Button
-                        key={size.id}
-                        variant={resumeData.metadata?.fontSize === size.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => updateMetadata({ fontSize: size.id })}
-                        className="flex-1"
-                    >
-                        {size.label}
-                    </Button>
-                 ))}
-               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <h3 className="font-medium text-gray-900 dark:text-white">Font Family</h3>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {fonts.map((font) => (
-                  <div
-                    key={font}
-                    onClick={() => updateMetadata({ fontFamily: font })}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      resumeData.metadata?.fontFamily === font
-                        ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-600"
-                        : "border-gray-200 dark:border-gray-800 hover:border-purple-300"
-                    }`}
-                  >
-                    <div className="font-medium text-sm" style={{ fontFamily: font }}>{font}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <DesignControls
+          metadata={resumeData.metadata}
+          onUpdate={updateMetadata}
+          defaultFontLabel={defaultFont}
+          advancedFormattingEnabled={advancedFormatting}
+          onAdvancedFormattingChange={onAdvancedFormattingChange}
+        />
       </div>
     </motion.div>
   );

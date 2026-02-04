@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FileUp, Plus, Loader2, Sparkles } from "lucide-react";
@@ -9,14 +9,52 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 
 export default function StartCoverLetterPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const { setImportedData } = useCoverLetter();
+  const { planChoice } = usePlanChoice();
   const [isUploading, setIsUploading] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+
+  const isAuthenticated = !!session?.user;
+  const shouldShowPlanModal = isAuthenticated && isPlanModalOpen;
+
+  const openPlanModal = () => {
+    if (!isAuthenticated) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!isAuthenticated) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
+
+  const ensurePaidPlan = () => {
+    if (!ensurePlanChosen()) return false;
+    if (planChoice !== "paid") {
+      toast.info("AI features are available in the Paid plan.");
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    if (planChoice) {
+      setIsPlanModalOpen(false);
+    }
+  }, [planChoice]);
 
   const handleStartFresh = () => {
+    if (!ensurePlanChosen()) return;
     setImportedData(null);
     router.push("/cover-letter/new");
   };
@@ -27,6 +65,7 @@ export default function StartCoverLetterPage() {
       router.push(`/login?callbackUrl=${window.location.pathname}`);
       return;
     }
+    if (!ensurePaidPlan()) return;
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -77,6 +116,7 @@ export default function StartCoverLetterPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
+      <PlanChoiceModal open={shouldShowPlanModal} onOpenChange={setIsPlanModalOpen} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">

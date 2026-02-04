@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface ProfessionalTemplateProps {
   data: ResumeData;
@@ -19,10 +21,8 @@ export function ProfessionalTemplate({ data, className = '' }: ProfessionalTempl
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#0f172a'; // Default slate-900
   const fontName = data.metadata?.fontFamily || 'Merriweather';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -37,7 +37,7 @@ export function ProfessionalTemplate({ data, className = '' }: ProfessionalTempl
         if (!basics.summary) return null;
         return (
           <div key={section.id} className="mb-8 max-w-3xl mx-auto text-center">
-            <p className="text-slate-700 leading-relaxed italic text-lg">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-slate-700 leading-relaxed italic text-lg" />
           </div>
         );
       case 'skills':
@@ -81,7 +81,7 @@ export function ProfessionalTemplate({ data, className = '' }: ProfessionalTempl
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-slate-600 leading-relaxed flex items-start gap-2">
                         <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: `${themeColor}88` }} />
-                        <span>{bullet}</span>
+                        <RichText inline text={bullet} />
                       </li>
                     ))}
                   </ul>
@@ -129,7 +129,7 @@ export function ProfessionalTemplate({ data, className = '' }: ProfessionalTempl
                       <a href={project.link} className="text-xs hover:underline" style={{ color: themeColor }}>Link</a>
                     )}
                   </div>
-                  <p className="text-sm text-slate-600 mt-1 line-clamp-2">{project.description}</p>
+                  <RichText text={project.description} className="text-sm text-slate-600 mt-1 line-clamp-2" />
                   {project.technologies.length > 0 && (
                     <p className="text-xs text-slate-500 mt-1 italic">
                       {project.technologies.join(', ')}

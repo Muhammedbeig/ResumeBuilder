@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
+import { requirePaidAiAccess } from "@/lib/ai-access";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PDFParser = require("pdf2json");
 
 export async function POST(req: NextRequest) {
+  const access = await requirePaidAiAccess();
+  if (access) return access;
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;

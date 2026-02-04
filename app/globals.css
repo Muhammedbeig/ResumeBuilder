@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --app-header-height: 96px;
+    --app-header-gap: 12px;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -207,6 +209,11 @@
 /* Selection styles */
 ::selection {
   @apply bg-purple-200 dark:bg-purple-900;
+}
+
+/* Hide Next.js dev overlay badge (dev only) */
+nextjs-portal {
+  display: none !important;
 }
 
 @media print {

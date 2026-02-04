@@ -38,7 +38,7 @@ const features = [
   {
     icon: BarChart3,
     title: 'Recruiter Insights',
-    description: 'Track views, downloads, and get analytics on your resume performance with our Pro plan.',
+    description: 'Track views, downloads, and get analytics on your resume performance with built-in insights.',
     color: 'from-indigo-500 to-blue-600'
   }
 ];

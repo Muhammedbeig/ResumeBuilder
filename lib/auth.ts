@@ -70,6 +70,8 @@ export const authOptions: NextAuthOptions = {
       // Handle session update (e.g. name change)
       if (trigger === "update" && session) {
         if (session.name) token.name = session.name;
+        if (session.subscription) token.subscription = session.subscription;
+        if (session.user?.subscription) token.subscription = session.user.subscription;
       }
       
       return token;

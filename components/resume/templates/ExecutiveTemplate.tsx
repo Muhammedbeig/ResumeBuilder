@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from "@/types";
 import { useMemo } from "react";
+import { getFontScale } from "@/lib/typography";
+import { RichText } from "@/components/editor/RichText";
 
 interface ExecutiveTemplateProps {
   data: ResumeData;
@@ -20,10 +22,8 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
   
   const themeColor = data.metadata?.themeColor || '#7c3aed'; // Default purple-600
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -110,7 +110,7 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
             >
               Summary
             </h2>
-            <p className="text-sm text-gray-700 leading-relaxed">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-sm text-gray-700 leading-relaxed" />
           </section>
         );
       case 'experience':
@@ -139,7 +139,9 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
                   </div>
                   <ul className="mt-2 space-y-1 text-xs text-gray-700 list-disc pl-4">
                     {exp.bullets.map((bullet, index) => (
-                      <li key={index}>{bullet}</li>
+                      <li key={index}>
+                        <RichText inline text={bullet} />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -166,7 +168,7 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
                       <span className="text-xs text-gray-500">{project.link}</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-600">{project.description}</p>
+                  <RichText text={project.description} className="text-xs text-gray-600" />
                   {project.technologies.length > 0 && (
                     <p className="text-xs text-gray-500">
                       Tech: {project.technologies.join(", ")}

@@ -27,16 +27,16 @@ const faqs = [
   },
   {
     question: "Can I create multiple versions of my resume?",
-    answer: "Yes! With our Pro plan, you can create unlimited resumes tailored for different roles or industries. Each resume can have its own template, content, and settings. Perfect for career changers or those applying to diverse roles."
+    answer: "Yes! You can create unlimited resumes tailored for different roles or industries. Each resume can have its own template, content, and settings. Perfect for career changers or those applying to diverse roles."
   },
   {
     question: "What languages are supported?",
     answer: "Currently, we fully support English and Urdu resume creation. Our AI can help write and optimize resumes in both languages. We're working on adding more languages soon!"
   },
-  {
-    question: "Can I get a refund if I'm not satisfied?",
-    answer: "Yes! We offer a 14-day money-back guarantee on all paid plans. If you're not completely satisfied with ResuPro, contact our support team within 14 days of your purchase for a full refund, no questions asked."
-  }
+  // {
+  //   question: "Can I get a refund if I'm not satisfied?",
+  //   answer: "Yes! We offer a 14-day money-back guarantee on all paid plans. If you're not completely satisfied with ResuPro, contact our support team within 14 days of your purchase for a full refund, no questions asked."
+  // }
 ];
 
 export function FAQ() {

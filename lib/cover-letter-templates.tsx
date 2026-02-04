@@ -1,12 +1,13 @@
 import React from 'react';
 import { CoverLetterData } from '@/types';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 const getStyles = (data: CoverLetterData) => {
   const themeColor = data.metadata?.themeColor || '#000000';
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
   
   return { themeColor, fontName, scale };
 };
@@ -39,12 +40,18 @@ const ModernCoverLetter = ({ data }: { data: CoverLetterData }) => {
         <p>{data.recipientInfo.city} {data.recipientInfo.zipCode}</p>
       </div>
 
-      <div className="mb-6 font-bold" style={{ color: themeColor }}>Subject: {data.content.subject}</div>
-      <div className="mb-4">{data.content.greeting}</div>
-      <div className="mb-4">{data.content.opening}</div>
-      <div className="mb-4 whitespace-pre-wrap leading-relaxed">{data.content.body}</div>
-      <div className="mb-8">{data.content.closing}</div>
-      <div className="font-bold text-xl" style={{ color: themeColor }}>{data.content.signature}</div>
+      <div className="mb-6 font-bold" style={{ color: themeColor }}>
+        Subject: <RichText inline text={data.content.subject} />
+      </div>
+      <div className="mb-4">
+        <RichText inline text={data.content.greeting} />
+      </div>
+      <RichText text={data.content.opening} className="mb-4" />
+      <RichText text={data.content.body} className="mb-4 leading-relaxed" />
+      <RichText text={data.content.closing} className="mb-8" />
+      <div className="font-bold text-xl" style={{ color: themeColor }}>
+        <RichText inline text={data.content.signature} />
+      </div>
     </div>
   );
 };
@@ -83,11 +90,15 @@ const ProfessionalCoverLetter = ({ data }: { data: CoverLetterData }) => {
       </div>
 
       <div className="space-y-4 leading-relaxed text-gray-800">
-        <p>{data.content.greeting}</p>
-        <p>{data.content.opening}</p>
-        <p className="whitespace-pre-wrap">{data.content.body}</p>
-        <p>{data.content.closing}</p>
-        <p className="mt-8 font-bold text-lg border-t pt-4 w-48" style={{ borderColor: themeColor }}>{data.content.signature}</p>
+        <p>
+          <RichText inline text={data.content.greeting} />
+        </p>
+        <RichText text={data.content.opening} />
+        <RichText text={data.content.body} className="whitespace-pre-wrap" />
+        <RichText text={data.content.closing} />
+        <p className="mt-8 font-bold text-lg border-t pt-4 w-48" style={{ borderColor: themeColor }}>
+          <RichText inline text={data.content.signature} />
+        </p>
       </div>
     </div>
   );

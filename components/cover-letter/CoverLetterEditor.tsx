@@ -1,33 +1,160 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { coverLetterTemplates } from "@/lib/cover-letter-templates";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
-import { Save, Download, Image as ImageIcon, ChevronLeft, ChevronRight, Palette } from "lucide-react";
-import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
+import { Save, Download, Image as ImageIcon, Eye } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { DesignControls } from "@/components/editor/DesignControls";
+import { RichTextarea } from "@/components/editor/RichTextarea";
+import { COVER_LETTER_DEFAULT_FONTS } from "@/lib/template-defaults";
+import { useElementSize } from "@/hooks/use-element-size";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 
 export function CoverLetterEditor() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const { planChoice } = usePlanChoice();
   const { currentCoverLetter, coverLetterData, updatePersonalInfo, updateRecipientInfo, updateContent, updateMetadata, saveCoverLetter } = useCoverLetter();
   const [isSaving, setIsSaving] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [zoom, setZoom] = useState([80]);
+  const [advancedFormatting, setAdvancedFormatting] = useState(false);
+  const hasSubscription =
+    session?.user?.subscription === "pro" || session?.user?.subscription === "business";
+  const { ref: previewContainerRef, size: previewContainerSize } =
+    useElementSize<HTMLDivElement>();
+  const { ref: mobilePreviewRef, size: mobilePreviewSize } =
+    useElementSize<HTMLDivElement>();
+
+  const PAGE_WIDTH = 816;
+  const PAGE_HEIGHT = 1056;
+
+  const getPreviewScale = (availableWidth?: number) => {
+    const zoomScale = zoom[0] / 100;
+    return zoomScale;
+  };
+
+  useEffect(() => {
+    if (planChoice) {
+      setIsPlanModalOpen(false);
+    }
+  }, [planChoice]);
 
   if (!currentCoverLetter) return null;
 
   const TemplateComponent = coverLetterTemplates.find(t => t.id === currentCoverLetter.template)?.component || coverLetterTemplates[0].component;
+  const exportElementId = "cl-preview-export";
+
+  const PreviewDocument = ({
+    elementId,
+    withScale = true,
+    maxWidth,
+  }: {
+    elementId: string;
+    withScale?: boolean;
+    maxWidth?: number;
+  }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [contentHeight, setContentHeight] = useState(PAGE_HEIGHT);
+
+    useEffect(() => {
+      if (!withScale) return;
+      const element = contentRef.current;
+      if (!element) return;
+
+      const updateHeight = () => {
+        setContentHeight(element.scrollHeight || PAGE_HEIGHT);
+      };
+
+      updateHeight();
+      const observer = new ResizeObserver(() => updateHeight());
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, [withScale]);
+
+    const scale = withScale ? getPreviewScale(maxWidth) : 1;
+    const scaledWidth = PAGE_WIDTH * scale;
+    const scaledHeight = contentHeight * scale;
+
+    return (
+      <div
+        className={withScale ? "overflow-hidden" : undefined}
+        style={withScale ? { width: scaledWidth, height: scaledHeight } : undefined}
+      >
+        <div
+          className={withScale ? "transition-transform duration-200" : undefined}
+          style={
+            withScale
+              ? {
+                  transform: `scale(${scale})`,
+                  transformOrigin: "top left",
+                  width: PAGE_WIDTH,
+                }
+              : undefined
+          }
+        >
+          <div ref={contentRef} id={elementId} className="bg-white shadow-2xl min-h-[1056px] w-[816px]">
+            <TemplateComponent data={coverLetterData} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const openPlanModal = () => {
+    if (!session?.user) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!session?.user) return true;
+    if (!planChoice) {
+      toast.info("Select a plan to continue.");
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
+
+  const openDownloadModal = () => {
+    if (!ensurePlanChosen()) return;
+    setIsDownloadModalOpen(true);
+  };
+
+  const handlePurchase = async () => {
+    if (!session?.user) {
+      toast.error("Please sign in to complete purchase");
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
+    try {
+      const response = await fetch("/api/user/upgrade", { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Upgrade failed");
+      }
+      const data = await response.json();
+      if (updateSession) {
+        await updateSession({ subscription: data.subscription || "pro" });
+      }
+      toast.success("Purchase successful!");
+    } catch (error) {
+      toast.error("Purchase failed. Please try again.");
+    }
+  };
 
   const handleSave = async () => {
     if (!session?.user && currentCoverLetter.id.startsWith("local-")) {
@@ -47,53 +174,61 @@ export function CoverLetterEditor() {
     }
   };
 
-  const handleExportPDF = async () => {
-    if (!session?.user) {
-      toast.error("Please sign in to export");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
-      return;
-    }
-    setIsExporting(true);
-    try {
-      const pdfUrl = await generatePDF('cl-preview', 'cover-letter.pdf');
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = 'cover-letter.pdf';
-      link.click();
-      toast.success('Exported successfully!');
-    } catch (error) {
-      toast.error('Export failed');
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExportPDF = () => {
+    openDownloadModal();
   };
 
-  const handleExportImage = async () => {
-    if (!session?.user) {
-      toast.error("Please sign in to export");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
-      return;
-    }
-    setIsExporting(true);
-    try {
-      const imageUrl = await generateImage('cl-preview');
-      downloadImage(imageUrl, 'cover-letter.png');
-      toast.success('Exported successfully!');
-    } catch (error) {
-      toast.error('Export failed');
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExportImage = () => {
+    openDownloadModal();
   };
 
   return (
-    <div className="flex h-[calc(100vh-96px)] overflow-hidden">
+    <>
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <DownloadGateModal
+        open={isDownloadModalOpen}
+        onOpenChange={setIsDownloadModalOpen}
+        planChoice={planChoice}
+        hasSubscription={!!hasSubscription}
+        onPurchase={handlePurchase}
+      />
+      <div className="flex h-full flex-col lg:flex-row overflow-hidden relative">
       {/* Editor Side (Left) */}
-      <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
+      <div className="w-full lg:w-1/2 lg:border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
         {/* Toolbar */}
         <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
           <h2 className="font-semibold text-gray-900 dark:text-white">Editor</h2>
           <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-none p-0">
+                <div className="h-full bg-gray-100 dark:bg-gray-950 overflow-y-auto overflow-x-auto">
+                  <div
+                    ref={mobilePreviewRef}
+                    className="w-full flex flex-col p-4"
+                  >
+                    <div className="w-full max-w-[816px] mx-auto flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+                      <span className="text-xs font-medium text-gray-500 px-2">Preview Zoom</span>
+                      <div className="flex items-center gap-4 w-48 px-2">
+                        <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
+                        <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+                      </div>
+                    </div>
+                    <div className="min-w-max w-full flex justify-center">
+                      <PreviewDocument
+                        elementId="cl-preview-mobile"
+                        maxWidth={mobilePreviewSize.width}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
             <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? "Saving..." : "Save"}
@@ -121,7 +256,7 @@ export function CoverLetterEditor() {
 
           <TabsContent value="personal" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
             <ScrollArea className="h-full">
-              <div className="p-6 pb-32 space-y-4">
+              <div className="p-6 pb-6 space-y-4">
                 <div className="space-y-2">
                   <Label>Full Name</Label>
                   <Input value={coverLetterData.personalInfo.fullName} onChange={(e) => updatePersonalInfo({ fullName: e.target.value })} placeholder="John Doe" />
@@ -161,7 +296,7 @@ export function CoverLetterEditor() {
 
           <TabsContent value="recipient" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
             <ScrollArea className="h-full">
-              <div className="p-6 pb-32 space-y-4">
+              <div className="p-6 pb-6 space-y-4">
                 <div className="space-y-2">
                   <Label>Manager Name</Label>
                   <Input value={coverLetterData.recipientInfo.managerName} onChange={(e) => updateRecipientInfo({ managerName: e.target.value })} placeholder="Hiring Manager Name" />
@@ -199,30 +334,92 @@ export function CoverLetterEditor() {
 
           <TabsContent value="content" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
             <ScrollArea className="h-full">
-              <div className="p-6 pb-32 space-y-4">
+              <div className="p-6 pb-6 space-y-4">
                 <div className="space-y-2">
                   <Label>Subject Line</Label>
-                  <Input value={coverLetterData.content.subject} onChange={(e) => updateContent({ subject: e.target.value })} placeholder="e.g. Application for Software Engineer position" />
+                  {advancedFormatting ? (
+                    <RichTextarea
+                      value={coverLetterData.content.subject}
+                      onValueChange={(value) => updateContent({ subject: value })}
+                      placeholder="e.g. Application for Software Engineer position"
+                      rows={1}
+                      enableFormatting
+                    />
+                  ) : (
+                    <Input
+                      value={coverLetterData.content.subject}
+                      onChange={(e) => updateContent({ subject: e.target.value })}
+                      placeholder="e.g. Application for Software Engineer position"
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Greeting</Label>
-                  <Input value={coverLetterData.content.greeting} onChange={(e) => updateContent({ greeting: e.target.value })} />
+                  {advancedFormatting ? (
+                    <RichTextarea
+                      value={coverLetterData.content.greeting}
+                      onValueChange={(value) => updateContent({ greeting: value })}
+                      rows={1}
+                      enableFormatting
+                    />
+                  ) : (
+                    <Input
+                      value={coverLetterData.content.greeting}
+                      onChange={(e) => updateContent({ greeting: e.target.value })}
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Opening Paragraph</Label>
-                  <Textarea className="min-h-32" value={coverLetterData.content.opening} onChange={(e) => updateContent({ opening: e.target.value })} placeholder="How did you find the job? Why are you interested?" />
+                  <RichTextarea
+                    className="min-h-32"
+                    value={coverLetterData.content.opening}
+                    onValueChange={(value) => updateContent({ opening: value })}
+                    placeholder="How did you find the job? Why are you interested?"
+                    enableFormatting
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Body Paragraphs</Label>
-                  <Textarea className="min-h-64" value={coverLetterData.content.body} onChange={(e) => updateContent({ body: e.target.value })} placeholder="Highlight your key achievements and match them to job requirements." />
+                  <RichTextarea
+                    className="min-h-64"
+                    value={coverLetterData.content.body}
+                    onValueChange={(value) => updateContent({ body: value })}
+                    placeholder="Highlight your key achievements and match them to job requirements."
+                    enableFormatting
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Closing</Label>
-                  <Input value={coverLetterData.content.closing} onChange={(e) => updateContent({ closing: e.target.value })} />
+                  {advancedFormatting ? (
+                    <RichTextarea
+                      value={coverLetterData.content.closing}
+                      onValueChange={(value) => updateContent({ closing: value })}
+                      rows={1}
+                      enableFormatting
+                    />
+                  ) : (
+                    <Input
+                      value={coverLetterData.content.closing}
+                      onChange={(e) => updateContent({ closing: e.target.value })}
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Signature</Label>
-                  <Input value={coverLetterData.content.signature} onChange={(e) => updateContent({ signature: e.target.value })} />
+                  {advancedFormatting ? (
+                    <RichTextarea
+                      value={coverLetterData.content.signature}
+                      onValueChange={(value) => updateContent({ signature: value })}
+                      rows={1}
+                      enableFormatting
+                    />
+                  ) : (
+                    <Input
+                      value={coverLetterData.content.signature}
+                      onChange={(e) => updateContent({ signature: e.target.value })}
+                    />
+                  )}
                 </div>
                 <div className="pt-4">
                   <Button onClick={handleSave} disabled={isSaving} className="w-full">
@@ -235,8 +432,12 @@ export function CoverLetterEditor() {
 
           <TabsContent value="design" className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden">
             <ScrollArea className="h-full">
-              <div className="p-6 pb-32">
-                <DesignSection />
+              <div className="p-6 pb-6">
+                <DesignSection
+                  templateId={currentCoverLetter.template}
+                  advancedFormatting={advancedFormatting}
+                  onAdvancedFormattingChange={setAdvancedFormatting}
+                />
               </div>
             </ScrollArea>
           </TabsContent>
@@ -244,56 +445,46 @@ export function CoverLetterEditor() {
       </div>
 
       {/* Preview Side (Right) */}
-      <div className="w-1/2 bg-gray-100 dark:bg-gray-950 p-8 overflow-auto flex flex-col items-center">
-        <div className="w-full max-w-[816px] flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-            <span className="text-xs font-medium text-gray-500 px-2">Preview Zoom</span>
-            <div className="flex items-center gap-4 w-48 px-2">
-                <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
-                <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
-            </div>
+      <div className="hidden lg:flex w-1/2 bg-gray-100 dark:bg-gray-950 flex-col">
+        <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Preview</span>
+          <div className="flex items-center gap-4 w-48">
+            <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
+            <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+          </div>
         </div>
-        
-        <div className="transition-transform duration-200" style={{ transform: `scale(${zoom[0] / 100})`, transformOrigin: "top center" }}>
-          <div id="cl-preview" className="bg-white shadow-2xl min-h-[1056px] w-[816px]">
-            <TemplateComponent data={coverLetterData} />
+      <div className="flex-1 w-full overflow-y-auto overflow-x-auto p-8">
+          <div ref={previewContainerRef} className="w-full">
+            <div className="min-w-max w-full flex justify-center">
+              <PreviewDocument
+                elementId="cl-preview-view"
+                maxWidth={previewContainerSize.width}
+              />
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Offscreen preview for mobile export */}
+      <div className="absolute -left-[9999px] top-0">
+        <PreviewDocument elementId={exportElementId} withScale={false} />
+      </div>
     </div>
+    </>
   );
 }
 
-function DesignSection() {
+function DesignSection({
+  templateId,
+  advancedFormatting,
+  onAdvancedFormattingChange,
+}: {
+  templateId: string;
+  advancedFormatting: boolean;
+  onAdvancedFormattingChange: (value: boolean) => void;
+}) {
   const { coverLetterData, updateMetadata } = useCoverLetter();
-  
-  const colors = [
-    "#000000", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6", 
-    "#f59e0b", "#ec4899", "#0ea5e9", "#6366f1", "#14b8a6",
-  ];
-
-  const fonts = [
-    "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Raleway", 
-    "Poppins", "Merriweather", "Playfair Display", "Ubuntu", "Nunito", 
-    "Rubik", "Lora", "PT Sans", "PT Serif", "Quicksand", "Work Sans", 
-    "Fira Sans", "Inconsolata", "Oswald"
-  ];
-
-  const fontSizes = [
-    { id: "sm", label: "Small" },
-    { id: "md", label: "Medium" },
-    { id: "lg", label: "Large" },
-  ];
-
-  useEffect(() => {
-    const font = coverLetterData.metadata?.fontFamily || "Inter";
-    const link = document.createElement("link");
-    link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}:wght@300;400;500;700&display=swap`;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, [coverLetterData.metadata?.fontFamily]);
+  const defaultFont = COVER_LETTER_DEFAULT_FONTS[templateId] || "Inter";
 
   return (
     <div className="space-y-8">
@@ -301,88 +492,13 @@ function DesignSection() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Design & Appearance
         </h2>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Palette className="w-4 h-4 text-purple-600" />
-                <h3 className="font-medium text-gray-900 dark:text-white">Accent Color</h3>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => updateMetadata({ themeColor: color })}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
-                      coverLetterData.metadata?.themeColor === color 
-                        ? "border-gray-900 dark:border-white scale-110" 
-                        : "border-transparent hover:scale-105"
-                    }`}
-                    style={{ backgroundColor: color }}
-                    aria-label={`Select color ${color}`}
-                  />
-                ))}
-                <div className="relative">
-                    <input 
-                        type="color" 
-                        value={coverLetterData.metadata?.themeColor || "#000000"}
-                        onChange={(e) => updateMetadata({ themeColor: e.target.value })}
-                        className="w-8 h-8 rounded-full overflow-hidden cursor-pointer opacity-0 absolute inset-0"
-                    />
-                    <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center pointer-events-none">
-                        <span className="text-xs">+</span>
-                    </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-               <div className="flex items-center gap-2 mb-4">
-                 <h3 className="font-medium text-gray-900 dark:text-white">Font Size</h3>
-               </div>
-               <div className="flex gap-2">
-                 {fontSizes.map((size) => (
-                    <Button
-                        key={size.id}
-                        variant={coverLetterData.metadata?.fontSize === size.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => updateMetadata({ fontSize: size.id })}
-                        className="flex-1"
-                    >
-                        {size.label}
-                    </Button>
-                 ))}
-               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <h3 className="font-medium text-gray-900 dark:text-white">Font Family</h3>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {fonts.map((font) => (
-                  <div
-                    key={font}
-                    onClick={() => updateMetadata({ fontFamily: font })}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      coverLetterData.metadata?.fontFamily === font
-                        ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-600"
-                        : "border-gray-200 dark:border-gray-800 hover:border-purple-300"
-                    }`}
-                  >
-                    <div className="font-medium text-sm" style={{ fontFamily: font }}>{font}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <DesignControls
+          metadata={coverLetterData.metadata}
+          onUpdate={updateMetadata}
+          defaultFontLabel={defaultFont}
+          advancedFormattingEnabled={advancedFormatting}
+          onAdvancedFormattingChange={onAdvancedFormattingChange}
+        />
       </div>
     </div>
   );

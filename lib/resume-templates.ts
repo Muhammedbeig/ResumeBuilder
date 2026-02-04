@@ -8,6 +8,7 @@ import { MinimalistPhotoTemplate } from "@/components/resume/templates/Minimalis
 import { TechModernTemplate } from "@/components/resume/templates/TechModernTemplate";
 import { ImpactTemplate } from "@/components/resume/templates/ImpactTemplate";
 import { MinimalTemplate } from "@/components/resume/templates/MinimalTemplate";
+import { MinimalistProfessionalTemplate } from "@/components/resume/templates/MinimalistProfessionalTemplate";
 
 export const resumeTemplates = [
   {
@@ -53,6 +54,13 @@ export const resumeTemplates = [
     component: MinimalistPhotoTemplate,
   },
   {
+    id: "minimalist-professional",
+    name: "Minimalist Professional",
+    premium: false,
+    description: "Minimalist two-column template with photo and clean typography.",
+    component: MinimalistProfessionalTemplate,
+  },
+  {
     id: "ats",
     name: "ATS",
     premium: false,
@@ -93,4 +101,5 @@ export const resumeTemplateMap = {
   creative: CreativeTemplate,
   "tech-modern": TechModernTemplate,
   "minimalist-photo": MinimalistPhotoTemplate,
+  "minimalist-professional": MinimalistProfessionalTemplate,
 } as const;

@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from "@/types";
 import { useMemo } from "react";
+import { getFontScale } from "@/lib/typography";
+import { RichText } from "@/components/editor/RichText";
 
 interface ClassicTemplateProps {
   data: ResumeData;
@@ -20,9 +22,8 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
   
   const themeColor = data.metadata?.themeColor || '#374151'; // Default gray-700
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const contactItems = [
     basics.phone,
@@ -72,7 +73,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
                             className="absolute left-0 top-2 h-1.5 w-1.5 rounded-full" 
                             style={{ backgroundColor: themeColor }}
                         />
-                        {bullet || "Add an achievement with measurable impact."}
+                        <RichText
+                          inline
+                          text={bullet || "Add an achievement with measurable impact."}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -100,7 +104,10 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
                       <span className="text-xs text-gray-500">{project.link}</span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700">{project.description || "Project description goes here."}</p>
+                  <RichText
+                    text={project.description || "Project description goes here."}
+                    className="text-sm text-gray-700"
+                  />
                   {project.technologies.length > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
                       Tech: {project.technologies.join(", ")}
@@ -191,7 +198,7 @@ export function ClassicTemplate({ data, className = "" }: ClassicTemplateProps) 
                  >
                      Summary
                  </h2>
-                 <p className="text-sm text-gray-700 leading-relaxed">{basics.summary}</p>
+                 <RichText text={basics.summary} className="text-sm text-gray-700 leading-relaxed" />
              </section>
          );
       default:

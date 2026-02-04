@@ -1,5 +1,7 @@
-import type { ResumeData, SectionConfig } from '@/types';
+﻿import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface CreativeTemplateProps {
   data: ResumeData;
@@ -19,10 +21,8 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#0f172a'; // Default slate-900
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -97,9 +97,7 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
               <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
               About Me
             </h2>
-            <p className="text-slate-600 leading-relaxed text-lg">
-              {basics.summary}
-            </p>
+            <RichText text={basics.summary} className="text-slate-600 leading-relaxed text-lg" />
           </div>
         );
       case 'experience':
@@ -117,15 +115,15 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
                     <h3 className="text-xl font-bold text-slate-900">{exp.role}</h3>
                     <span className="text-slate-500 font-mono text-sm bg-slate-200 px-2 py-1 rounded">
-                      {exp.startDate} — {exp.current ? 'Present' : exp.endDate}
+                      {exp.startDate} â€” {exp.current ? 'Present' : exp.endDate}
                     </span>
                   </div>
                   <div className="text-slate-600 font-semibold mb-3">{exp.company} | {exp.location}</div>
                   <ul className="space-y-2">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-slate-600 leading-relaxed text-sm flex gap-2">
-                        <span className="text-slate-400 mt-1">›</span>
-                        {bullet}
+                        <span className="text-slate-400 mt-1">â€º</span>
+                        <RichText inline text={bullet} />
                       </li>
                     ))}
                   </ul>
@@ -151,7 +149,7 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
                       <a href={project.link} className="text-xs font-bold text-white px-2 py-1 rounded transition-colors" style={{ backgroundColor: themeColor }}>VIEW</a>
                     )}
                   </div>
-                  <p className="text-slate-600 text-sm mb-3">{project.description}</p>
+                  <RichText text={project.description} className="text-slate-600 text-sm mb-3" />
                   {project.technologies.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {project.technologies.map((tech, i) => (
@@ -266,3 +264,5 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
     </div>
   );
 }
+
+

@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from "@/types";
 import { useMemo } from "react";
+import { getFontScale } from "@/lib/typography";
+import { RichText } from "@/components/editor/RichText";
 
 interface AcademicCVTemplateProps {
   data: ResumeData;
@@ -19,9 +21,8 @@ export function AcademicCVTemplate({ data, className = "" }: AcademicCVTemplateP
   
   const themeColor = data.metadata?.themeColor || '#0f172a'; // Default slate-900
   const fontName = data.metadata?.fontFamily || 'Times New Roman'; // Default serif
-  const fontSize = data.metadata?.fontSize || 'md';
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const contactItems = [
     basics.email,
@@ -63,7 +64,7 @@ export function AcademicCVTemplate({ data, className = "" }: AcademicCVTemplateP
                   <ul className="list-disc list-outside ml-5 space-y-1">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-sm text-gray-800 leading-relaxed font-serif pl-1">
-                        {bullet}
+                        <RichText inline text={bullet} />
                       </li>
                     ))}
                   </ul>
@@ -95,7 +96,10 @@ export function AcademicCVTemplate({ data, className = "" }: AcademicCVTemplateP
                       )}
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-800 mb-1 font-serif text-justify">{project.description}</p>
+                  <RichText
+                    text={project.description}
+                    className="text-sm text-gray-800 mb-1 font-serif text-justify"
+                  />
                   {project.technologies.length > 0 && (
                     <p className="text-xs text-gray-600 font-serif italic">
                       <span className="font-semibold">Tools:</span> {project.technologies.join(", ")}
@@ -186,9 +190,10 @@ export function AcademicCVTemplate({ data, className = "" }: AcademicCVTemplateP
                  >
                      Professional Summary
                  </h2>
-                 <p className="text-sm text-gray-800 leading-relaxed font-serif text-justify">
-                    {basics.summary}
-                 </p>
+                 <RichText
+                    text={basics.summary}
+                    className="text-sm text-gray-800 leading-relaxed font-serif text-justify"
+                 />
              </section>
          );
       default:

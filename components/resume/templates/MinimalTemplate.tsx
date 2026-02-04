@@ -1,5 +1,7 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface MinimalTemplateProps {
   data: ResumeData;
@@ -19,10 +21,8 @@ export function MinimalTemplate({ data, className = '' }: MinimalTemplateProps) 
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#000000';
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -37,7 +37,7 @@ export function MinimalTemplate({ data, className = '' }: MinimalTemplateProps) 
         if (!basics.summary) return null;
         return (
           <div key={section.id} className="mb-10">
-            <p className="text-gray-600 leading-relaxed text-lg font-light tracking-wide">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-gray-600 leading-relaxed text-lg font-light tracking-wide" />
           </div>
         );
       case 'experience':
@@ -57,7 +57,9 @@ export function MinimalTemplate({ data, className = '' }: MinimalTemplateProps) 
                   <p className="text-sm font-semibold text-gray-500 mb-3">{exp.company} — {exp.location}</p>
                   <ul className="space-y-2">
                     {exp.bullets.map((bullet, idx) => (
-                      <li key={idx} className="text-sm text-gray-600 leading-relaxed pl-4 border-l border-gray-200">{bullet}</li>
+                      <li key={idx} className="text-sm text-gray-600 leading-relaxed pl-4 border-l border-gray-200">
+                        <RichText inline text={bullet} />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -105,7 +107,7 @@ export function MinimalTemplate({ data, className = '' }: MinimalTemplateProps) 
               {projects.map((project) => (
                 <div key={project.id}>
                    <h3 className="text-lg font-bold text-gray-900 tracking-tight">{project.name}</h3>
-                   <p className="text-sm text-gray-600">{project.description}</p>
+                   <RichText text={project.description} className="text-sm text-gray-600" />
                 </div>
               ))}
             </div>

@@ -1,6 +1,8 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { useMemo } from 'react';
 import { Mail, Phone, MapPin, Linkedin, Github } from 'lucide-react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface ImpactTemplateProps {
   data: ResumeData;
@@ -20,10 +22,8 @@ export function ImpactTemplate({ data, className = '' }: ImpactTemplateProps) {
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#1e293b'; // Default slate-800
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -39,7 +39,7 @@ export function ImpactTemplate({ data, className = '' }: ImpactTemplateProps) {
         return (
           <div key={section.id} className="mb-8">
             <h2 className="text-xl font-bold uppercase tracking-wider mb-3 pb-1 border-b-2" style={{ color: themeColor, borderColor: themeColor }}>Profile</h2>
-            <p className="text-gray-700 leading-relaxed">{basics.summary}</p>
+            <RichText text={basics.summary} className="text-gray-700 leading-relaxed" />
           </div>
         );
       case 'experience':
@@ -62,7 +62,9 @@ export function ImpactTemplate({ data, className = '' }: ImpactTemplateProps) {
                   </div>
                   <ul className="list-disc ml-5 space-y-1">
                     {exp.bullets.map((bullet, idx) => (
-                      <li key={idx} className="text-sm text-gray-700 leading-relaxed">{bullet}</li>
+                      <li key={idx} className="text-sm text-gray-700 leading-relaxed">
+                        <RichText inline text={bullet} />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -82,7 +84,7 @@ export function ImpactTemplate({ data, className = '' }: ImpactTemplateProps) {
                     <h3 className="font-bold text-gray-900">{project.name}</h3>
                     {project.link && <span className="text-[10px] font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: themeColor }}>PROJECT</span>}
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{project.description}</p>
+                  <RichText text={project.description} className="text-sm text-gray-700 mb-2" />
                   <p className="text-xs text-gray-500 font-medium">Tech: {project.technologies.join(', ')}</p>
                 </div>
               ))}

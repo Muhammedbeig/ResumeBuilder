@@ -34,7 +34,14 @@ export default function CoverLetterEditorPage() {
   }
 
   return (
-    <div className="pt-24">
+    <div
+      className="overflow-hidden box-border"
+      style={{
+        paddingTop:
+          "calc(var(--app-header-offset, var(--app-header-height)) + var(--app-header-gap, 0px))",
+        height: "100vh",
+      }}
+    >
       <CoverLetterEditor />
     </div>
   );

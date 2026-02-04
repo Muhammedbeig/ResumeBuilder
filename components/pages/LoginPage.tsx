@@ -14,7 +14,7 @@ import { toast } from "sonner";
 export function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // If the callbackUrl is just the login page itself, default to dashboard
   const rawCallback = searchParams.get("callbackUrl") || "/dashboard";
@@ -31,7 +31,6 @@ export function LoginPage() {
   const isFromEditor = callbackUrl.includes("/resume/") || 
                        callbackUrl.includes("/cv/") || 
                        callbackUrl.includes("/cover-letter/");
-
   useEffect(() => {
     if (status === "authenticated") {
       router.replace(callbackUrl);
@@ -142,6 +141,7 @@ export function LoginPage() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -154,6 +154,7 @@ export function LoginPage() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
 

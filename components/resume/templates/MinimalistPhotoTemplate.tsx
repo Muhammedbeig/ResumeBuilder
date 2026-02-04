@@ -1,6 +1,8 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { User } from 'lucide-react';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface MinimalistPhotoTemplateProps {
   data: ResumeData;
@@ -20,10 +22,8 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#8b5cf6'; // Default purple-500
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -90,9 +90,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
               <span className="w-8 h-0.5" style={{ backgroundColor: themeColor }}></span>
               Profile
             </h2>
-            <p className="text-gray-600 leading-relaxed text-sm">
-              {basics.summary}
-            </p>
+            <RichText text={basics.summary} className="text-gray-600 leading-relaxed text-sm" />
           </div>
         );
       case 'experience':
@@ -117,7 +115,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
                   <ul className="space-y-1.5">
                     {exp.bullets.map((bullet, idx) => (
                       <li key={idx} className="text-sm text-gray-600 leading-relaxed">
-                        {bullet}
+                        <RichText inline text={bullet} />
                       </li>
                     ))}
                   </ul>
@@ -143,7 +141,7 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
                       <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm" style={{ color: themeColor }}>Link</span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{project.description}</p>
+                  <RichText text={project.description} className="text-sm text-gray-600 mb-2" />
                   <div className="flex flex-wrap gap-1">
                     {project.technologies.map(t => (
                       <span key={t} className="text-[10px] uppercase font-bold text-gray-400">#{t}</span>

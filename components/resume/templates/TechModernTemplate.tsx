@@ -1,6 +1,8 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { User, MapPin, Mail, Phone, Globe, Github, Linkedin } from 'lucide-react';
 import { useMemo } from 'react';
+import { getFontScale } from '@/lib/typography';
+import { RichText } from '@/components/editor/RichText';
 
 interface TechModernTemplateProps {
   data: ResumeData;
@@ -20,10 +22,8 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
   const { basics, experiences, education, skills, projects, certifications } = data;
   const themeColor = data.metadata?.themeColor || '#06b6d4'; // Default cyan-500
   const fontName = data.metadata?.fontFamily || 'Inter';
-  const fontSize = data.metadata?.fontSize || 'md';
-  
-  const scaleMap: Record<string, number> = { sm: 0.875, md: 1, lg: 1.125 };
-  const scale = scaleMap[fontSize] || 1;
+  const fontSize = data.metadata?.fontSize;
+  const scale = getFontScale(fontSize);
 
   const activeStructure = useMemo(() => {
     if (data.structure && data.structure.length > 0) {
@@ -39,9 +39,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
         return (
           <div key={section.id}>
             <h2 className="text-lg font-bold text-slate-900 border-l-4 pl-3 mb-3" style={{ borderColor: themeColor }}>About Me</h2>
-            <p className="text-slate-600 leading-relaxed text-sm">
-              {basics.summary}
-            </p>
+            <RichText text={basics.summary} className="text-slate-600 leading-relaxed text-sm" />
           </div>
         );
       case 'experience':
@@ -61,7 +59,9 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
                   <p className="text-sm font-medium mb-2" style={{ color: themeColor }}>{exp.company} • {exp.location}</p>
                   <ul className="list-disc list-outside ml-4 space-y-1">
                     {exp.bullets.map((bullet, idx) => (
-                      <li key={idx} className="text-sm text-slate-600 pl-1">{bullet}</li>
+                      <li key={idx} className="text-sm text-slate-600 pl-1">
+                        <RichText inline text={bullet} />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -81,7 +81,7 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
                     <h3 className="font-bold text-slate-800">{project.name}</h3>
                     {project.link && <Globe className="w-3 h-3 text-slate-400" />}
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">{project.description}</p>
+                  <RichText text={project.description} className="text-sm text-slate-600 mb-2" />
                   <div className="flex flex-wrap gap-2">
                     {project.technologies.map(t => (
                       <span key={t} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-full border border-slate-200">

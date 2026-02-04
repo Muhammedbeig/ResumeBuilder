@@ -21,6 +21,9 @@ import type {
   SkillGroup,
 } from "@/types";
 import { emptyResumeData, normalizeResumeData } from "@/lib/resume-data";
+import { getSuggestedBullets } from "@/lib/experience-suggestions";
+import { extractSummarySuggestions } from "@/lib/summary-suggestions";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { toast } from "sonner";
 
 // Reusing Resume type alias for CV to avoid duplicating types if they are identical
@@ -40,6 +43,7 @@ interface CVContextType {
   updateTemplate: (template: string) => void;
   updateCVData: (data: Partial<ResumeData>) => void;
   updateBasics: (basics: Partial<ResumeData["basics"]>) => void;
+  updateMetadata: (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => void;
   addExperience: (experience: Omit<Experience, "id">) => void;
   updateExperience: (id: string, experience: Partial<Experience>) => void;
   removeExperience: (id: string) => void;
@@ -58,7 +62,7 @@ interface CVContextType {
   updateStructure: (structure: import("@/types").SectionConfig[]) => void;
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
-  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string>;
+  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string[]>;
   suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
   suggestResponsibilitiesAI: (jobTitle: string, description?: string) => Promise<string[]>;
   generatePDF?: (templateId: string) => Promise<void>;
@@ -84,6 +88,7 @@ function normalizeCVList(cvs: CV[]): CV[] {
 
 export function CVProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
+  const { planChoice } = usePlanChoice();
   const router = useRouter();
   const params = useParams();
   const currentPathId = params?.id as string;
@@ -93,6 +98,14 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const [cvData, setCVData] = useState<ResumeData>(emptyResumeData);
   const [importedData, setImportedData] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const hasSubscription = useMemo(
+    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
+    [session?.user?.subscription]
+  );
+  const canUsePaid = useMemo(
+    () => planChoice === "paid" || hasSubscription,
+    [planChoice, hasSubscription]
+  );
 
   const getLocalCVs = useCallback(() => {
     const guestCVs: CV[] = [];
@@ -122,11 +135,16 @@ export function CVProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch("/api/cvs");
       if (!response.ok) {
-        throw new Error("Failed to load CVs");
+        console.error("Failed to load CVs", response.status);
+        setCVs(localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+        return;
       }
       const data = await response.json();
       const remoteCVs = normalizeCVList(data.cvs || []);
       setCVs([...remoteCVs, ...localCVs].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+    } catch (error) {
+      console.error("Failed to load CVs", error);
+      setCVs(localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
     } finally {
       setIsLoading(false);
     }
@@ -399,6 +417,13 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateMetadata = useCallback((metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
+    setCVData((prev) => ({
+      ...prev,
+      metadata: { ...(prev.metadata || {}), ...metadata },
+    }));
+  }, []);
+
   const addExperience = useCallback((experience: Omit<Experience, "id">) => {
     const newExp: Experience = { ...experience, id: Date.now().toString() };
     setCVData((prev) => ({
@@ -512,12 +537,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const notifyAiLimit = useCallback(() => {
-    toast.error("Free AI limit reached. Redirecting to pricing...");
-    if (typeof window !== "undefined") {
-      setTimeout(() => {
-        window.location.href = "/pricing";
-      }, 1200);
-    }
+    toast.error("AI limit has done.");
   }, []);
 
   const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
@@ -535,11 +555,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
         data && typeof data === "object" && "error" in data && typeof data.error === "string"
           ? data.error
           : "AI request failed";
-      if (
-        response.status === 429 ||
-        response.status === 402 ||
-        /quota|limit|resource exhausted|billing|payment/i.test(message)
-      ) {
+      const isLimit = /quota|limit|resource exhausted|billing|payment/i.test(message);
+      if (response.status === 429 || (response.status === 402 && isLimit)) {
         notifyAiLimit();
       }
       throw new Error(message);
@@ -549,6 +566,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const rewriteBulletAI = useCallback(
     async (experienceId: string, bulletIndex: number) => {
+      if (!canUsePaid) {
+        toast.info("AI tools are not available in this version.");
+        return;
+      }
       try {
         const experience = cvData.experiences.find((exp) => exp.id === experienceId);
         if (!experience) return;
@@ -580,15 +601,20 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [cvData.experiences, callAI]
+    [cvData.experiences, callAI, canUsePaid]
   );
 
   const generateSummaryAI = useCallback(
     async (targetRole?: string) => {
+      if (!canUsePaid) {
+        toast.info("AI tools are not available in this version.");
+        return;
+      }
       setIsLoading(true);
       try {
         const result = await callAI("summary", { resumeData: cvData, targetRole });
-        const summary = result.summary as string;
+        const suggestions = extractSummarySuggestions(result);
+        const summary = suggestions[0] ?? "";
         setCVData((prev) => ({
           ...prev,
           basics: { ...prev.basics, summary },
@@ -601,27 +627,33 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [cvData, callAI]
+    [cvData, callAI, canUsePaid]
   );
 
   const suggestSummaryAI = useCallback(
     async (data: ResumeData, targetRole?: string) => {
+      if (!canUsePaid) {
+        return [];
+      }
       setIsLoading(true);
       try {
         const result: any = await callAI("summary", { resumeData: data, targetRole });
-        return typeof result?.summary === "string" ? result.summary : "";
+        return extractSummarySuggestions(result).slice(0, 3);
       } catch (error) {
         console.error("Error suggesting summary:", error);
-        return "";
+        return [];
       } finally {
         setIsLoading(false);
       }
     },
-    [callAI]
+    [callAI, canUsePaid]
   );
 
   const suggestSkillsAI = useCallback(
     async (jobTitle: string, description?: string) => {
+      if (!canUsePaid) {
+        return { hardSkills: [], softSkills: [] };
+      }
       setIsLoading(true);
       try {
         const result: any = await callAI("suggestions/skills", { jobTitle, description });
@@ -633,11 +665,14 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI]
+    [callAI, canUsePaid]
   );
 
   const suggestResponsibilitiesAI = useCallback(
     async (jobTitle: string, description?: string) => {
+      if (!canUsePaid) {
+        return getSuggestedBullets(jobTitle, 8);
+      }
       setIsLoading(true);
       try {
         const result: any = await callAI("suggestions/responsibilities", { jobTitle, description });
@@ -649,7 +684,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI]
+    [callAI, canUsePaid]
   );
 
   const value = useMemo(
@@ -667,6 +702,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       updateTemplate,
       updateCVData,
       updateBasics,
+      updateMetadata,
       addExperience,
       updateExperience,
       removeExperience,
@@ -705,6 +741,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       updateTemplate,
       updateCVData,
       updateBasics,
+      updateMetadata,
       addExperience,
       updateExperience,
       removeExperience,

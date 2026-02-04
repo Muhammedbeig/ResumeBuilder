@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,8 @@ export function Navigation() {
   const { theme, toggleTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
+  const navRef = useRef<HTMLElement | null>(null);
+  const navContentRef = useRef<HTMLDivElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -51,6 +53,42 @@ export function Navigation() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const setHeaderVars = () => {
+      const navElement = navRef.current;
+      if (!navElement) return;
+
+      const navRect = navElement.getBoundingClientRect();
+      document.documentElement.style.setProperty("--app-header-height", `${navRect.height}px`);
+
+      const navContent = navContentRef.current;
+      if (navContent) {
+        const contentRect = navContent.getBoundingClientRect();
+        const offset = contentRect.bottom - navRect.top;
+        document.documentElement.style.setProperty("--app-header-offset", `${offset}px`);
+      }
+    };
+
+    setHeaderVars();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => setHeaderVars());
+    if (navRef.current) {
+      observer.observe(navRef.current);
+    }
+    if (navContentRef.current) {
+      observer.observe(navContentRef.current);
+    }
+    window.addEventListener("resize", setHeaderVars);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", setHeaderVars);
+    };
   }, []);
 
   const navDropdowns = [
@@ -113,6 +151,7 @@ export function Navigation() {
 
   return (
     <motion.nav
+      ref={navRef}
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -122,6 +161,7 @@ export function Navigation() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div 
+          ref={navContentRef}
           className={`flex items-center justify-between px-6 py-3 rounded-full transition-all duration-500 ${
             isScrolled 
               ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50' 
