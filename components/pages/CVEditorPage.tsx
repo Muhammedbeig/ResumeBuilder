@@ -902,6 +902,8 @@ function ExperienceSection({
   const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
   const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
   const [existingSuggestionsLoading, setExistingSuggestionsLoading] = useState<Record<string, boolean>>({});
+  const skipNextNewSuggestRef = useRef(false);
+  const skipNextExistingSuggestRef = useRef<Record<string, boolean>>({});
   const activeBulletRef = useRef<HTMLTextAreaElement | null>(null);
   const [activeBulletContext, setActiveBulletContext] = useState<{
     scope: "new" | "existing";
@@ -1027,6 +1029,10 @@ function ExperienceSection({
     const existing = exp.bullets.map((bullet) => bullet.trim().toLowerCase());
     if (existing.includes(trimmed.toLowerCase())) return;
     updateExperience(exp.id, { bullets: [...exp.bullets, trimmed] });
+    skipNextExistingSuggestRef.current = {
+      ...skipNextExistingSuggestRef.current,
+      [exp.id]: true,
+    };
     setExistingSuggestionState((prev) => {
       const current = prev[exp.id];
       const nextUsed = current && current.role === exp.role ? current.used : [];
@@ -1058,6 +1064,11 @@ function ExperienceSection({
         setIsNewSuggestionsLoading(false);
         return;
       }
+      if (skipNextNewSuggestRef.current) {
+        skipNextNewSuggestRef.current = false;
+        setIsNewSuggestionsLoading(false);
+        return;
+      }
       const description = (newExperience.bullets || []).join(" ").trim();
       const role = newExperience.role.trim();
       let isActive = true;
@@ -1084,6 +1095,14 @@ function ExperienceSection({
       let isActive = true;
       cvData.experiences.forEach((exp) => {
         if (!editingExperiences[exp.id] || !exp.role) {
+          setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
+          return;
+        }
+        if (skipNextExistingSuggestRef.current[exp.id]) {
+          skipNextExistingSuggestRef.current = {
+            ...skipNextExistingSuggestRef.current,
+            [exp.id]: false,
+          };
           setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
           return;
         }
@@ -1188,6 +1207,7 @@ function ExperienceSection({
   const handleApplySuggestion = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    skipNextNewSuggestRef.current = true;
     setNewExperience((prev) => {
       const bullets = [...(prev.bullets || [])];
       if (bullets.some((bullet) => bullet.trim().toLowerCase() === trimmed.toLowerCase())) {
@@ -1943,10 +1963,13 @@ function SkillsSection({
   const [isAdding, setIsAdding] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', skills: '' });
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [isSkillSuggestionsLoading, setIsSkillSuggestionsLoading] = useState(false);
   const [editingSkillGroups, setEditingSkillGroups] = useState<Record<string, boolean>>({});
   const [skillDrafts, setSkillDrafts] = useState<Record<string, string>>({});
   const [existingSkillSuggestions, setExistingSkillSuggestions] = useState<Record<string, string[]>>({});
+  const [existingSkillSuggestionsLoading, setExistingSkillSuggestionsLoading] = useState<Record<string, boolean>>({});
   const [existingSkillKeys, setExistingSkillKeys] = useState<Record<string, string>>({});
+  const skipNextSkillSuggestRef = useRef(false);
 
   const experiencesForSuggestions = experienceSource || cvData.experiences;
 
@@ -2037,6 +2060,12 @@ function SkillsSection({
   useEffect(() => {
     if (!isAdding) {
       setAiSuggestions([]);
+      setIsSkillSuggestionsLoading(false);
+      return;
+    }
+    if (skipNextSkillSuggestRef.current) {
+      skipNextSkillSuggestRef.current = false;
+      setIsSkillSuggestionsLoading(false);
       return;
     }
     const experienceText = experiencesForSuggestions
@@ -2046,20 +2075,31 @@ function SkillsSection({
     const context = [newGroup.name, newGroup.skills, experienceText].join(" ").trim();
     if (!cvData.basics.title && !context) {
       setAiSuggestions([]);
+      setIsSkillSuggestionsLoading(false);
       return;
     }
+    let isActive = true;
+    setIsSkillSuggestionsLoading(true);
     const timer = setTimeout(async () => {
-      const result = await suggestSkillsAI(cvData.basics.title, context);
-      const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
-        .map((skill) => skill.trim())
-        .filter(Boolean);
-      const nextAi = combined.filter(
-        (skill, index, arr) =>
-          arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
-      );
-      setAiSuggestions(nextAi.slice(0, 24));
+      try {
+        const result = await suggestSkillsAI(cvData.basics.title, context);
+        if (!isActive) return;
+        const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
+          .map((skill) => skill.trim())
+          .filter(Boolean);
+        const nextAi = combined.filter(
+          (skill, index, arr) =>
+            arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+        );
+        setAiSuggestions(nextAi.slice(0, 24));
+      } finally {
+        if (isActive) setIsSkillSuggestionsLoading(false);
+      }
     }, 500);
-    return () => clearTimeout(timer);
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
   }, [isAdding, newGroup.name, newGroup.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
 
   useEffect(() => {
@@ -2073,20 +2113,25 @@ function SkillsSection({
       .trim();
     const key = `${group.name}|${group.skills.join(",")}|${experienceText}`;
     if (existingSkillKeys[activeId] === key) return;
+    setExistingSkillSuggestionsLoading((prev) => ({ ...prev, [activeId]: true }));
     const timer = setTimeout(async () => {
-      const result = await suggestSkillsAI(
-        cvData.basics.title,
-        `${group.name} ${group.skills.join(" ")} ${experienceText}`
-      );
-      const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
-        .map((skill) => skill.trim())
-        .filter(Boolean);
-      const nextAi = combined.filter(
-        (skill, index, arr) =>
-          arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
-      );
-      setExistingSkillSuggestions((prev) => ({ ...prev, [activeId]: nextAi.slice(0, 24) }));
-      setExistingSkillKeys((prev) => ({ ...prev, [activeId]: key }));
+      try {
+        const result = await suggestSkillsAI(
+          cvData.basics.title,
+          `${group.name} ${group.skills.join(" ")} ${experienceText}`
+        );
+        const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
+          .map((skill) => skill.trim())
+          .filter(Boolean);
+        const nextAi = combined.filter(
+          (skill, index, arr) =>
+            arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+        );
+        setExistingSkillSuggestions((prev) => ({ ...prev, [activeId]: nextAi.slice(0, 24) }));
+        setExistingSkillKeys((prev) => ({ ...prev, [activeId]: key }));
+      } finally {
+        setExistingSkillSuggestionsLoading((prev) => ({ ...prev, [activeId]: false }));
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [editingSkillGroups, cvData.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
@@ -2095,6 +2140,7 @@ function SkillsSection({
     const existing = new Set(parsedSkills.map((item) => item.toLowerCase()));
     if (existing.has(skill.toLowerCase())) return;
     const nextSkills = [...parsedSkills, skill];
+    skipNextSkillSuggestRef.current = true;
     setNewGroup((prev) => ({ ...prev, skills: nextSkills.join(", ") }));
   };
 
@@ -2123,31 +2169,41 @@ function SkillsSection({
       {isAdding && (
         <Card className="border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 space-y-4">
-            <div>
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                Suggested Skills
-              </p>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                Suggestions update automatically. Click to add.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {availableSuggestions.length === 0 ? (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Add details to see suggestions.
-                </p>
-              ) : (
-                availableSuggestions.map((skill) => (
-                  <button
-                    key={skill}
-                    type="button"
-                    onClick={() => handleAddSkillSuggestion(skill)}
-                    className="rounded-full border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition"
-                  >
-                    {skill}
-                  </button>
-                ))
-              )}
+            <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                    Suggested Skills
+                  </p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                    Suggestions update automatically. Click to add.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {isSkillSuggestionsLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300">
+                    <Spinner className="h-3 w-3" />
+                    <Sparkles className="h-3 w-3 animate-pulse" />
+                    <span>Generating skills...</span>
+                  </div>
+                ) : availableSuggestions.length === 0 ? (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Add details to see suggestions.
+                  </p>
+                ) : (
+                  availableSuggestions.map((skill) => (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => handleAddSkillSuggestion(skill)}
+                      className="rounded-full border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition"
+                    >
+                      {skill}
+                    </button>
+                  ))
+                )}
+              </div>
             </div>
             <Input
               placeholder="Category Name (e.g., Programming Languages)"
@@ -2167,6 +2223,7 @@ function SkillsSection({
                 onClick={() => {
                   setIsAdding(false);
                   onDraftChange?.(null);
+                  setAiSuggestions([]);
                 }}
               >
                 Cancel
@@ -2218,17 +2275,35 @@ function SkillsSection({
                   rows={3}
                   placeholder="Enter skills separated by commas"
                 />
-                <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
+                <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-4">
                   <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
                     Suggested Skills
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {(existingSkillSuggestions[group.id] || []).length === 0 ? (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Add details to see suggestions.
-                      </p>
-                    ) : (
-                      (existingSkillSuggestions[group.id] || []).map((skill) => (
+                    {existingSkillSuggestionsLoading[group.id] ? (
+                      <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300">
+                        <Spinner className="h-3 w-3" />
+                        <Sparkles className="h-3 w-3 animate-pulse" />
+                        <span>Generating skills...</span>
+                      </div>
+                    ) : (() => {
+                      const currentSkills = new Set(
+                        (skillDrafts[group.id] ?? group.skills.join(", "))
+                          .split(",")
+                          .map((item) => item.trim().toLowerCase())
+                          .filter(Boolean)
+                      );
+                      const filteredSuggestions = (existingSkillSuggestions[group.id] || []).filter(
+                        (skill) => !currentSkills.has(skill.toLowerCase())
+                      );
+                      if (filteredSuggestions.length === 0) {
+                        return (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Add details to see suggestions.
+                          </p>
+                        );
+                      }
+                      return filteredSuggestions.map((skill) => (
                         <button
                           key={`${group.id}-${skill}`}
                           type="button"
@@ -2247,8 +2322,8 @@ function SkillsSection({
                         >
                           {skill}
                         </button>
-                      ))
-                    )}
+                      ));
+                    })()}
                   </div>
                 </div>
                 <div className="flex gap-2">
