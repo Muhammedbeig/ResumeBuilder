@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
 import { resumeTemplates } from "@/lib/resume-templates";
@@ -15,14 +15,17 @@ import { Spinner } from "@/components/ui/spinner";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
 
-export default function NewResumePage() {
+function NewResumeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const { createResume, importedData } = useResume();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Resume");
   const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  
+  const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
   const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
   const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
@@ -78,6 +81,16 @@ export default function NewResumePage() {
       setCreatingTemplateId(null);
     }
   };
+
+  // Auto-select template if query param is present
+  useEffect(() => {
+    if (templateIdFromQuery && isLoaded && status !== "loading") {
+      const template = resumeTemplates.find(t => t.id === templateIdFromQuery);
+      if (template && !creatingTemplateId) {
+        handleSelectTemplate(template.id, template.premium);
+      }
+    }
+  }, [templateIdFromQuery, isLoaded, status]);
 
   if (status === "loading") {
     return (
@@ -157,5 +170,13 @@ export default function NewResumePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewResumePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+      <NewResumeContent />
+    </Suspense>
   );
 }

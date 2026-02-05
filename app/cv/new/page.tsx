@@ -15,14 +15,32 @@ import { Spinner } from "@/components/ui/spinner";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
 
-export default function NewCVPage() {
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Crown } from "lucide-react";
+import { cvTemplates } from "@/lib/cv-templates";
+import { placeholderResumeData, previewResumeData } from "@/lib/resume-samples";
+import { useCV } from "@/contexts/CVContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { toast } from "sonner";
+
+function NewCVContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const { createCV, importedData } = useCV();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled CV");
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  
+  const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
   const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
   const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
@@ -79,6 +97,16 @@ export default function NewCVPage() {
       setIsCreating(false);
     }
   };
+
+  // Auto-select template if query param is present
+  useEffect(() => {
+    if (templateIdFromQuery && isLoaded && status !== "loading") {
+      const template = cvTemplates.find(t => t.id === templateIdFromQuery);
+      if (template && !isCreating) {
+        handleSelectTemplate(template.id, template.premium);
+      }
+    }
+  }, [templateIdFromQuery, isLoaded, status]);
 
   if (status === "loading") {
     return (
@@ -158,5 +186,13 @@ export default function NewCVPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewCVPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+      <NewCVContent />
+    </Suspense>
   );
 }

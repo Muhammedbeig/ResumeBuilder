@@ -42,14 +42,59 @@ const previewData = {
   },
 };
 
-export default function NewCoverLetterPage() {
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Crown } from "lucide-react";
+import { coverLetterTemplates } from "@/lib/cover-letter-templates";
+import { useCoverLetter } from "@/contexts/CoverLetterContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { toast } from "sonner";
+
+// Placeholder data for preview
+const previewData = {
+  personalInfo: {
+    fullName: "Alex Morgan",
+    email: "alex.morgan@example.com",
+    phone: "(555) 123-4567",
+    address: "123 Innovation Dr",
+    city: "San Francisco",
+    zipCode: "94103",
+  },
+  recipientInfo: {
+    managerName: "Sarah Connor",
+    companyName: "TechCorp Inc.",
+    address: "456 Future Way",
+    city: "San Francisco",
+    zipCode: "94105",
+    email: "hiring@techcorp.com",
+  },
+  content: {
+    subject: "Application for Senior Developer Position",
+    greeting: "Dear Ms. Connor,",
+    opening: "I am writing to express my strong interest in the Senior Developer position at TechCorp Inc.",
+    body: "With over 5 years of experience in full-stack development, I have a proven track record of delivering scalable web applications...",
+    closing: "Sincerely,",
+    signature: "Alex Morgan",
+  },
+};
+
+function NewCoverLetterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const { createCoverLetter, importedData } = useCoverLetter();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Cover Letter");
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+
+  const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
   const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
   const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
@@ -99,7 +144,6 @@ export default function NewCoverLetterPage() {
         importedData || previewData 
       );
       toast.success("Cover Letter created successfully!");
-      // Redirect to editor (not implemented yet, but we'll point to it)
       router.push(`/cover-letter/${coverLetter.id}`);
     } catch (error) {
       toast.error("Failed to create cover letter");
@@ -107,6 +151,16 @@ export default function NewCoverLetterPage() {
       setIsCreating(false);
     }
   };
+
+  // Auto-select template if query param is present
+  useEffect(() => {
+    if (templateIdFromQuery && isLoaded && status !== "loading") {
+      const template = coverLetterTemplates.find(t => t.id === templateIdFromQuery);
+      if (template && !isCreating) {
+        handleSelectTemplate(template.id, template.premium);
+      }
+    }
+  }, [templateIdFromQuery, isLoaded, status]);
 
   if (status === "loading") {
     return (
@@ -186,5 +240,13 @@ export default function NewCoverLetterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewCoverLetterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+      <NewCoverLetterContent />
+    </Suspense>
   );
 }

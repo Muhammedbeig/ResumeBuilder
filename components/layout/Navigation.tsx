@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon, Sparkles } from "lucide-react";
+import { Menu, X, Sun, Moon, Sparkles, FileText, File, LayoutTemplate, FileCode, CheckSquare, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import { RESUME_TEMPLATE_CATEGORIES } from "@/lib/resume-template-catalog";
@@ -294,7 +294,7 @@ export function Navigation() {
             </div>
 
             {/* Mobile Menu Button */}
-            {!isSimplified && (
+            {(!isSimplified || pathname === "/dashboard") && (
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -312,14 +312,51 @@ export function Navigation() {
 
       {/* Mobile Menu */}
       <AnimatePresence>
-        {isMobileMenuOpen && !isSimplified && (
+        {isMobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="md:hidden absolute top-full left-4 right-4 mt-2 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
           >
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-2 max-h-[80vh] overflow-y-auto">
+              {pathname === "/dashboard" ? (
+                <div className="space-y-6 py-2">
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">Resume</h3>
+                    <div className="space-y-1">
+                      <Link href="/resume/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><FileText className="w-4 h-4" /> Resume Builder</Link>
+                      <Link href="/resume/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><File className="w-4 h-4" /> Import Resume</Link>
+                      <Link href="/templates" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><LayoutTemplate className="w-4 h-4" /> Templates</Link>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">CV</h3>
+                    <div className="space-y-1">
+                      <Link href="/cv/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><FileCode className="w-4 h-4" /> CV Builder</Link>
+                      <Link href="/cv/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><File className="w-4 h-4" /> Import CV</Link>
+                      <Link href="/cv/new" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><LayoutTemplate className="w-4 h-4" /> Templates</Link>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">Cover Letter</h3>
+                    <div className="space-y-1">
+                      <Link href="/cover-letter/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><FileText className="w-4 h-4" /> Cover Letter Builder</Link>
+                      <Link href="/cover-letter/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><File className="w-4 h-4" /> Import Document</Link>
+                      <Link href="/cover-letter/templates" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><LayoutTemplate className="w-4 h-4" /> Templates</Link>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">Tools</h3>
+                    <div className="space-y-1">
+                      <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><CheckSquare className="w-4 h-4" /> ATS Checker</Link>
+                      <Link href="/ai-resume-optimizer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Sparkles className="w-4 h-4" /> AI Resume Optimizer</Link>
+                      <Link href="/career-management" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Eye className="w-4 h-4" /> Career Management</Link>
+                    </div>
+                  </div>
+                </div>
+              ) : !isSimplified ? (
+                <>
               <Accordion type="multiple" className="space-y-1">
                 {navDropdowns.map((group) => (
                   <AccordionItem
@@ -374,6 +411,8 @@ export function Navigation() {
                   </Link>
                 </div>
               )}
+                </>
+              ) : null}
             </div>
           </motion.div>
         )}

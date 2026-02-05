@@ -12,8 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
-import { Save, Download, Image as ImageIcon, Eye } from "lucide-react";
+import { Save, Download, Image as ImageIcon, Eye, MoreHorizontal, CheckCircle2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DesignControls } from "@/components/editor/DesignControls";
 import { RichTextarea } from "@/components/editor/RichTextarea";
 import { COVER_LETTER_DEFAULT_FONTS } from "@/lib/template-defaults";
@@ -275,30 +281,65 @@ export function CoverLetterEditor() {
                 </div>
               </SheetContent>
             </Sheet>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleWatermarkToggle(!watermarkEnabled)}
-              className={
-                !watermarkEnabled
-                  ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
-                  : undefined
-              }
-            >
-              Watermark {watermarkEnabled ? "On" : "Off"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportImage} disabled={isExporting}>
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Image
-            </Button>
-            <Button size="sm" onClick={handleExportPDF} disabled={isExporting} className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white">
-              <Download className="w-4 h-4 mr-2" />
-              PDF
-            </Button>
+
+            {/* Desktop Buttons */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleWatermarkToggle(!watermarkEnabled)}
+                className={
+                  !watermarkEnabled
+                    ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
+                    : undefined
+                }
+              >
+                Watermark {watermarkEnabled ? "On" : "Off"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportImage} disabled={isExporting}>
+                <ImageIcon className="w-4 h-4 mr-2" />
+                Image
+              </Button>
+              <Button size="sm" onClick={handleExportPDF} disabled={isExporting} className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white">
+                <Download className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+            </div>
+
+            {/* Mobile Buttons */}
+            <div className="flex lg:hidden items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
+                <Save className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save"}</span>
+              </Button>
+              <Button size="sm" onClick={handleExportPDF} disabled={isExporting} className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white">
+                <Download className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontal className="w-4 h-4 mr-2" />
+                    More
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => handleWatermarkToggle(!watermarkEnabled)}>
+                    <CheckCircle2 className={`w-4 h-4 mr-2 ${!watermarkEnabled ? "text-purple-600" : "text-gray-400"}`} />
+                    Watermark {watermarkEnabled ? "Off" : "On"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportImage} disabled={isExporting}>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Export Image
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
 
