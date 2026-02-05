@@ -2021,12 +2021,17 @@ function SkillsSection({
   );
 
   const availableSuggestions = useMemo(() => {
-    const existing = new Set(parsedSkills.map((skill) => skill.toLowerCase()));
+    const existingLow = parsedSkills.map((skill) => skill.toLowerCase());
     const unique = aiSuggestions.filter(
       (skill, index, arr) =>
         arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
     );
-    return unique.filter((skill) => !existing.has(skill.toLowerCase())).slice(0, 24);
+    return unique
+      .filter((skill) => {
+        const sLow = skill.toLowerCase();
+        return !existingLow.some((ext) => ext.includes(sLow) || sLow.includes(ext));
+      })
+      .slice(0, 24);
   }, [aiSuggestions, parsedSkills]);
 
   useEffect(() => {
@@ -2325,14 +2330,15 @@ function SkillsSection({
                         <span>Generating skills...</span>
                       </div>
                     ) : (() => {
-                      const currentSkills = new Set(
-                        (skillDrafts[group.id] ?? group.skills.join(", "))
-                          .split(",")
-                          .map((item) => item.trim().toLowerCase())
-                          .filter(Boolean)
-                      );
+                      const currentSkills = (skillDrafts[group.id] ?? group.skills.join(", "))
+                        .split(",")
+                        .map((item) => item.trim().toLowerCase())
+                        .filter(Boolean);
                       const filteredSuggestions = (existingSkillSuggestions[group.id] || []).filter(
-                        (skill) => !currentSkills.has(skill.toLowerCase())
+                        (skill) => {
+                          const sLow = skill.toLowerCase();
+                          return !currentSkills.some((ext) => ext.includes(sLow) || sLow.includes(ext));
+                        }
                       );
                       if (filteredSuggestions.length === 0) {
                         return (

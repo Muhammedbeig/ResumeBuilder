@@ -31,14 +31,35 @@ export const emptyResumeData: ResumeData = {
 
 export function normalizeResumeData(data?: Partial<ResumeData> | null): ResumeData {
   if (!data) return { ...emptyResumeData };
+
+  const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).substring(2, 11)}`;
+
   return {
     basics: { ...emptyResumeData.basics, ...(data.basics || {}) },
-    experiences: data.experiences || [],
-    education: data.education || [],
-    skills: data.skills || [],
-    projects: data.projects || [],
-    certifications: data.certifications || [],
-    languages: data.languages || [],
+    experiences: (data.experiences || []).map((item) => ({
+      ...item,
+      id: (item as any).id || generateId("exp"),
+    })),
+    education: (data.education || []).map((item) => ({
+      ...item,
+      id: (item as any).id || generateId("edu"),
+    })),
+    skills: (data.skills || []).map((item) => ({
+      ...item,
+      id: (item as any).id || generateId("skill"),
+    })),
+    projects: (data.projects || []).map((item) => ({
+      ...item,
+      id: (item as any).id || generateId("proj"),
+    })),
+    certifications: (data.certifications || []).map((item) => ({
+      ...item,
+      id: (item as any).id || generateId("cert"),
+    })),
+    languages: (data.languages || []).map((item) => ({
+      ...item,
+      id: (item as any).id || generateId("lang"),
+    })),
     structure: data.structure || defaultSectionOrder,
     metadata: { ...emptyResumeData.metadata, ...(data.metadata || {}) },
   };
