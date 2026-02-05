@@ -30,7 +30,7 @@ const PUBLIC_PREFIXES = [
   "/sitemap.xml",
 ];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   if (pathname === "/") return NextResponse.next();
