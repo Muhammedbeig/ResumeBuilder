@@ -1,48 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Crown } from "lucide-react";
-import { coverLetterTemplates } from "@/lib/cover-letter-templates";
-import { useCoverLetter } from "@/contexts/CoverLetterContext";
-import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
-import { toast } from "sonner";
-
-// Placeholder data for preview
-const previewData = {
-  personalInfo: {
-    fullName: "Alex Morgan",
-    email: "alex.morgan@example.com",
-    phone: "(555) 123-4567",
-    address: "123 Innovation Dr",
-    city: "San Francisco",
-    zipCode: "94103",
-  },
-  recipientInfo: {
-    managerName: "Sarah Connor",
-    companyName: "TechCorp Inc.",
-    address: "456 Future Way",
-    city: "San Francisco",
-    zipCode: "94105",
-    email: "hiring@techcorp.com",
-  },
-  content: {
-    subject: "Application for Senior Developer Position",
-    greeting: "Dear Ms. Connor,",
-    opening: "I am writing to express my strong interest in the Senior Developer position at TechCorp Inc.",
-    body: "With over 5 years of experience in full-stack development, I have a proven track record of delivering scalable web applications...",
-    closing: "Sincerely,",
-    signature: "Alex Morgan",
-  },
-};
-
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
@@ -120,12 +78,12 @@ function NewCoverLetterContent() {
     }
   }, [planChoice]);
 
-  const openPlanModal = () => {
+  const openPlanModal = useCallback(() => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
-  };
+  }, [isAuthenticated]);
 
-  const handleSelectTemplate = async (templateId: string, premium: boolean) => {
+  const handleSelectTemplate = useCallback(async (templateId: string, premium: boolean) => {
     if (premium && !canUsePaid) {
       if (!isAuthenticated) {
         toast.error("Please sign in to unlock premium templates");
@@ -145,12 +103,12 @@ function NewCoverLetterContent() {
       );
       toast.success("Cover Letter created successfully!");
       router.push(`/cover-letter/${coverLetter.id}`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create cover letter");
     } finally {
       setIsCreating(false);
     }
-  };
+  }, [canUsePaid, isAuthenticated, router, title, createCoverLetter, importedData, openPlanModal]);
 
   // Auto-select template if query param is present
   useEffect(() => {
@@ -160,7 +118,7 @@ function NewCoverLetterContent() {
         handleSelectTemplate(template.id, template.premium);
       }
     }
-  }, [templateIdFromQuery, isLoaded, status]);
+  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate]);
 
   if (status === "loading") {
     return (

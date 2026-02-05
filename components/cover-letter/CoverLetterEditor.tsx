@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
@@ -71,7 +71,7 @@ export function CoverLetterEditor() {
     return coverLetterData.metadata?.watermarkEnabled ?? false;
   }, [canUsePaid, coverLetterData.metadata?.watermarkEnabled]);
 
-  const syncSubscription = async () => {
+  const syncSubscription = useCallback(async () => {
     try {
       const response = await fetch("/api/user/subscription");
       if (!response.ok) return;
@@ -85,7 +85,7 @@ export function CoverLetterEditor() {
     } catch {
       // ignore
     }
-  };
+  }, [updateSession]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -100,7 +100,7 @@ export function CoverLetterEditor() {
       toast.info("Payment canceled.");
     }
     window.history.replaceState({}, "", window.location.pathname);
-  }, []);
+  }, [syncSubscription]);
 
   if (!currentCoverLetter) return null;
 

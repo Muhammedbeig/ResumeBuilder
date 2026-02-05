@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   User,
-  Briefcase,
-  GraduationCap,
   Code,
   Award,
   Save,
@@ -50,8 +48,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCV } from "@/contexts/CVContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { cvTemplateMap, cvTemplates } from "@/lib/cv-templates";
-import { generateImage, generatePDF, downloadImage } from "@/lib/pdf";
+import { cvTemplateMap } from "@/lib/cv-templates";
+import { generatePDF } from "@/lib/pdf";
 import {
   buildMonthYear,
   buildYearOptions,
@@ -196,7 +194,7 @@ export function CVEditorPage() {
     }
   }, [planChoice]);
 
-  const syncSubscription = async () => {
+  const syncSubscription = useCallback(async () => {
     try {
       const response = await fetch("/api/user/subscription");
       if (!response.ok) return;
@@ -210,7 +208,7 @@ export function CVEditorPage() {
     } catch {
       // ignore
     }
-  };
+  }, [updateSession]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -225,7 +223,7 @@ export function CVEditorPage() {
       toast.info("Payment canceled.");
     }
     window.history.replaceState({}, "", window.location.pathname);
-  }, []);
+  }, [syncSubscription]);
 
   useEffect(() => {
     if (previewData.experiences.length === 0) {

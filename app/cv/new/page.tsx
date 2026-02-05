@@ -1,21 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Crown } from "lucide-react";
-import { cvTemplates } from "@/lib/cv-templates";
-import { placeholderResumeData, previewResumeData } from "@/lib/resume-samples";
-import { useCV } from "@/contexts/CVContext";
-import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
-import { toast } from "sonner";
-
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
@@ -66,12 +51,12 @@ function NewCVContent() {
     }
   }, [planChoice]);
 
-  const openPlanModal = () => {
+  const openPlanModal = useCallback(() => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
-  };
+  }, [isAuthenticated]);
 
-  const handleSelectTemplate = async (templateId: string, premium: boolean) => {
+  const handleSelectTemplate = useCallback(async (templateId: string, premium: boolean) => {
     if (premium && !canUsePaid) {
       if (!isAuthenticated) {
         toast.error("Please sign in to unlock premium templates");
@@ -91,12 +76,12 @@ function NewCVContent() {
       );
       toast.success("CV created successfully!");
       router.push(`/cv/${cv.id}`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create CV");
     } finally {
       setIsCreating(false);
     }
-  };
+  }, [canUsePaid, isAuthenticated, router, title, createCV, importedData, openPlanModal]);
 
   // Auto-select template if query param is present
   useEffect(() => {
@@ -106,7 +91,7 @@ function NewCVContent() {
         handleSelectTemplate(template.id, template.premium);
       }
     }
-  }, [templateIdFromQuery, isLoaded, status]);
+  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate]);
 
   if (status === "loading") {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
@@ -51,12 +51,12 @@ function NewResumeContent() {
     }
   }, [planChoice]);
 
-  const openPlanModal = () => {
+  const openPlanModal = useCallback(() => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
-  };
+  }, [isAuthenticated]);
 
-  const handleSelectTemplate = async (templateId: string, premium: boolean) => {
+  const handleSelectTemplate = useCallback(async (templateId: string, premium: boolean) => {
     if (premium && !canUsePaid) {
       if (!isAuthenticated) {
         toast.error("Please sign in to unlock premium templates");
@@ -75,12 +75,12 @@ function NewResumeContent() {
         importedData || placeholderResumeData
       );
       router.push(`/resume/${resume.id}`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create resume");
     } finally {
       setCreatingTemplateId(null);
     }
-  };
+  }, [canUsePaid, isAuthenticated, router, title, createResume, importedData, openPlanModal]);
 
   // Auto-select template if query param is present
   useEffect(() => {
@@ -90,7 +90,7 @@ function NewResumeContent() {
         handleSelectTemplate(template.id, template.premium);
       }
     }
-  }, [templateIdFromQuery, isLoaded, status]);
+  }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate]);
 
   if (status === "loading") {
     return (
