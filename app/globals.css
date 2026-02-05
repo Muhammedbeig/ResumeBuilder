@@ -136,6 +136,8 @@
 
 .resume-template {
   @apply bg-white text-gray-900;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .resume-template h1,

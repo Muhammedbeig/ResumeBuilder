@@ -17,7 +17,7 @@ const ModernCoverLetter = ({ data }: { data: CoverLetterData }) => {
 
   return (
     <div 
-      className="p-8 bg-white text-black min-h-[11in]"
+      className="resume-template p-8 bg-white text-black min-h-[11in]"
       style={{ 
         fontFamily: `"${fontName}", sans-serif`,
         zoom: scale
@@ -61,7 +61,7 @@ const ProfessionalCoverLetter = ({ data }: { data: CoverLetterData }) => {
 
   return (
     <div 
-      className="p-12 bg-white text-black min-h-[11in]"
+      className="resume-template p-12 bg-white text-black min-h-[11in]"
       style={{ 
         fontFamily: `"${fontName}", serif`,
         zoom: scale
