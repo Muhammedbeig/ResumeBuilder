@@ -1,17 +1,7 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import { PricingSection } from "@/components/pricing/PricingSection";
+import { fetchPricingCards } from "@/lib/panel-pricing";
 
-export function Pricing() {
-  const router = useRouter();
-
-  return (
-    <PricingSection
-      mode="landing"
-      onSelectPlan={() => {
-        router.push("/pricing");
-      }}
-    />
-  );
+export async function Pricing() {
+  const cards = await fetchPricingCards();
+  return <PricingSection mode="landing" cards={cards} />;
 }

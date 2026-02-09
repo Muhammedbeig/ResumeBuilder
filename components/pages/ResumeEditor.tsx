@@ -79,6 +79,8 @@ import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
+const AI_SUGGESTION_DELAY_MS = 1200;
+
 export function ResumeEditorPage() {
   const router = useRouter();
   const params = useParams();
@@ -206,8 +208,8 @@ export function ResumeEditorPage() {
 
   const syncSubscription = useCallback(async () => {
     try {
-      const response = await fetch("/api/user/subscription");
-      if (!response.ok) return;
+      const response = await fetch("/api/user/subscription", { cache: "no-store" });
+      if (!response.ok) return null;
       const data = await response.json();
       if (updateSession) {
         await updateSession({
@@ -215,9 +217,11 @@ export function ResumeEditorPage() {
           subscriptionPlanId: data.subscriptionPlanId ?? null,
         });
       }
+      return data as { subscription?: string; subscriptionPlanId?: string | null };
     } catch {
       // ignore
     }
+    return null;
   }, [updateSession]);
 
   useEffect(() => {
@@ -236,6 +240,7 @@ export function ResumeEditorPage() {
   }, [syncSubscription]);
 
   useEffect(() => {
+    if (activeTab !== "basics") return;
     if (previewData.experiences.length === 0) {
       setSummarySuggestions([]);
       summaryKeyRef.current = "";
@@ -258,9 +263,9 @@ export function ResumeEditorPage() {
       );
       setSummarySuggestions(suggestions);
       summaryKeyRef.current = key;
-    }, 600);
+    }, AI_SUGGESTION_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [previewData, suggestSummaryAI]);
+  }, [previewData, suggestSummaryAI, activeTab]);
 
 
   useEffect(() => {
@@ -345,6 +350,7 @@ export function ResumeEditorPage() {
   const buildShareUrl = () => {
     if (typeof window === "undefined") return "";
     const origin = window.location.origin;
+    if (currentResume?.shortId) return `${origin}/shared/${currentResume.shortId}`;
     if (currentResume?.id) return `${origin}/shared/${currentResume.id}`;
     return origin;
   };
@@ -373,13 +379,18 @@ export function ResumeEditorPage() {
     return true;
   };
 
-  const openDownloadModal = () => {
+  const openDownloadModal = async () => {
     if (!ensurePlanChosen()) return;
     if (planChoice === "paid" && !hasSubscription) {
-      router.push(
-        `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
-      );
-      return;
+      const latest = await syncSubscription();
+      const latestHasSubscription =
+        latest?.subscription === "pro" || latest?.subscription === "business";
+      if (!latestHasSubscription) {
+        router.push(
+          `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
     }
     setIsDownloadModalOpen(true);
   };
@@ -413,11 +424,11 @@ export function ResumeEditorPage() {
   };
 
   const handleExportPDF = () => {
-    openDownloadModal();
+    void openDownloadModal();
   };
 
   const handleExportImage = () => {
-    openDownloadModal();
+    void openDownloadModal();
   };
 
   const handleExportTxt = () => {
@@ -826,7 +837,10 @@ export function ResumeEditorPage() {
                 </TabsContent>
 
                 <TabsContent value="experience" className="mt-0">
-                  <ExperienceSection onDraftChange={setDraftExperience} />
+                  <ExperienceSection
+                    onDraftChange={setDraftExperience}
+                    isActive={activeTab === "experience"}
+                  />
                 </TabsContent>
 
                 <TabsContent value="education" className="mt-0">
@@ -837,6 +851,7 @@ export function ResumeEditorPage() {
                   <SkillsSection
                     onDraftChange={setDraftSkillGroup}
                     experienceSource={previewData.experiences}
+                    isActive={activeTab === "skills"}
                   />
                 </TabsContent>
 
@@ -904,8 +919,10 @@ export function ResumeEditorPage() {
 // Subcomponents
 function ExperienceSection({
   onDraftChange,
+  isActive = true,
 }: {
   onDraftChange?: (draft: Partial<Experience> | null) => void;
+  isActive?: boolean;
 }) {
   const {
     resumeData,
@@ -1096,6 +1113,10 @@ function ExperienceSection({
     }, [newExperience.role]);
 
     useEffect(() => {
+      if (!isActive) {
+        setIsNewSuggestionsLoading(false);
+        return;
+      }
       if (!isAdding || !newExperience.role) {
         setAiSuggestedBullets([]);
         setIsNewSuggestionsLoading(false);
@@ -1108,28 +1129,29 @@ function ExperienceSection({
       }
       const description = (newExperience.bullets || []).join(" ").trim();
       const role = newExperience.role.trim();
-      let isActive = true;
+      let isMounted = true;
       setIsNewSuggestionsLoading(true);
       const timer = setTimeout(async () => {
         try {
           const bullets = await suggestResponsibilitiesAI(role, description);
-          if (!isActive) return;
+          if (!isMounted) return;
           setAiSuggestedBullets(bullets);
         } catch (error) {
           console.error("Auto-suggest failed", error);
         } finally {
-          if (isActive) setIsNewSuggestionsLoading(false);
+          if (isMounted) setIsNewSuggestionsLoading(false);
         }
-      }, 500);
+      }, AI_SUGGESTION_DELAY_MS);
       return () => {
-        isActive = false;
+        isMounted = false;
         clearTimeout(timer);
       };
-    }, [isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
+    }, [isActive, isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
 
     useEffect(() => {
+      if (!isActive) return;
       const timers: NodeJS.Timeout[] = [];
-      let isActive = true;
+      let isMounted = true;
       resumeData.experiences.forEach((exp) => {
         if (!editingExperiences[exp.id] || !exp.role) {
           setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
@@ -1150,24 +1172,24 @@ function ExperienceSection({
         const timer = setTimeout(async () => {
           try {
             const bullets = await suggestResponsibilitiesAI(exp.role, description);
-            if (!isActive) return;
+            if (!isMounted) return;
             setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
             setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
           } catch (error) {
             console.error("Auto-suggest existing failed", error);
           } finally {
-            if (isActive) {
+            if (isMounted) {
               setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
             }
           }
-        }, 500);
+        }, AI_SUGGESTION_DELAY_MS);
         timers.push(timer);
       });
       return () => {
-        isActive = false;
+        isMounted = false;
         timers.forEach(clearTimeout);
       };
-    }, [editingExperiences, resumeData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
+    }, [isActive, editingExperiences, resumeData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
 
   useEffect(() => {
     if (!onDraftChange) return;
@@ -2010,9 +2032,11 @@ function EducationSection() {
 function SkillsSection({
   onDraftChange,
   experienceSource,
+  isActive = true,
 }: {
   onDraftChange?: (draft: Partial<SkillGroup> | null) => void;
   experienceSource?: Experience[];
+  isActive?: boolean;
 }) {
   const { resumeData, addSkillGroup, updateSkillGroup, removeSkillGroup, suggestSkillsAI } = useResume();
   const [isAdding, setIsAdding] = useState(false);
@@ -2118,6 +2142,10 @@ function SkillsSection({
   };
 
   useEffect(() => {
+    if (!isActive) {
+      setIsSkillSuggestionsLoading(false);
+      return;
+    }
     if (!isAdding) {
       setAiSuggestions([]);
       setIsSkillSuggestionsLoading(false);
@@ -2138,12 +2166,12 @@ function SkillsSection({
       setIsSkillSuggestionsLoading(false);
       return;
     }
-    let isActive = true;
+    let isMounted = true;
     setIsSkillSuggestionsLoading(true);
     const timer = setTimeout(async () => {
       try {
         const result = await suggestSkillsAI(resumeData.basics.title, context);
-        if (!isActive) return;
+        if (!isMounted) return;
         const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
           .map((skill) => skill.trim())
           .filter(Boolean);
@@ -2153,16 +2181,17 @@ function SkillsSection({
         );
         setAiSuggestions(nextAi.slice(0, 24));
       } finally {
-        if (isActive) setIsSkillSuggestionsLoading(false);
+        if (isMounted) setIsSkillSuggestionsLoading(false);
       }
-    }, 500);
+    }, AI_SUGGESTION_DELAY_MS);
     return () => {
-      isActive = false;
+      isMounted = false;
       clearTimeout(timer);
     };
-  }, [isAdding, newGroup.name, newGroup.skills, resumeData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
+  }, [isActive, isAdding, newGroup.name, newGroup.skills, resumeData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
 
   useEffect(() => {
+    if (!isActive) return;
     const activeId = Object.keys(editingSkillGroups).find((id) => editingSkillGroups[id]);
     if (!activeId) return;
     const group = resumeData.skills.find((item) => item.id === activeId);
@@ -2194,7 +2223,7 @@ function SkillsSection({
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [editingSkillGroups, resumeData.skills, resumeData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
+  }, [isActive, editingSkillGroups, resumeData.skills, resumeData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
 
   const handleAddSkillSuggestion = (skill: string) => {
     const existing = new Set(parsedSkills.map((item) => item.toLowerCase()));
@@ -2729,7 +2758,7 @@ function SharePopover() {
   if (!currentResume) return null;
 
   const url = typeof window !== 'undefined' 
-    ? `${window.location.origin}/shared/${currentResume.id}`
+    ? `${window.location.origin}/shared/${currentResume.shortId || currentResume.id}`
     : '';
 
   const handleCopy = () => {

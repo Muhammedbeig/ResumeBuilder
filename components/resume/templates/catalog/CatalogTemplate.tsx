@@ -54,6 +54,7 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
   const scale = getFontScale(fontSize);
   const accentSoft = hexToRgba(themeColor, 0.14);
   const accentSoftStrong = hexToRgba(themeColor, 0.22);
+  const isSidebarLayout = config.layout === "sidebar-left" || config.layout === "sidebar-right";
 
   const activeStructure = useMemo(() => {
     if (structure && structure.length > 0) {
@@ -219,23 +220,32 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
 
     return (
       <div className="mb-6">
-        <div className="flex items-center gap-4">
+        <div className={`flex gap-4 ${isSidebarLayout ? "flex-col items-start" : "items-center"}`}>
           {config.hasPhoto && photo}
-          <div>
+          <div className={isSidebarLayout ? "w-full" : "min-w-0 flex-1"}>
             <h1
-              className="text-3xl font-bold tracking-tight"
+              className={`font-bold tracking-tight break-words ${
+                isSidebarLayout ? "text-2xl" : "text-3xl"
+              }`}
               style={{ fontFamily: `"${headingFont}", serif` }}
             >
               {basics.name || "Your Name"}
             </h1>
-            <p className="text-base mt-1" style={{ color: config.palette.muted }}>
+            <p
+              className={`mt-1 break-words ${isSidebarLayout ? "text-sm" : "text-base"}`}
+              style={{ color: config.palette.muted }}
+            >
               {basics.title || "Professional Title"}
             </p>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2 text-xs" style={{ color: config.palette.muted }}>
           {contactItems.map((item) => (
-            <span key={item} className="px-3 py-1 rounded-full" style={{ backgroundColor: accentSoft }}>
+            <span
+              key={item}
+              className="max-w-full break-all px-3 py-1 rounded-full"
+              style={{ backgroundColor: accentSoft }}
+            >
               {item}
             </span>
           ))}

@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resumeTemplateMap } from "@/lib/resume-templates";
+import { cvTemplateMap } from "@/lib/cv-templates";
 import { normalizeResumeData } from "@/lib/resume-data";
 import { ResumeData } from "@/types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Download } from "lucide-react";
 
 interface SharedResumePageProps {
   params: Promise<{ id: string }>;
@@ -14,8 +14,14 @@ interface SharedResumePageProps {
 export default async function SharedResumePage({ params }: SharedResumePageProps) {
   const { id } = await params;
 
-  const resume = await prisma.resume.findUnique({
-    where: { id },
+  // Try finding a resume first
+  let doc: any = await prisma.resume.findFirst({
+    where: {
+      OR: [
+        { id },
+        { shortId: id }
+      ]
+    },
     include: {
       versions: {
         orderBy: { createdAt: "desc" },
@@ -24,22 +30,46 @@ export default async function SharedResumePage({ params }: SharedResumePageProps
     },
   });
 
-  if (!resume || resume.versions.length === 0) {
+  let docType = 'resume';
+
+  if (!doc) {
+    // Try finding a CV
+    doc = await prisma.cv.findFirst({
+      where: {
+        OR: [
+          { id },
+          { shortId: id }
+        ]
+      },
+      include: {
+        versions: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+    docType = 'cv';
+  }
+
+  if (!doc || doc.versions.length === 0) {
     notFound();
   }
 
-  const latestVersion = resume.versions[0];
+  const latestVersion = doc.versions[0];
   const resumeData = normalizeResumeData(latestVersion.jsonData as unknown as Partial<ResumeData>);
-  const TemplateComponent = resumeTemplateMap[resume.template as keyof typeof resumeTemplateMap] || resumeTemplateMap.modern;
+  
+  const TemplateComponent = docType === 'resume'
+    ? (resumeTemplateMap[doc.template as keyof typeof resumeTemplateMap] || resumeTemplateMap.modern)
+    : (cvTemplateMap[doc.template as keyof typeof cvTemplateMap] || (cvTemplateMap as any)["academic-cv"]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto mb-8 flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white">
-          ResuPra
+          ResuPro
         </Link>
         <Link href="/">
-            <Button variant="outline">Create Your Own Resume</Button>
+            <Button variant="outline">Create Your Own {docType === 'resume' ? 'Resume' : 'CV'}</Button>
         </Link>
       </div>
 
@@ -48,7 +78,7 @@ export default async function SharedResumePage({ params }: SharedResumePageProps
       </div>
 
       <div className="max-w-4xl mx-auto mt-8 text-center text-sm text-gray-500">
-        Generated with ResuPra AI Resume Builder
+        Generated with ResuPro AI Builder
       </div>
     </div>
   );

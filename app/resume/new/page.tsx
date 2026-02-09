@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
@@ -24,6 +24,7 @@ function NewResumeContent() {
   const [title, setTitle] = useState("Untitled Resume");
   const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const autoCreateRef = useRef<string | null>(null);
   
   const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
@@ -84,12 +85,12 @@ function NewResumeContent() {
 
   // Auto-select template if query param is present
   useEffect(() => {
-    if (templateIdFromQuery && isLoaded && status !== "loading") {
-      const template = resumeTemplates.find(t => t.id === templateIdFromQuery);
-      if (template && !creatingTemplateId) {
-        handleSelectTemplate(template.id, template.premium);
-      }
-    }
+    if (!templateIdFromQuery || !isLoaded || status === "loading") return;
+    const template = resumeTemplates.find((t) => t.id === templateIdFromQuery);
+    if (!template || creatingTemplateId) return;
+    if (autoCreateRef.current === templateIdFromQuery) return;
+    autoCreateRef.current = templateIdFromQuery;
+    handleSelectTemplate(template.id, template.premium);
   }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate]);
 
   if (status === "loading") {

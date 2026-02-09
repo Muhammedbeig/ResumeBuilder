@@ -109,9 +109,14 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
     title: "Careers | ResuPro",
     description: "Join the team building the future of career tools.",
   },
+  "/contact": {
+    title: "Contact | ResuPro",
+    description: "Send a message to the ResuPro team. Your request is handled through our Admin Panel.",
+  },
 };
 
 const DYNAMIC_ROUTES: Array<{ pattern: RegExp; key: string; param: string }> = [
+  { pattern: /^\/career-blog\/tag\/([^/]+)$/, key: "/career-blog/tag/[slug]", param: "slug" },
   { pattern: /^\/career-blog\/category\/([^/]+)$/, key: "/career-blog/category/[slug]", param: "slug" },
   { pattern: /^\/career-blog\/([^/]+)$/, key: "/career-blog/[slug]", param: "slug" },
   { pattern: /^\/templates\/([^/]+)$/, key: "/templates/[category]", param: "category" },
@@ -122,6 +127,10 @@ const DYNAMIC_ROUTES: Array<{ pattern: RegExp; key: string; param: string }> = [
 ];
 
 const DYNAMIC_SEO: Record<string, SeoConfig> = {
+  "/career-blog/tag/[slug]": {
+    title: "{slug} Career Articles | ResuPro",
+    description: "Browse {slug} career articles, guides, and job search tactics.",
+  },
   "/career-blog/category/[slug]": {
     title: "{slug} Career Articles | ResuPro",
     description: "Browse {slug} career articles, guides, and job search tactics.",

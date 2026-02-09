@@ -390,6 +390,7 @@ const CATEGORY_OVERRIDES: Partial<Record<string, Partial<ResumeTemplateCatalogEn
       border: "rgba(196,181,253,0.45)",
     },
     ornament: "orbs",
+    headerStyle: "left",
   },
   watercolor: {
     background: {
@@ -401,6 +402,7 @@ const CATEGORY_OVERRIDES: Partial<Record<string, Partial<ResumeTemplateCatalogEn
   photo: {
     hasPhoto: true,
     layout: "sidebar-left",
+    headerStyle: "left",
   },
   infographic: {
     layout: "cards",
@@ -420,6 +422,7 @@ const CATEGORY_OVERRIDES: Partial<Record<string, Partial<ResumeTemplateCatalogEn
   },
   logo: {
     ornament: "badge",
+    headerStyle: "left",
   },
 };
 

@@ -93,13 +93,18 @@ export function Navigation() {
     };
   }, []);
 
+  const templateItems = [
+    { label: "All Templates", href: "/templates" },
+    ...RESUME_TEMPLATE_CATEGORIES.map((category) => ({
+      label: category.label,
+      href: `/templates/${category.slug}`,
+    })),
+  ];
+
   const navDropdowns = [
     {
       label: "Templates",
-      items: RESUME_TEMPLATE_CATEGORIES.map((category) => ({
-        label: category.label,
-        href: `/templates/${category.slug}`,
-      })),
+      items: templateItems,
     },
     {
       label: "Tools",
@@ -141,11 +146,6 @@ export function Navigation() {
       label: "Career Blog",
       items: [
         { label: "All Articles", href: "/career-blog" },
-        { label: "Career Advice", href: "/career-blog/category/career-advice" },
-        { label: "Career Paths", href: "/career-blog/category/career-paths" },
-        { label: "Career Services", href: "/career-blog/category/career-services" },
-        { label: "Internships", href: "/career-blog/category/internships" },
-        { label: "Professional Development", href: "/career-blog/category/professional-development" },
       ],
     },
     {
@@ -153,6 +153,7 @@ export function Navigation() {
       items: [
         { label: "About Us", href: "/about" },
         { label: "Our Story", href: "/about/story" },
+        { label: "Contact", href: "/contact" },
         { label: "Press", href: "/about/press" },
         { label: "Careers", href: "/about/careers" },
       ],

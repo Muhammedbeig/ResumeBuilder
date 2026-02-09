@@ -6,5 +6,8 @@ export async function hashPassword(password: string) {
 }
 
 export async function verifyPassword(password: string, hash: string) {
-  return bcrypt.compare(password, hash);
+  // Laravel typically stores bcrypt hashes with `$2y$` prefix; bcryptjs expects `$2a$`/`$2b$`.
+  // Normalize to avoid edge-case incompatibilities.
+  const normalizedHash = hash?.startsWith("$2y$") ? `$2a$${hash.slice(4)}` : hash;
+  return bcrypt.compare(password, normalizedHash);
 }

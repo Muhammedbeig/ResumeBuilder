@@ -38,61 +38,35 @@ export async function POST(request: Request) {
         const clientReferenceId = session.client_reference_id || undefined;
         const customerId =
           typeof session.customer === "string" ? session.customer : session.customer?.id;
-        const planId = session.metadata?.planId || undefined;
 
-        const user = clientReferenceId
-          ? await prisma.user.findUnique({ where: { id: clientReferenceId } })
+        const userId =
+          clientReferenceId && /^\d+$/.test(clientReferenceId)
+            ? BigInt(clientReferenceId)
+            : null;
+
+        const user = userId
+          ? await prisma.user.findUnique({ where: { id: userId } })
           : customerId
           ? await prisma.user.findFirst({ where: { stripeCustomerId: customerId } })
           : null;
 
         if (user) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              subscription: "pro",
-              stripeCustomerId: customerId ?? user.stripeCustomerId,
-              subscriptionPlanId: planId ?? user.subscriptionPlanId ?? null,
-            },
-          });
+          // We only persist Stripe linkage for now. Entitlements will be driven by Panel packages later.
+          if (customerId && user.stripeCustomerId !== customerId) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { stripeCustomerId: customerId },
+            });
+          }
         }
         break;
       }
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const customerId = typeof invoice.customer === "string" ? invoice.customer : null;
-        if (customerId) {
-          let planId: string | null = null;
-          const invoiceSubscription = (invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription }).subscription;
-          if (invoiceSubscription) {
-            try {
-              const stripe = getStripe();
-              const subscription =
-                typeof invoiceSubscription === "string"
-                  ? await stripe.subscriptions.retrieve(invoiceSubscription)
-                  : invoiceSubscription;
-              planId = subscription.metadata?.planId || null;
-            } catch (error) {
-              console.error("Failed to retrieve subscription metadata", error);
-            }
-          }
-          await prisma.user.updateMany({
-            where: { stripeCustomerId: customerId },
-            data: { subscription: "pro", subscriptionPlanId: planId ?? undefined },
-          });
-        }
+        // Entitlements are not synced from Stripe yet.
         break;
       }
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId =
-          typeof subscription.customer === "string" ? subscription.customer : null;
-        if (customerId) {
-          await prisma.user.updateMany({
-            where: { stripeCustomerId: customerId },
-            data: { subscription: "free", subscriptionPlanId: null },
-          });
-        }
+        // Entitlements are not synced from Stripe yet.
         break;
       }
       default:

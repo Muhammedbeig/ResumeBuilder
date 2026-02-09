@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -96,6 +97,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData);
   const [importedData, setImportedData] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const aiInFlightRef = useRef(new Map<string, Promise<unknown>>());
   const hasSubscription = useMemo(
     () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
     [session?.user?.subscription]
@@ -580,27 +582,41 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
-    const response = await fetch(`/api/ai/${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const contentType = response.headers.get("content-type") || "";
-    const data = contentType.includes("application/json")
-      ? await response.json().catch(() => null)
-      : await response.text().catch(() => "");
-    if (!response.ok) {
-      const message =
-        data && typeof data === "object" && "error" in data && typeof data.error === "string"
-          ? data.error
-          : "AI request failed";
-      const isLimit = /quota|limit|resource exhausted|billing|payment/i.test(message);
-      if (response.status === 429 || (response.status === 402 && isLimit)) {
-        notifyAiLimit();
+    const key = `${path}:${JSON.stringify(payload)}`;
+    const inFlight = aiInFlightRef.current;
+    const existing = inFlight.get(key);
+    if (existing) return existing;
+
+    const request = (async () => {
+      const response = await fetch(`/api/ai/${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json().catch(() => null)
+        : await response.text().catch(() => "");
+      if (!response.ok) {
+        const message =
+          data && typeof data === "object" && "error" in data && typeof data.error === "string"
+            ? data.error
+            : "AI request failed";
+        const isLimit = /quota|limit|resource exhausted|billing|payment/i.test(message);
+        if (response.status === 429 || (response.status === 402 && isLimit)) {
+          notifyAiLimit();
+        }
+        throw new Error(message);
       }
-      throw new Error(message);
+      return data;
+    })();
+
+    inFlight.set(key, request);
+    try {
+      return await request;
+    } finally {
+      inFlight.delete(key);
     }
-    return data;
   }, [notifyAiLimit]);
 
   const rewriteBulletAI = useCallback(

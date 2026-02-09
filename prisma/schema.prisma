@@ -8,21 +8,25 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
+  // Shared with the Laravel Panel (BIGINT ids).
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name          String
   email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  // Subscription info
-  subscription  String?   @default("free") // free, pro, business
-  stripeCustomerId String?
-  subscriptionPlanId String?
+  emailVerified DateTime? @map("email_verified_at")
+  image         String?   @map("profile")
+  passwordHash  String    @map("password")
+  type          String
+  fcmId         String    @map("fcm_id")
+  firebaseId    String?   @map("firebase_id")
+  notification  Boolean   @default(true)
+  stripeCustomerId String? @map("stripe_customer_id")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   bankTransferReceipts BankTransferReceipt[]
+  paymentTransactions PaymentTransaction[]
+  purchasedPackages UserPurchasedPackage[]
   marketValueReports MarketValueReport[]
   
   // Relations
@@ -36,7 +40,7 @@ model User {
 
 model BankTransferReceipt {
   id          String   @id @default(cuid())
-  userId      String
+  userId      BigInt   @db.UnsignedBigInt
   planId      String
   amountCents Int
   currency    String   @default("usd")
@@ -53,7 +57,7 @@ model BankTransferReceipt {
 
 model MarketValueReport {
   id          String   @id @default(cuid())
-  userId      String
+  userId      BigInt   @db.UnsignedBigInt
   resumeId    String?
   source      String
   periodLabel String
@@ -69,7 +73,7 @@ model MarketValueReport {
 
 model Account {
   id                 String  @id @default(cuid())
-  userId             String
+  userId             BigInt   @db.UnsignedBigInt
   type               String
   provider           String
   providerAccountId  String
@@ -90,7 +94,7 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String
+  userId       BigInt   @db.UnsignedBigInt
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -109,7 +113,8 @@ model VerificationToken {
 
 model Resume {
   id              String   @id @default(cuid())
-  userId          String
+  shortId         String?  @unique
+  userId          BigInt   @db.UnsignedBigInt
   title           String   @default("Untitled Resume")
   template        String   @default("modern")
   isPublic        Boolean  @default(false)
@@ -127,7 +132,8 @@ model Resume {
 
 model Cv {
   id              String   @id @default(cuid())
-  userId          String
+  shortId         String?  @unique
+  userId          BigInt   @db.UnsignedBigInt
   title           String   @default("Untitled CV")
   template        String   @default("academic-cv")
   isPublic        Boolean  @default(false)
@@ -201,7 +207,7 @@ model Export {
 
 model AIUsage {
   id           String   @id @default(cuid())
-  userId       String?
+  userId       BigInt?  @db.UnsignedBigInt
   type         String   // parse, rewrite, tailor, summary
   inputHash    String?
   status       String   @default("pending")
@@ -211,4 +217,80 @@ model AIUsage {
   createdAt    DateTime @default(now())
   
   @@map("ai_jobs")
+}
+
+enum PaymentTransactionStatus {
+  failed
+  succeed
+  pending
+  under_review @map("under review")
+  rejected
+}
+
+model Package {
+  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name                 String
+  finalPrice           Float     @map("final_price")
+  discountInPercentage Float     @default(0) @map("discount_in_percentage")
+  price                Float     @default(0)
+  duration             String
+  listingDurationType  String?   @map("listing_duration_type")
+  listingDurationDays  Int?      @map("listing_duration_days")
+  itemLimit            String    @map("item_limit")
+  type                 String
+  isGlobal             Int       @default(1) @map("is_global")
+  icon                 String
+  description          String    @db.LongText
+  keyPoints            String?   @map("key_points") @db.LongText
+  status               Int       @default(1)
+  iosProductId         String?   @map("ios_product_id") @db.VarChar(512)
+  createdAt            DateTime? @map("created_at")
+  updatedAt            DateTime? @map("updated_at")
+
+  paymentTransactions PaymentTransaction[]
+  purchasedPackages   UserPurchasedPackage[]
+
+  @@map("packages")
+}
+
+model PaymentTransaction {
+  id             BigInt                   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId         BigInt                   @map("user_id") @db.UnsignedBigInt
+  packageId      BigInt?                  @map("package_id") @db.UnsignedBigInt
+  amount         Float
+  paymentGateway String                   @map("payment_gateway") @db.VarChar(128)
+  orderId        String?                  @map("order_id")
+  paymentStatus  PaymentTransactionStatus @map("payment_status")
+  createdAt      DateTime?                @map("created_at")
+  updatedAt      DateTime?                @map("updated_at")
+  paymentReceipt String?                  @map("payment_receipt")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package? @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  userPurchasedPackages UserPurchasedPackage[]
+
+  @@unique([paymentGateway, orderId])
+  @@map("payment_transactions")
+}
+
+model UserPurchasedPackage {
+  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId                BigInt    @map("user_id") @db.UnsignedBigInt
+  packageId             BigInt    @map("package_id") @db.UnsignedBigInt
+  startDate             DateTime  @map("start_date") @db.Date
+  endDate               DateTime? @map("end_date") @db.Date
+  totalLimit            Int?      @map("total_limit")
+  usedLimit             Int       @default(0) @map("used_limit")
+  paymentTransactionId  BigInt?   @map("payment_transactions_id") @db.UnsignedBigInt
+  createdAt             DateTime? @map("created_at")
+  updatedAt             DateTime? @map("updated_at")
+  listingDurationType   String?   @map("listing_duration_type")
+  listingDurationDays   Int?      @map("listing_duration_days")
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package           Package            @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  paymentTransaction PaymentTransaction? @relation(fields: [paymentTransactionId], references: [id], onDelete: Cascade)
+
+  @@map("user_purchased_packages")
 }

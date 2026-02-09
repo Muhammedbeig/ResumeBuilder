@@ -1,15 +1,17 @@
-import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { json } from "@/lib/json";
 import { normalizeResumeData } from "@/lib/resume-data";
+import { generateShortId } from "@/lib/utils";
+import { parseUserIdBigInt } from "@/lib/user-id";
 import type { Prisma } from "@prisma/client";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const cvs = await prisma.cv.findMany({
@@ -17,14 +19,14 @@ export async function GET() {
     orderBy: { updatedAt: "desc" },
   });
 
-  return NextResponse.json({ cvs });
+  return json({ cvs });
 }
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
         userId,
         title,
         template,
+        shortId: generateShortId(),
       },
     });
 
@@ -62,5 +65,5 @@ export async function POST(request: Request) {
     timeout: 20000, // default: 5000
   });
 
-  return NextResponse.json(result);
+  return json(result);
 }

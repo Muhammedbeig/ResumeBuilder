@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { json } from "@/lib/json";
 import { normalizeResumeData } from "@/lib/resume-data";
+import { parseUserIdBigInt } from "@/lib/user-id";
 import type { Prisma } from "@prisma/client";
 
 interface RouteContext {
@@ -13,9 +14,9 @@ interface RouteContext {
 
 export async function GET(_request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: cvId } = await context.params;
@@ -24,7 +25,7 @@ export async function GET(_request: Request, context: RouteContext) {
   });
 
   if (!cv) {
-    return NextResponse.json({ error: "CV not found" }, { status: 404 });
+    return json({ error: "CV not found" }, { status: 404 });
   }
 
   let version = null;
@@ -42,14 +43,14 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const data = normalizeResumeData(version?.jsonData as Record<string, unknown>);
-  return NextResponse.json({ cv, data });
+  return json({ cv, data });
 }
 
 export async function PUT(request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: cvId } = await context.params;
@@ -60,7 +61,7 @@ export async function PUT(request: Request, context: RouteContext) {
   });
 
   if (!cv) {
-    return NextResponse.json({ error: "CV not found" }, { status: 404 });
+    return json({ error: "CV not found" }, { status: 404 });
   }
 
   const title = typeof body?.title === "string" ? body.title : cv.title;
@@ -103,14 +104,14 @@ export async function PUT(request: Request, context: RouteContext) {
     timeout: 20000,
   });
 
-  return NextResponse.json(result);
+  return json(result);
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: cvId } = await context.params;
@@ -119,9 +120,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
   });
 
   if (!cv) {
-    return NextResponse.json({ error: "CV not found" }, { status: 404 });
+    return json({ error: "CV not found" }, { status: 404 });
   }
 
   await prisma.cv.delete({ where: { id: cv.id } });
-  return NextResponse.json({ success: true });
+  return json({ success: true });
 }

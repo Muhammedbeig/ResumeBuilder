@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { parseUserIdBigInt } from "@/lib/user-id";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,9 +18,13 @@ export async function GET(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = parseUserIdBigInt(session.user.id);
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: userId },
     select: { id: true, email: true, name: true, stripeCustomerId: true },
   });
 
@@ -33,7 +38,7 @@ export async function GET(request: Request) {
     const customer = await stripe.customers.create({
       email: user.email ?? undefined,
       name: user.name ?? undefined,
-      metadata: { userId: user.id },
+      metadata: { userId: user.id.toString() },
     });
     customerId = customer.id;
     await prisma.user.update({

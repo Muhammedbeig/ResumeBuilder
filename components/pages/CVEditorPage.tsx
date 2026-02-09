@@ -16,6 +16,10 @@ import {
   Trash2,
   Layout,
   MoreHorizontal,
+  Share2,
+  Copy,
+  Globe,
+  Check,
   Sparkles,
   CheckCircle2,
   Eye
@@ -40,6 +44,11 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +76,8 @@ import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
+
+const AI_SUGGESTION_DELAY_MS = 1200;
 
 export function CVEditorPage() {
   const router = useRouter();
@@ -196,8 +207,8 @@ export function CVEditorPage() {
 
   const syncSubscription = useCallback(async () => {
     try {
-      const response = await fetch("/api/user/subscription");
-      if (!response.ok) return;
+      const response = await fetch("/api/user/subscription", { cache: "no-store" });
+      if (!response.ok) return null;
       const data = await response.json();
       if (updateSession) {
         await updateSession({
@@ -205,9 +216,11 @@ export function CVEditorPage() {
           subscriptionPlanId: data.subscriptionPlanId ?? null,
         });
       }
+      return data as { subscription?: string; subscriptionPlanId?: string | null };
     } catch {
       // ignore
     }
+    return null;
   }, [updateSession]);
 
   useEffect(() => {
@@ -226,6 +239,7 @@ export function CVEditorPage() {
   }, [syncSubscription]);
 
   useEffect(() => {
+    if (activeTab !== "basics") return;
     if (previewData.experiences.length === 0) {
       setSummarySuggestions([]);
       summaryKeyRef.current = "";
@@ -248,9 +262,9 @@ export function CVEditorPage() {
       );
       setSummarySuggestions(suggestions);
       summaryKeyRef.current = key;
-    }, 600);
+    }, AI_SUGGESTION_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [previewData, suggestSummaryAI]);
+  }, [previewData, suggestSummaryAI, activeTab]);
 
 
   useEffect(() => {
@@ -335,6 +349,7 @@ export function CVEditorPage() {
   const buildShareUrl = () => {
     if (typeof window === "undefined") return "";
     const origin = window.location.origin;
+    if (currentCV?.shortId) return `${origin}/shared/${currentCV.shortId}`;
     if (currentCV?.id) return `${origin}/shared/${currentCV.id}`;
     return origin;
   };
@@ -363,13 +378,18 @@ export function CVEditorPage() {
     return true;
   };
 
-  const openDownloadModal = () => {
+  const openDownloadModal = async () => {
     if (!ensurePlanChosen()) return;
     if (planChoice === "paid" && !hasSubscription) {
-      router.push(
-        `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
-      );
-      return;
+      const latest = await syncSubscription();
+      const latestHasSubscription =
+        latest?.subscription === "pro" || latest?.subscription === "business";
+      if (!latestHasSubscription) {
+        router.push(
+          `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
     }
     setIsDownloadModalOpen(true);
   };
@@ -403,11 +423,11 @@ export function CVEditorPage() {
   };
 
   const handleExportPDF = () => {
-    openDownloadModal();
+    void openDownloadModal();
   };
 
   const handleExportImage = () => {
-    openDownloadModal();
+    void openDownloadModal();
   };
 
   const handleExportTxt = () => {
@@ -510,6 +530,7 @@ export function CVEditorPage() {
 
               {/* Desktop Buttons */}
               <div className="hidden lg:flex items-center gap-2">
+                <SharePopover />
                 <Button
                   variant="outline"
                   size="sm"
@@ -559,6 +580,9 @@ export function CVEditorPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                      <SharePopover />
+                    </div>
                     <DropdownMenuItem onClick={() => handleWatermarkToggle(!watermarkEnabled)}>
                       <CheckCircle2 className={`w-4 h-4 mr-2 ${!watermarkEnabled ? "text-purple-600" : "text-gray-400"}`} />
                       Watermark {watermarkEnabled ? "Off" : "On"}
@@ -828,7 +852,10 @@ export function CVEditorPage() {
                   </TabsContent>
 
                   <TabsContent value="experience" className="mt-0">
-                    <ExperienceSection onDraftChange={setDraftExperience} />
+                    <ExperienceSection
+                      onDraftChange={setDraftExperience}
+                      isActive={activeTab === "experience"}
+                    />
                   </TabsContent>
 
                   <TabsContent value="education" className="mt-0">
@@ -839,6 +866,7 @@ export function CVEditorPage() {
                   <SkillsSection
                     onDraftChange={setDraftSkillGroup}
                     experienceSource={previewData.experiences}
+                    isActive={activeTab === "skills"}
                   />
                 </TabsContent>
 
@@ -906,8 +934,10 @@ export function CVEditorPage() {
 // Subcomponents
 function ExperienceSection({
   onDraftChange,
+  isActive = true,
 }: {
   onDraftChange?: (draft: Partial<Experience> | null) => void;
+  isActive?: boolean;
 }) {
   const {
     cvData,
@@ -1097,6 +1127,10 @@ function ExperienceSection({
     }, [newExperience.role]);
 
     useEffect(() => {
+      if (!isActive) {
+        setIsNewSuggestionsLoading(false);
+        return;
+      }
       if (!isAdding || !newExperience.role) {
         setAiSuggestedBullets([]);
         setIsNewSuggestionsLoading(false);
@@ -1109,28 +1143,29 @@ function ExperienceSection({
       }
       const description = (newExperience.bullets || []).join(" ").trim();
       const role = newExperience.role.trim();
-      let isActive = true;
+      let isMounted = true;
       setIsNewSuggestionsLoading(true);
       const timer = setTimeout(async () => {
         try {
           const bullets = await suggestResponsibilitiesAI(role, description);
-          if (!isActive) return;
+          if (!isMounted) return;
           setAiSuggestedBullets(bullets);
         } catch (error) {
           console.error("Auto-suggest failed", error);
         } finally {
-          if (isActive) setIsNewSuggestionsLoading(false);
+          if (isMounted) setIsNewSuggestionsLoading(false);
         }
-      }, 500);
+      }, AI_SUGGESTION_DELAY_MS);
       return () => {
-        isActive = false;
+        isMounted = false;
         clearTimeout(timer);
       };
-    }, [isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
+    }, [isActive, isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
 
     useEffect(() => {
+      if (!isActive) return;
       const timers: NodeJS.Timeout[] = [];
-      let isActive = true;
+      let isMounted = true;
       cvData.experiences.forEach((exp) => {
         if (!editingExperiences[exp.id] || !exp.role) {
           setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
@@ -1151,24 +1186,24 @@ function ExperienceSection({
         const timer = setTimeout(async () => {
           try {
             const bullets = await suggestResponsibilitiesAI(exp.role, description);
-            if (!isActive) return;
+            if (!isMounted) return;
             setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
             setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
           } catch (error) {
             console.error("Auto-suggest existing failed", error);
           } finally {
-            if (isActive) {
+            if (isMounted) {
               setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
             }
           }
-        }, 500);
+        }, AI_SUGGESTION_DELAY_MS);
         timers.push(timer);
       });
       return () => {
-        isActive = false;
+        isMounted = false;
         timers.forEach(clearTimeout);
       };
-    }, [editingExperiences, cvData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
+    }, [isActive, editingExperiences, cvData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
 
   useEffect(() => {
     if (!onDraftChange) return;
@@ -1993,9 +2028,11 @@ function EducationSection() {
 function SkillsSection({
   onDraftChange,
   experienceSource,
+  isActive = true,
 }: {
   onDraftChange?: (draft: Partial<SkillGroup> | null) => void;
   experienceSource?: Experience[];
+  isActive?: boolean;
 }) {
   const { cvData, addSkillGroup, updateSkillGroup, removeSkillGroup, suggestSkillsAI } = useCV();
   const [isAdding, setIsAdding] = useState(false);
@@ -2101,6 +2138,10 @@ function SkillsSection({
   };
 
   useEffect(() => {
+    if (!isActive) {
+      setIsSkillSuggestionsLoading(false);
+      return;
+    }
     if (!isAdding) {
       setAiSuggestions([]);
       setIsSkillSuggestionsLoading(false);
@@ -2121,12 +2162,12 @@ function SkillsSection({
       setIsSkillSuggestionsLoading(false);
       return;
     }
-    let isActive = true;
+    let isMounted = true;
     setIsSkillSuggestionsLoading(true);
     const timer = setTimeout(async () => {
       try {
         const result = await suggestSkillsAI(cvData.basics.title, context);
-        if (!isActive) return;
+        if (!isMounted) return;
         const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
           .map((skill) => skill.trim())
           .filter(Boolean);
@@ -2136,16 +2177,17 @@ function SkillsSection({
         );
         setAiSuggestions(nextAi.slice(0, 24));
       } finally {
-        if (isActive) setIsSkillSuggestionsLoading(false);
+        if (isMounted) setIsSkillSuggestionsLoading(false);
       }
-    }, 500);
+    }, AI_SUGGESTION_DELAY_MS);
     return () => {
-      isActive = false;
+      isMounted = false;
       clearTimeout(timer);
     };
-  }, [isAdding, newGroup.name, newGroup.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
+  }, [isActive, isAdding, newGroup.name, newGroup.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
 
   useEffect(() => {
+    if (!isActive) return;
     const activeId = Object.keys(editingSkillGroups).find((id) => editingSkillGroups[id]);
     if (!activeId) return;
     const group = cvData.skills.find((item) => item.id === activeId);
@@ -2175,9 +2217,9 @@ function SkillsSection({
       } finally {
         setExistingSkillSuggestionsLoading((prev) => ({ ...prev, [activeId]: false }));
       }
-    }, 500);
+    }, AI_SUGGESTION_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [editingSkillGroups, cvData.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
+  }, [isActive, editingSkillGroups, cvData.skills, cvData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
 
   const handleAddSkillSuggestion = (skill: string) => {
     const existing = new Set(parsedSkills.map((item) => item.toLowerCase()));
@@ -2695,5 +2737,57 @@ function DesignSection({
         />
       </div>
     </motion.div>
+  );
+}
+
+function SharePopover() {
+  const { currentCV } = useCV();
+  const [copied, setCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!currentCV) return null;
+
+  const url = typeof window !== "undefined" 
+    ? `${window.location.origin}/shared/${currentCV.shortId || currentCV.id}`
+    : "";
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success("Link copied to clipboard");
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Share2 className="w-4 h-4 mr-2" />
+          Share
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="end">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium leading-none">Share CV</h4>
+          </div>
+          <p className="text-sm text-gray-500">
+            Anyone with the link can view this CV. No login required.
+          </p>
+
+          <div className="flex items-center space-x-2">
+            <Input value={url} readOnly className="h-8 text-xs" />
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCopy}>
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <Globe className="w-4 h-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

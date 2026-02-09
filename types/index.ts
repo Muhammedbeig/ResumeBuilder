@@ -10,6 +10,7 @@ export interface User {
 
 export interface Resume {
   id: string;
+  shortId?: string;
   userId: string;
   title: string;
   template: string;

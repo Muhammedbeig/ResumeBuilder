@@ -12,11 +12,13 @@ const footerLinks = {
     { name: 'Careers', href: '/about/careers' },
     { name: 'Blog', href: '/career-blog' },
     { name: 'Press', href: '/about/press' },
+    { name: 'Contact', href: '/contact' },
   ],
   resources: [
     { name: 'Help Center', href: '/#faq' },
     { name: 'Resume Examples', href: '/templates' },
-    { name: 'Career Advice', href: '/career-blog/category/career-advice' },
+    // Panel blog uses tags (keywords). Keep this link generic to avoid implying categories.
+    { name: 'Career Blog', href: '/career-blog' },
     { name: 'API Docs', href: '#' },
   ],
   legal: [

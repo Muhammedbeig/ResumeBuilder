@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { json } from "@/lib/json";
+import { parseUserIdBigInt } from "@/lib/user-id";
 import { getGeminiModel } from "@/lib/gemini";
 import { requireAnnualAccess } from "@/lib/ai-access";
 import type { Prisma } from "@prisma/client";
@@ -53,9 +55,9 @@ function extractJson(textResponse: string) {
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const reports = await prisma.marketValueReport.findMany({
@@ -63,7 +65,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ reports });
+  return json({ reports });
 }
 
 export async function POST(request: Request) {
@@ -71,9 +73,9 @@ export async function POST(request: Request) {
   if (access) return access;
 
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const userId = parseUserIdBigInt(session?.user?.id);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
   const location = typeof body?.location === "string" ? body.location : "";
 
   if (!resumeJson || typeof resumeJson !== "object") {
-    return NextResponse.json({ error: "resumeJson is required" }, { status: 400 });
+    return json({ error: "resumeJson is required" }, { status: 400 });
   }
 
   const model = getGeminiModel();
@@ -142,9 +144,9 @@ ${JSON.stringify(resumeJson)}
       },
     });
 
-    return NextResponse.json({ report: record });
+    return json({ report: record });
   } catch (error) {
     console.error("Market value report error:", error);
-    return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
+    return json({ error: "Failed to generate report" }, { status: 500 });
   }
 }

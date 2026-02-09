@@ -1,9 +1,12 @@
 import { TemplatesCatalogPage } from "@/components/pages/TemplatesCatalogPage";
 
 interface TemplatesCategoryPageProps {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }
 
-export default function TemplatesCategoryPage({ params }: TemplatesCategoryPageProps) {
-  return <TemplatesCatalogPage initialCategory={params.category} />;
+export default async function TemplatesCategoryPage({
+  params,
+}: TemplatesCategoryPageProps) {
+  const resolvedParams = await params;
+  return <TemplatesCatalogPage initialCategory={resolvedParams.category} />;
 }

@@ -73,8 +73,8 @@ export function CoverLetterEditor() {
 
   const syncSubscription = useCallback(async () => {
     try {
-      const response = await fetch("/api/user/subscription");
-      if (!response.ok) return;
+      const response = await fetch("/api/user/subscription", { cache: "no-store" });
+      if (!response.ok) return null;
       const data = await response.json();
       if (updateSession) {
         await updateSession({
@@ -82,9 +82,11 @@ export function CoverLetterEditor() {
           subscriptionPlanId: data.subscriptionPlanId ?? null,
         });
       }
+      return data as { subscription?: string; subscriptionPlanId?: string | null };
     } catch {
       // ignore
     }
+    return null;
   }, [updateSession]);
 
   useEffect(() => {
@@ -198,13 +200,18 @@ export function CoverLetterEditor() {
     return true;
   };
 
-  const openDownloadModal = () => {
+  const openDownloadModal = async () => {
     if (!ensurePlanChosen()) return;
     if (planChoice === "paid" && !hasSubscription) {
-      router.push(
-        `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
-      );
-      return;
+      const latest = await syncSubscription();
+      const latestHasSubscription =
+        latest?.subscription === "pro" || latest?.subscription === "business";
+      if (!latestHasSubscription) {
+        router.push(
+          `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
     }
     setIsDownloadModalOpen(true);
   };
@@ -228,11 +235,11 @@ export function CoverLetterEditor() {
   };
 
   const handleExportPDF = () => {
-    openDownloadModal();
+    void openDownloadModal();
   };
 
   const handleExportImage = () => {
-    openDownloadModal();
+    void openDownloadModal();
   };
 
   return (
