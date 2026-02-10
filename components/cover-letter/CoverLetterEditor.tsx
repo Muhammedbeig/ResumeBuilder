@@ -1,11 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { coverLetterTemplates } from "@/lib/cover-letter-templates";
+import { resolveCoverLetterTemplateComponent } from "@/lib/template-resolvers";
+import { usePanelTemplate } from "@/hooks/use-panel-template";
+import type { CoverLetterTemplateConfig } from "@/lib/panel-templates";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,21 +29,32 @@ import { useElementSize } from "@/hooks/use-element-size";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export function CoverLetterEditor() {
   const router = useRouter();
   const { data: session, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
+  const [subscriptionOverride, setSubscriptionOverride] = useState(false);
+  const [serverSubscription, setServerSubscription] = useState<string | null>(null);
+  const lastUserIdRef = useRef<string | null>(null);
   const { currentCoverLetter, coverLetterData, updatePersonalInfo, updateRecipientInfo, updateContent, updateMetadata, saveCoverLetter } = useCoverLetter();
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [isSubscriptionActivating, setIsSubscriptionActivating] = useState(false);
   const [zoom, setZoom] = useState([80]);
   const [advancedFormatting, setAdvancedFormatting] = useState(false);
+  const isUnmountingRef = useRef(false);
   const hasSubscription = useMemo(
-    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
-    [session?.user?.subscription]
+    () =>
+      subscriptionOverride ||
+      serverSubscription === "pro" ||
+      serverSubscription === "business" ||
+      session?.user?.subscription === "pro" ||
+      session?.user?.subscription === "business",
+    [subscriptionOverride, serverSubscription, session?.user?.subscription]
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
@@ -66,6 +79,16 @@ export function CoverLetterEditor() {
     }
   }, [planChoice]);
 
+  useEffect(() => {
+    const nextUserId = session?.user?.id ?? null;
+    if (!nextUserId) return;
+    if (lastUserIdRef.current && lastUserIdRef.current !== nextUserId) {
+      setSubscriptionOverride(false);
+      setServerSubscription(null);
+    }
+    lastUserIdRef.current = nextUserId;
+  }, [session?.user?.id]);
+
   const watermarkEnabled = useMemo(() => {
     if (!canUsePaid) return true;
     return coverLetterData.metadata?.watermarkEnabled ?? false;
@@ -73,14 +96,17 @@ export function CoverLetterEditor() {
 
   const syncSubscription = useCallback(async () => {
     try {
-      const response = await fetch("/api/user/subscription", { cache: "no-store" });
+      const response = await fetchWithTimeout("/api/user/subscription", { cache: "no-store" }, 8000);
       if (!response.ok) return null;
       const data = await response.json();
+      if (typeof data?.subscription === "string") {
+        setServerSubscription(data.subscription);
+      }
       if (updateSession) {
-        await updateSession({
+        void updateSession({
           subscription: data.subscription ?? "free",
           subscriptionPlanId: data.subscriptionPlanId ?? null,
-        });
+        }).catch(() => undefined);
       }
       return data as { subscription?: string; subscriptionPlanId?: string | null };
     } catch {
@@ -88,25 +114,93 @@ export function CoverLetterEditor() {
     }
     return null;
   }, [updateSession]);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     const params = new URLSearchParams(window.location.search);
     const status = params.get("stripe");
     if (!status) return;
+
+    const paymentTransactionId = params.get("payment_transaction_id");
+    const checkoutSessionId = params.get("session_id");
+
+    let cancelled = false;
+
     if (status === "success") {
       setIsDownloadModalOpen(true);
-      syncSubscription();
       toast.success("Payment successful.");
+
+      void (async () => {
+        setIsSubscriptionActivating(true);
+        try {
+          if (paymentTransactionId && checkoutSessionId) {
+            await fetchWithTimeout("/api/stripe/confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentTransactionId,
+                sessionId: checkoutSessionId,
+              }),
+            }, 15000).catch(() => null);
+          }
+
+          const deadline = Date.now() + 30_000;
+          while (!cancelled && Date.now() < deadline) {
+            const latest = await syncSubscription();
+            const ok =
+              latest?.subscription === "pro" || latest?.subscription === "business";
+            if (ok) { setSubscriptionOverride(true); return; }
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+          }
+        } finally {
+          if (!isUnmountingRef.current) setIsSubscriptionActivating(false);
+        }
+      })();
     } else if (status === "cancel") {
       toast.info("Payment canceled.");
     }
+
     window.history.replaceState({}, "", window.location.pathname);
+
+    return () => {
+      cancelled = true;
+    };
   }, [syncSubscription]);
+
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isDownloadModalOpen) return;
+    if (planChoice !== "paid" || hasSubscription) return;
+    let cancelled = false;
+
+    void (async () => {
+      const latest = await syncSubscription();
+      const ok = latest?.subscription === "pro" || latest?.subscription === "business";
+      if (ok && !cancelled) {
+        setSubscriptionOverride(true);
+        setIsSubscriptionActivating(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isDownloadModalOpen, planChoice, hasSubscription, syncSubscription]);
+
 
   if (!currentCoverLetter) return null;
 
-  const TemplateComponent = coverLetterTemplates.find(t => t.id === currentCoverLetter.template)?.component || coverLetterTemplates[0].component;
+  const panelTemplate = usePanelTemplate("cover_letter", currentCoverLetter.template, true);
+  const templateConfig = panelTemplate?.config as CoverLetterTemplateConfig | null;
+  const TemplateComponent = resolveCoverLetterTemplateComponent(
+    currentCoverLetter.template,
+    templateConfig
+  );
   const exportElementId = "cl-preview-export";
 
   const PreviewDocument = ({
@@ -212,6 +306,7 @@ export function CoverLetterEditor() {
         );
         return;
       }
+      setSubscriptionOverride(true);
     }
     setIsDownloadModalOpen(true);
   };
@@ -250,6 +345,9 @@ export function CoverLetterEditor() {
         onOpenChange={setIsDownloadModalOpen}
         planChoice={planChoice}
         hasSubscription={!!hasSubscription}
+        isActivating={isSubscriptionActivating}
+        resourceType="cover_letter"
+        resourceId={currentCoverLetter?.id ?? null}
       />
       <div className="flex h-full flex-col lg:flex-row overflow-hidden relative">
       {/* Editor Side (Left) */}
@@ -541,6 +639,7 @@ export function CoverLetterEditor() {
               <div className="p-6 pb-6">
                 <DesignSection
                   templateId={currentCoverLetter.template}
+                  templateConfig={templateConfig}
                   advancedFormatting={advancedFormatting}
                   onAdvancedFormattingChange={setAdvancedFormatting}
                   watermarkEnabled={watermarkEnabled}
@@ -585,6 +684,7 @@ export function CoverLetterEditor() {
 
 function DesignSection({
   templateId,
+  templateConfig,
   advancedFormatting,
   onAdvancedFormattingChange,
   watermarkEnabled,
@@ -592,6 +692,7 @@ function DesignSection({
   watermarkLocked,
 }: {
   templateId: string;
+  templateConfig?: CoverLetterTemplateConfig | null;
   advancedFormatting: boolean;
   onAdvancedFormattingChange: (value: boolean) => void;
   watermarkEnabled: boolean;
@@ -599,7 +700,8 @@ function DesignSection({
   watermarkLocked: boolean;
 }) {
   const { coverLetterData, updateMetadata } = useCoverLetter();
-  const defaultFont = COVER_LETTER_DEFAULT_FONTS[templateId] || "Inter";
+  const defaultFont =
+    templateConfig?.bodyFont || COVER_LETTER_DEFAULT_FONTS[templateId] || "Inter";
 
   return (
     <div className="space-y-8">
@@ -621,3 +723,7 @@ function DesignSection({
     </div>
   );
 }
+
+
+
+

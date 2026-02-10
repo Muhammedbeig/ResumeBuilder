@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,6 @@ import { PricingSection } from "@/components/pricing/PricingSection";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { BANK_TRANSFER_ADMIN_EMAIL, BANK_TRANSFER_DETAILS } from "@/lib/bank-transfer";
 import type { PricingCard } from "@/lib/panel-pricing";
-import type { PaidPlanId } from "@/lib/pricing-plans";
 import {
   Dialog,
   DialogContent,
@@ -33,15 +33,6 @@ const normalizeReturnUrl = (returnUrl?: string) => {
 
 type PaymentMethod = "card" | "paypal" | "bank";
 
-const mapDurationToPlanId = (duration: string, price: number): PaidPlanId | null => {
-  const normalized = String(duration ?? "").trim().toLowerCase();
-  if (!normalized) return null;
-  if (price <= 0) return null;
-  if (normalized === "7") return "weekly";
-  if (normalized === "30") return "monthly";
-  if (normalized === "365" || normalized === "unlimited") return "annual";
-  return null;
-};
 
 export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const router = useRouter();
@@ -53,8 +44,92 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isRedirecting, setIsRedirecting] = useState(false);
   const safeReturnUrl = useMemo(() => normalizeReturnUrl(returnUrl), [returnUrl]);
+  const [isStripeConfirming, setIsStripeConfirming] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const current = new URL(window.location.href);
+    const stripeStatus = current.searchParams.get("stripe");
+    if (!stripeStatus) return;
+
+    const paymentTransactionId = current.searchParams.get("payment_transaction_id");
+    const checkoutSessionId = current.searchParams.get("session_id");
+
+    // Remove Stripe params from the pricing URL so refresh/back doesn't re-run the handler.
+    current.searchParams.delete("stripe");
+    current.searchParams.delete("payment_transaction_id");
+    current.searchParams.delete("session_id");
+    window.history.replaceState({}, "", current.pathname + current.search);
+
+    if (stripeStatus === "cancel") {
+      toast.info("Payment canceled.");
+      return;
+    }
+
+    if (stripeStatus !== "success") return;
+
+    const origin = window.location.origin;
+    const target = new URL(safeReturnUrl, origin);
+
+    // If this purchase was triggered by a download flow, hand off to the editor page
+    // so it can open the QR/download modal.
+    if (flow === "download" && target.pathname !== "/pricing") {
+      target.searchParams.set("stripe", "success");
+      if (paymentTransactionId) {
+        target.searchParams.set("payment_transaction_id", paymentTransactionId);
+      }
+      if (checkoutSessionId) {
+        target.searchParams.set("session_id", checkoutSessionId);
+      }
+      router.replace(target.pathname + target.search);
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      setIsStripeConfirming(true);
+      try {
+        if (paymentTransactionId && checkoutSessionId) {
+          await fetchWithTimeout("/api/stripe/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              paymentTransactionId,
+              sessionId: checkoutSessionId,
+            }),
+          }, 15000).catch(() => null);
+        }
+
+        const deadline = Date.now() + 30_000;
+        while (!cancelled && Date.now() < deadline) {
+          const res = await fetchWithTimeout("/api/user/subscription", { cache: "no-store" }, 8000).catch(
+            () => null
+          );
+          if (res && res.ok) {
+            const data: any = await res.json().catch(() => null);
+            if (data?.subscription === "pro" || data?.subscription === "business") {
+              break;
+            }
+          }
+          await new Promise((r) => setTimeout(r, 1200));
+        }
+
+        toast.success("Subscription activated.");
+        if (!cancelled) router.replace(target.pathname + target.search);
+      } finally {
+        if (!cancelled) setIsStripeConfirming(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [flow, router, safeReturnUrl]);
 
   const handleSelectPackage = (packageId?: string) => {
+    if (isStripeConfirming) return;
     if (!packageId) {
       setPlanChoice("free");
       router.push(safeReturnUrl);
@@ -66,12 +141,11 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     setPaymentMethod("card");
     setIsPaymentOpen(true);
   };
-
   const handleStripeCheckout = async () => {
-    if (!selectedPackage) return;
-    const planId = mapDurationToPlanId(selectedPackage.duration, selectedPackage.finalPrice);
-    if (!planId) {
-      toast.error("Stripe checkout is not configured for this package.");
+    if (!selectedPackageId) return;
+
+    if (!/^\d+$/.test(selectedPackageId)) {
+      toast.error("Stripe checkout is only available when Panel packages are loaded.");
       return;
     }
 
@@ -80,7 +154,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, returnUrl: safeReturnUrl }),
+        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: safeReturnUrl }),
       });
       if (response.status === 401) {
         const callbackUrl = `/pricing?flow=${encodeURIComponent(flow ?? "download")}&returnUrl=${encodeURIComponent(
@@ -90,21 +164,22 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
         return;
       }
       if (!response.ok) {
-        throw new Error("Checkout failed");
+        const data = await response.json().catch(() => null);
+        toast.error(data?.error || "Unable to start Stripe checkout. Please try again.");
+        return;
       }
       const data = await response.json();
       if (data?.url) {
         window.location.href = data.url;
         return;
       }
-      throw new Error("Missing checkout URL");
+      toast.error("Missing checkout URL.");
     } catch {
       toast.error("Unable to start Stripe checkout. Please try again.");
     } finally {
       setIsRedirecting(false);
     }
   };
-
   const handleReceiptUpload = async () => {
     if (!selectedPackageId) return;
     if (!receiptFile) {
@@ -152,6 +227,16 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {isStripeConfirming && (
+        <div className="mx-auto max-w-4xl px-4 pt-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border border-slate-400 border-t-transparent" />
+              Confirming your payment and activating your plan...
+            </span>
+          </div>
+        </div>
+      )}
       <PricingSection
         mode="checkout"
         cards={cards}
@@ -312,3 +397,4 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     </div>
   );
 }
+

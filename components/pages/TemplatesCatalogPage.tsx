@@ -12,9 +12,11 @@ import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import {
   RESUME_TEMPLATE_CATEGORIES,
   RESUME_TEMPLATE_CATALOG_BY_CATEGORY,
-  RESUME_TEMPLATE_CATEGORY_SLUGS,
 } from "@/lib/resume-template-catalog";
-import { catalogTemplateMap } from "@/components/resume/templates/catalog";
+import type { ResumeTemplateCatalogEntry, ResumeTemplateCategory } from "@/lib/resume-template-catalog";
+import { CatalogTemplate } from "@/components/resume/templates/catalog/CatalogTemplate";
+import { fetchTemplateCategories, fetchTemplates } from "@/lib/template-client";
+import { normalizeResumeConfig, type PanelTemplate } from "@/lib/panel-templates";
 import { previewResumeData } from "@/lib/resume-samples";
 
 function RescaleContainer({ children }: { children: React.ReactNode }) {
@@ -58,10 +60,10 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
   );
 }
 
-const resolveInitialCategory = (value?: string | null) => {
+const resolveInitialCategory = (value: string | null | undefined, slugs: string[]) => {
   if (!value) return null;
   if (value === "all") return "all";
-  return RESUME_TEMPLATE_CATEGORY_SLUGS.includes(value) ? value : null;
+  return slugs.includes(value) ? value : null;
 };
 
 export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: string | null }) {
@@ -73,18 +75,80 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
   const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
   const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
 
-  const categories = useMemo(
-    () => [{ slug: "all", label: "All", description: "" }, ...RESUME_TEMPLATE_CATEGORIES],
-    []
+  const [categoryOptions, setCategoryOptions] = useState<ResumeTemplateCategory[]>(
+    RESUME_TEMPLATE_CATEGORIES
   );
-  const [activeCategory, setActiveCategory] = useState(
-    resolveInitialCategory(initialCategory) || "all"
+  const [templatesByCategory, setTemplatesByCategory] = useState<
+    Record<string, ResumeTemplateCatalogEntry[]>
+  >(RESUME_TEMPLATE_CATALOG_BY_CATEGORY);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  const categories = useMemo(
+    () => [{ slug: "all", label: "All", description: "" }, ...categoryOptions],
+    [categoryOptions]
   );
 
-  const templatesByCategory = useMemo(
-    () => RESUME_TEMPLATE_CATALOG_BY_CATEGORY,
-    []
-  );
+  useEffect(() => {
+    let isActive = true;
+
+    const loadPanelTemplates = async () => {
+      const [panelCategories, panelTemplates] = await Promise.all([
+        fetchTemplateCategories("resume"),
+        fetchTemplates("resume", { active: true }),
+      ]);
+
+      const resolvedCategories =
+        panelCategories.length > 0
+          ? panelCategories.map((cat) => ({
+              slug: cat.slug,
+              label: cat.label,
+              description: cat.description ?? "",
+            }))
+          : RESUME_TEMPLATE_CATEGORIES;
+
+      const mappedTemplates = panelTemplates
+        .map((template: PanelTemplate) => {
+          const config = normalizeResumeConfig(
+            template.config as ResumeTemplateCatalogEntry,
+            template.template_id
+          );
+          if (!config) return null;
+          return {
+            ...config,
+            id: template.template_id,
+            name: template.name || config.name,
+            description: template.description || config.description,
+            category: template.category?.slug || config.category,
+          } as ResumeTemplateCatalogEntry;
+        })
+        .filter(Boolean) as ResumeTemplateCatalogEntry[];
+
+      const grouped: Record<string, ResumeTemplateCatalogEntry[]> = {};
+      const sourceTemplates =
+        mappedTemplates.length > 0 ? mappedTemplates : Object.values(RESUME_TEMPLATE_CATALOG_BY_CATEGORY).flat();
+
+      for (const template of sourceTemplates) {
+        if (!grouped[template.category]) grouped[template.category] = [];
+        grouped[template.category].push(template);
+      }
+
+      if (!isActive) return;
+      setCategoryOptions(resolvedCategories);
+      setTemplatesByCategory(grouped);
+    };
+
+    loadPanelTemplates();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const slugs = categories.map((category) => category.slug);
+    const resolved = resolveInitialCategory(initialCategory, slugs) || "all";
+    setActiveCategory(resolved);
+  }, [initialCategory, categories]);
 
   const handleCategoryClick = (slug: string) => {
     setActiveCategory(slug);
@@ -149,8 +213,6 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {templates.map((template, index) => {
-            const TemplateComponent = catalogTemplateMap[template.id];
-            if (!TemplateComponent) return null;
             return (
               <motion.div
                 key={template.id}
@@ -161,7 +223,7 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
               >
                 <div className="relative p-4 pb-0 bg-slate-50 rounded-t-2xl dark:bg-slate-900/30">
                   <RescaleContainer>
-                    <TemplateComponent data={previewResumeData} />
+                    <CatalogTemplate data={previewResumeData} config={template} />
                   </RescaleContainer>
                   <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl dark:bg-slate-950/70">
                     <Link href={`/resume/new?template=${template.id}`}>

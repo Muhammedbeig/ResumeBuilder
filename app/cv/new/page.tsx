@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
+import { useEffect, useMemo, useState, Suspense, useCallback, type ComponentType } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
 import { cvTemplates } from "@/lib/cv-templates";
+import { fetchTemplates } from "@/lib/template-client";
+import { resolveCvTemplateComponent } from "@/lib/template-resolvers";
+import type { CvTemplateConfig } from "@/lib/panel-templates";
 import { placeholderResumeData, previewResumeData } from "@/lib/resume-samples";
 import { useCV } from "@/contexts/CVContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
@@ -15,6 +18,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
 
+type TemplateOption = {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  component: ComponentType<{ data: any }>;
+};
+
 function NewCVContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +33,7 @@ function NewCVContent() {
   const { createCV, importedData } = useCV();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled CV");
+  const [templates, setTemplates] = useState<TemplateOption[]>(() => [...cvTemplates]);
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   
@@ -35,6 +47,40 @@ function NewCVContent() {
       setTitle(`${importedData.basics.name}'s CV`);
     }
   }, [importedData]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTemplates = async () => {
+      const panelTemplates = await fetchTemplates("cv", { active: true });
+      if (!panelTemplates.length || !isActive) return;
+
+      const mapped: TemplateOption[] = panelTemplates.map((template) => {
+        const component = resolveCvTemplateComponent(
+          template.template_id,
+          template.config as CvTemplateConfig
+        );
+
+        return {
+          id: template.template_id,
+          name: template.name || template.template_id,
+          description: template.description || "",
+          premium: template.is_premium,
+          component,
+        };
+      });
+
+      if (isActive) {
+        setTemplates(mapped);
+      }
+    };
+
+    loadTemplates();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const hasSubscription = useMemo(
     () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
@@ -86,12 +132,12 @@ function NewCVContent() {
   // Auto-select template if query param is present
   useEffect(() => {
     if (templateIdFromQuery && isLoaded && status !== "loading") {
-      const template = cvTemplates.find(t => t.id === templateIdFromQuery);
+      const template = templates.find(t => t.id === templateIdFromQuery);
       if (template && !isCreating) {
         handleSelectTemplate(template.id, template.premium);
       }
     }
-  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate]);
+  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate, templates]);
 
   if (status === "loading") {
     return (
@@ -130,7 +176,7 @@ function NewCVContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {cvTemplates.map((template) => {
+          {templates.map((template) => {
             const Preview = template.component;
             const isLocked = template.premium && !canUsePaid;
             return (

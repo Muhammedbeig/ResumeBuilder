@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getStripe } from "@/lib/stripe";
+import { getStripeGatewayConfig } from "@/lib/panel-payment-gateways";
 import { parseUserIdBigInt } from "@/lib/user-id";
 
 export const runtime = "nodejs";
@@ -32,7 +34,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const stripe = getStripe();
+  const stripeCfg = await getStripeGatewayConfig();
+  if (!stripeCfg) {
+    return NextResponse.json(
+      { error: "Stripe is not enabled or not configured in the Admin Panel." },
+      { status: 503 }
+    );
+  }
+
+  const stripe = new Stripe(stripeCfg.secretKey, { typescript: true });
+
   let customerId = user.stripeCustomerId;
   if (!customerId) {
     const customer = await stripe.customers.create({
@@ -50,9 +61,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const returnUrlParam = searchParams.get("returnUrl");
   const baseUrl = resolveBaseUrl();
-  const returnUrl = returnUrlParam && returnUrlParam.startsWith("/")
-    ? new URL(returnUrlParam, baseUrl).toString()
-    : baseUrl;
+  const returnUrl =
+    returnUrlParam && returnUrlParam.startsWith("/")
+      ? new URL(returnUrlParam, baseUrl).toString()
+      : baseUrl;
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: customerId,

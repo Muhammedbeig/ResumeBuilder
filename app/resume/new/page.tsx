@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, Suspense, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense, useCallback, type ComponentType } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
 import { resumeTemplates } from "@/lib/resume-templates";
+import { fetchTemplates } from "@/lib/template-client";
+import { normalizeResumeConfig } from "@/lib/panel-templates";
+import { resolveResumeTemplateComponent } from "@/lib/template-resolvers";
 import { placeholderResumeData, previewResumeData } from "@/lib/resume-samples";
 import { useResume } from "@/contexts/ResumeContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
@@ -15,6 +18,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
 
+type TemplateOption = {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  component: ComponentType<{ data: any }>;
+};
+
 function NewResumeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +33,7 @@ function NewResumeContent() {
   const { createResume, importedData } = useResume();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Resume");
+  const [templates, setTemplates] = useState<TemplateOption[]>(resumeTemplates);
   const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const autoCreateRef = useRef<string | null>(null);
@@ -36,6 +48,44 @@ function NewResumeContent() {
       setTitle(`${importedData.basics.name}'s Resume`);
     }
   }, [importedData]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTemplates = async () => {
+      const panelTemplates = await fetchTemplates("resume", { active: true });
+      if (!panelTemplates.length || !isActive) return;
+
+      const mapped: TemplateOption[] = panelTemplates.map((template) => {
+        const config = normalizeResumeConfig(
+          template.config as any,
+          template.template_id
+        );
+        const component = resolveResumeTemplateComponent(
+          template.template_id,
+          config ?? undefined
+        );
+
+        return {
+          id: template.template_id,
+          name: template.name || config?.name || template.template_id,
+          description: template.description || config?.description || "",
+          premium: template.is_premium,
+          component,
+        };
+      });
+
+      if (isActive) {
+        setTemplates(mapped);
+      }
+    };
+
+    loadTemplates();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const hasSubscription = useMemo(
     () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
@@ -86,12 +136,12 @@ function NewResumeContent() {
   // Auto-select template if query param is present
   useEffect(() => {
     if (!templateIdFromQuery || !isLoaded || status === "loading") return;
-    const template = resumeTemplates.find((t) => t.id === templateIdFromQuery);
+    const template = templates.find((t) => t.id === templateIdFromQuery);
     if (!template || creatingTemplateId) return;
     if (autoCreateRef.current === templateIdFromQuery) return;
     autoCreateRef.current = templateIdFromQuery;
     handleSelectTemplate(template.id, template.premium);
-  }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate]);
+  }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate, templates]);
 
   if (status === "loading") {
     return (
@@ -130,7 +180,7 @@ function NewResumeContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {resumeTemplates.map((template) => {
+          {templates.map((template) => {
             const Preview = template.component;
             const isLocked = template.premium && !canUsePaid;
             return (

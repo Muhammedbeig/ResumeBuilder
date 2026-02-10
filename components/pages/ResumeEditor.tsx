@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -58,6 +58,9 @@ import {
 import { useResume } from "@/contexts/ResumeContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { resumeTemplateMap } from "@/lib/resume-templates";
+import { resolveResumeTemplateComponent } from "@/lib/template-resolvers";
+import { usePanelTemplate } from "@/hooks/use-panel-template";
+import { normalizeResumeConfig } from "@/lib/panel-templates";
 import { generatePDF } from "@/lib/pdf";
 import { buildResumeText, downloadTextFile } from "@/lib/resume-text";
 import { createQrDataUrl } from "@/lib/qr";
@@ -77,6 +80,7 @@ import { useElementSize } from "@/hooks/use-element-size";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
 const AI_SUGGESTION_DELAY_MS = 1200;
@@ -87,15 +91,23 @@ export function ResumeEditorPage() {
   const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
+  const [subscriptionOverride, setSubscriptionOverride] = useState(false);
+  const [serverSubscription, setServerSubscription] = useState<string | null>(null);
   const hasSubscription = useMemo(
-    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
-    [session?.user?.subscription]
+    () =>
+      subscriptionOverride ||
+      serverSubscription === "pro" ||
+      serverSubscription === "business" ||
+      session?.user?.subscription === "pro" ||
+      session?.user?.subscription === "business",
+    [subscriptionOverride, serverSubscription, session?.user?.subscription]
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
     [planChoice, hasSubscription]
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isUnmountingRef = useRef(false);
   const {
     resumeData,
     currentResume,
@@ -127,6 +139,8 @@ export function ResumeEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [isSubscriptionActivating, setIsSubscriptionActivating] = useState(false);
+  const lastUserIdRef = useRef<string | null>(null);
   const [zoom, setZoom] = useState([90]);
   const [advancedFormatting, setAdvancedFormatting] = useState(false);
   const [draftExperience, setDraftExperience] = useState<Partial<Experience> | null>(null);
@@ -206,16 +220,29 @@ export function ResumeEditorPage() {
     }
   }, [planChoice]);
 
+  useEffect(() => {
+    const nextUserId = session?.user?.id ?? null;
+    if (!nextUserId) return;
+    if (lastUserIdRef.current && lastUserIdRef.current !== nextUserId) {
+      setSubscriptionOverride(false);
+      setServerSubscription(null);
+    }
+    lastUserIdRef.current = nextUserId;
+  }, [session?.user?.id]);
+
   const syncSubscription = useCallback(async () => {
     try {
-      const response = await fetch("/api/user/subscription", { cache: "no-store" });
+      const response = await fetchWithTimeout("/api/user/subscription", { cache: "no-store" }, 8000);
       if (!response.ok) return null;
       const data = await response.json();
+      if (typeof data?.subscription === "string") {
+        setServerSubscription(data.subscription);
+      }
       if (updateSession) {
-        await updateSession({
+        void updateSession({
           subscription: data.subscription ?? "free",
           subscriptionPlanId: data.subscriptionPlanId ?? null,
-        });
+        }).catch(() => undefined);
       }
       return data as { subscription?: string; subscriptionPlanId?: string | null };
     } catch {
@@ -223,21 +250,83 @@ export function ResumeEditorPage() {
     }
     return null;
   }, [updateSession]);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     const params = new URLSearchParams(window.location.search);
     const status = params.get("stripe");
     if (!status) return;
+
+    const paymentTransactionId = params.get("payment_transaction_id");
+    const checkoutSessionId = params.get("session_id");
+
+    let cancelled = false;
+
     if (status === "success") {
       setIsDownloadModalOpen(true);
-      syncSubscription();
       toast.success("Payment successful.");
+
+      void (async () => {
+        setIsSubscriptionActivating(true);
+        try {
+          if (paymentTransactionId && checkoutSessionId) {
+            await fetchWithTimeout("/api/stripe/confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentTransactionId,
+                sessionId: checkoutSessionId,
+              }),
+            }, 15000).catch(() => null);
+          }
+
+          const deadline = Date.now() + 30_000;
+          while (!cancelled && Date.now() < deadline) {
+            const latest = await syncSubscription();
+            const ok =
+              latest?.subscription === "pro" || latest?.subscription === "business";
+            if (ok) { setSubscriptionOverride(true); return; }
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+          }
+        } finally {
+          if (!isUnmountingRef.current) setIsSubscriptionActivating(false);
+        }
+      })();
     } else if (status === "cancel") {
       toast.info("Payment canceled.");
     }
+
     window.history.replaceState({}, "", window.location.pathname);
+
+    return () => {
+      cancelled = true;
+    };
   }, [syncSubscription]);
+
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isDownloadModalOpen) return;
+    if (planChoice !== "paid" || hasSubscription) return;
+    let cancelled = false;
+
+    void (async () => {
+      const latest = await syncSubscription();
+      const ok = latest?.subscription === "pro" || latest?.subscription === "business";
+      if (ok && !cancelled) {
+        setSubscriptionOverride(true);
+        setIsSubscriptionActivating(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isDownloadModalOpen, planChoice, hasSubscription, syncSubscription]);
 
   useEffect(() => {
     if (activeTab !== "basics") return;
@@ -275,9 +364,10 @@ export function ResumeEditorPage() {
   }, [resumeId, loadResume]);
 
   const activeTemplateId = currentResume?.template || "modern";
-  const ActiveTemplate =
-    resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap] ||
-    resumeTemplateMap.modern;
+  const shouldFetchTemplate = !resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap];
+  const panelTemplate = usePanelTemplate("resume", activeTemplateId, shouldFetchTemplate);
+  const templateConfig = normalizeResumeConfig(panelTemplate?.config as any, activeTemplateId);
+  const ActiveTemplate = resolveResumeTemplateComponent(activeTemplateId, templateConfig);
   const exportElementId = "resume-preview-export";
 
   const PreviewDocument = ({
@@ -391,6 +481,7 @@ export function ResumeEditorPage() {
         );
         return;
       }
+      setSubscriptionOverride(true);
     }
     setIsDownloadModalOpen(true);
   };
@@ -482,6 +573,9 @@ export function ResumeEditorPage() {
         onOpenChange={setIsDownloadModalOpen}
         planChoice={planChoice}
         hasSubscription={hasSubscription}
+        isActivating={isSubscriptionActivating}
+        resourceType="resume"
+        resourceId={currentResume?.id ?? null}
       />
       <div
         className="relative overflow-hidden box-border"
@@ -858,6 +952,7 @@ export function ResumeEditorPage() {
                 <TabsContent value="design" className="mt-0">
                 <DesignSection
                   templateId={activeTemplateId}
+                  templateConfig={templateConfig}
                   advancedFormatting={advancedFormatting}
                   onAdvancedFormattingChange={setAdvancedFormatting}
                   watermarkEnabled={watermarkEnabled}
@@ -2707,6 +2802,7 @@ function CertificationsSection() {
 
 function DesignSection({
   templateId,
+  templateConfig,
   advancedFormatting,
   onAdvancedFormattingChange,
   watermarkEnabled,
@@ -2714,6 +2810,7 @@ function DesignSection({
   watermarkLocked,
 }: {
   templateId: string;
+  templateConfig?: ReturnType<typeof normalizeResumeConfig> | null;
   advancedFormatting: boolean;
   onAdvancedFormattingChange: (value: boolean) => void;
   watermarkEnabled: boolean;
@@ -2721,7 +2818,8 @@ function DesignSection({
   watermarkLocked: boolean;
 }) {
   const { resumeData, updateMetadata } = useResume();
-  const defaultFont = RESUME_TEMPLATE_DEFAULT_FONTS[templateId] || "Inter";
+  const defaultFont =
+    templateConfig?.bodyFont || RESUME_TEMPLATE_DEFAULT_FONTS[templateId] || "Inter";
 
   return (
     <motion.div
@@ -2801,3 +2899,11 @@ function SharePopover() {
     </Popover>
   );
 }
+
+
+
+
+
+
+
+

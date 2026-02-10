@@ -1,0 +1,39 @@
+﻿{
+  "info": {
+    "name": "ResuPro - App Download Links",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Link Metadata (Bearer)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{SANCTUM_TOKEN}}" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{PANEL_BASE_URL}}/api/app-download-links/{{DL_TOKEN}}"
+        }
+      }
+    },
+    {
+      "name": "Download PDF (Bearer)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{SANCTUM_TOKEN}}" },
+          { "key": "Accept", "value": "application/pdf" }
+        ],
+        "url": {
+          "raw": "{{PANEL_BASE_URL}}/api/app-download-links/{{DL_TOKEN}}/download"
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "PANEL_BASE_URL", "value": "http://localhost/Panel/public" },
+    { "key": "DL_TOKEN", "value": "<paste-token-here>" },
+    { "key": "SANCTUM_TOKEN", "value": "<paste-bearer-token-here>" }
+  ]
+}

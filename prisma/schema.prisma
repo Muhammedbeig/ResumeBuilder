@@ -9,32 +9,33 @@ datasource db {
 
 model User {
   // Shared with the Laravel Panel (BIGINT ids).
-  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  name          String
-  email         String    @unique
-  emailVerified DateTime? @map("email_verified_at")
-  image         String?   @map("profile")
-  passwordHash  String    @map("password")
-  type          String
-  fcmId         String    @map("fcm_id")
-  firebaseId    String?   @map("firebase_id")
-  notification  Boolean   @default(true)
-  stripeCustomerId String? @map("stripe_customer_id")
-  deletedAt     DateTime? @map("deleted_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name             String
+  email            String    @unique
+  emailVerified    DateTime? @map("email_verified_at")
+  image            String?   @map("profile")
+  passwordHash     String    @map("password")
+  type             String
+  fcmId            String    @map("fcm_id")
+  firebaseId       String?   @map("firebase_id")
+  notification     Boolean   @default(true)
+  stripeCustomerId String?   @map("stripe_customer_id")
+  deletedAt        DateTime? @map("deleted_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   bankTransferReceipts BankTransferReceipt[]
-  paymentTransactions PaymentTransaction[]
-  purchasedPackages UserPurchasedPackage[]
-  marketValueReports MarketValueReport[]
-  
+  paymentTransactions  PaymentTransaction[]
+  purchasedPackages    UserPurchasedPackage[]
+  marketValueReports   MarketValueReport[]
+
   // Relations
-  resumes       Resume[]
-  cvs           Cv[]
-  accounts      Account[]
-  sessions      Session[]
-  
+  resumes          Resume[]
+  cvs              Cv[]
+  accounts         Account[]
+  sessions         Session[]
+  appDownloadLinks AppDownloadLink[]
+
   @@map("users")
 }
 
@@ -72,18 +73,18 @@ model MarketValueReport {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             BigInt   @db.UnsignedBigInt
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String? @db.Text
+  id                String  @id @default(cuid())
+  userId            BigInt  @db.UnsignedBigInt
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String? @db.Text
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -121,12 +122,12 @@ model Resume {
   activeVersionId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  versions        ResumeVersion[]
-  exports         Export[]
-  
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions ResumeVersion[]
+  exports  Export[]
+
   @@map("resumes")
 }
 
@@ -140,82 +141,82 @@ model Cv {
   activeVersionId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  versions        CvVersion[]
-  exports         CvExport[]
-  
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions CvVersion[]
+  exports  CvExport[]
+
   @@map("cvs")
 }
 
 model CvVersion {
-  id         String   @id @default(cuid())
-  cvId       String
-  jsonData   Json     // Structured cv data
-  source     String   @default("manual") // upload, manual, ai
-  createdAt  DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  cvId      String
+  jsonData  Json // Structured cv data
+  source    String   @default("manual") // upload, manual, ai
+  createdAt DateTime @default(now())
+
   // Relations
-  cv         Cv   @relation(fields: [cvId], references: [id], onDelete: Cascade)
-  
+  cv Cv @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
   @@map("cv_versions")
 }
 
 model CvExport {
-  id               String   @id @default(cuid())
-  cvId             String
-  cvVersionId      String
-  fileUrl          String?
-  status           String   @default("pending") // pending, processing, completed, failed
-  createdAt        DateTime @default(now())
-  completedAt      DateTime?
-  
+  id          String    @id @default(cuid())
+  cvId        String
+  cvVersionId String
+  fileUrl     String?
+  status      String    @default("pending") // pending, processing, completed, failed
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
   // Relations
-  cv               Cv   @relation(fields: [cvId], references: [id], onDelete: Cascade)
-  
+  cv Cv @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
   @@map("cv_exports")
 }
 
 model ResumeVersion {
-  id         String   @id @default(cuid())
-  resumeId   String
-  jsonData   Json     // Structured resume data
-  source     String   @default("manual") // upload, manual, ai
-  createdAt  DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  resumeId  String
+  jsonData  Json // Structured resume data
+  source    String   @default("manual") // upload, manual, ai
+  createdAt DateTime @default(now())
+
   // Relations
-  resume     Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
   @@map("resume_versions")
 }
 
 model Export {
-  id               String   @id @default(cuid())
-  resumeId         String
-  resumeVersionId  String
-  fileUrl          String?
-  status           String   @default("pending") // pending, processing, completed, failed
-  createdAt        DateTime @default(now())
-  completedAt      DateTime?
-  
+  id              String    @id @default(cuid())
+  resumeId        String
+  resumeVersionId String
+  fileUrl         String?
+  status          String    @default("pending") // pending, processing, completed, failed
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+
   // Relations
-  resume           Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
   @@map("exports")
 }
 
 model AIUsage {
   id           String   @id @default(cuid())
   userId       BigInt?  @db.UnsignedBigInt
-  type         String   // parse, rewrite, tailor, summary
+  type         String // parse, rewrite, tailor, summary
   inputHash    String?
   status       String   @default("pending")
   resultJson   Json?
   tokensUsed   Int?
   costEstimate Float?
   createdAt    DateTime @default(now())
-  
+
   @@map("ai_jobs")
 }
 
@@ -225,6 +226,25 @@ enum PaymentTransactionStatus {
   pending
   under_review @map("under review")
   rejected
+}
+
+model PaymentConfiguration {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  paymentMethod    String    @map("payment_method")
+  apiKey           String    @map("api_key")
+  secretKey        String    @map("secret_key")
+  webhookSecretKey String    @map("webhook_secret_key")
+  currencyCode     String?   @map("currency_code") @db.VarChar(128)
+  status           Boolean   @default(true)
+  createdAt        DateTime? @map("created_at")
+  updatedAt        DateTime? @map("updated_at")
+  additionalData1  String?   @map("additional_data_1")
+  additionalData2  String?   @map("additional_data_2")
+  paymentMode      String?   @map("payment_mode")
+  username         String?
+  password         String?
+
+  @@map("payment_configurations")
 }
 
 model Package {
@@ -275,22 +295,45 @@ model PaymentTransaction {
 }
 
 model UserPurchasedPackage {
-  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  userId                BigInt    @map("user_id") @db.UnsignedBigInt
-  packageId             BigInt    @map("package_id") @db.UnsignedBigInt
-  startDate             DateTime  @map("start_date") @db.Date
-  endDate               DateTime? @map("end_date") @db.Date
-  totalLimit            Int?      @map("total_limit")
-  usedLimit             Int       @default(0) @map("used_limit")
-  paymentTransactionId  BigInt?   @map("payment_transactions_id") @db.UnsignedBigInt
-  createdAt             DateTime? @map("created_at")
-  updatedAt             DateTime? @map("updated_at")
-  listingDurationType   String?   @map("listing_duration_type")
-  listingDurationDays   Int?      @map("listing_duration_days")
+  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId               BigInt    @map("user_id") @db.UnsignedBigInt
+  packageId            BigInt    @map("package_id") @db.UnsignedBigInt
+  startDate            DateTime  @map("start_date") @db.Date
+  endDate              DateTime? @map("end_date") @db.Date
+  totalLimit           Int?      @map("total_limit")
+  usedLimit            Int       @default(0) @map("used_limit")
+  paymentTransactionId BigInt?   @map("payment_transactions_id") @db.UnsignedBigInt
+  createdAt            DateTime? @map("created_at")
+  updatedAt            DateTime? @map("updated_at")
+  listingDurationType  String?   @map("listing_duration_type")
+  listingDurationDays  Int?      @map("listing_duration_days")
 
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  package           Package            @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package            Package             @relation(fields: [packageId], references: [id], onDelete: Cascade)
   paymentTransaction PaymentTransaction? @relation(fields: [paymentTransactionId], references: [id], onDelete: Cascade)
 
   @@map("user_purchased_packages")
+}
+
+model AppDownloadLink {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenHash         String    @unique @map("token_hash") @db.Char(64)
+  userId            BigInt    @map("user_id") @db.UnsignedBigInt
+  resourceType      String    @map("resource_type") @db.VarChar(32)
+  resourceId        String    @map("resource_id") @db.VarChar(64)
+  resourceVersionId String?   @map("resource_version_id") @db.VarChar(64)
+  templateId        String?   @map("template_id") @db.VarChar(128)
+  format            String    @default("pdf") @db.VarChar(16)
+  expiresAt         DateTime  @map("expires_at")
+  redeemedAt        DateTime? @map("redeemed_at")
+  redeemedCount     Int       @default(0) @map("redeemed_count") @db.UnsignedInt
+  metaJson          Json?     @map("meta_json")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@map("app_download_links")
 }

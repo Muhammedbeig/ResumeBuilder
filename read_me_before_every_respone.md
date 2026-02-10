@@ -1,1 +1,0 @@
-You dont need to ask for any session acceptance. just implement needed change without needing to ask for allowance of the session.

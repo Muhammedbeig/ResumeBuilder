@@ -1,14 +1,25 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, type ComponentType } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { coverLetterTemplates } from '@/lib/cover-letter-templates';
+import { fetchTemplates } from '@/lib/template-client';
+import { resolveCoverLetterTemplateComponent } from '@/lib/template-resolvers';
+import type { CoverLetterTemplateConfig } from '@/lib/panel-templates';
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { useSession } from "next-auth/react";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+
+type TemplateOption = {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  component: ComponentType<{ data: any }>;
+};
 
 // Using a placeholder data for previews
 const previewData = {
@@ -84,8 +95,36 @@ export default function CoverLetterTemplatesPage() {
   const { planChoice, isLoaded } = usePlanChoice();
   const isAuthenticated = !!session?.user;
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [templates, setTemplates] = useState<TemplateOption[]>(coverLetterTemplates);
   const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
   const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTemplates = async () => {
+      const panelTemplates = await fetchTemplates("cover_letter", { active: true });
+      if (!panelTemplates.length || !isActive) return;
+
+      const mapped: TemplateOption[] = panelTemplates.map((template) => ({
+        id: template.template_id,
+        name: template.name || template.template_id,
+        description: template.description || "",
+        premium: template.is_premium,
+        component: resolveCoverLetterTemplateComponent(
+          template.template_id,
+          template.config as CoverLetterTemplateConfig
+        ),
+      }));
+
+      if (isActive) setTemplates(mapped);
+    };
+
+    loadTemplates();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
@@ -115,7 +154,7 @@ export default function CoverLetterTemplatesPage() {
       {/* Templates Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {coverLetterTemplates.map((template, index) => {
+          {templates.map((template, index) => {
             const TemplateComponent = template.component;
             return (
               <motion.div

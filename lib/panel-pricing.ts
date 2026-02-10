@@ -1,4 +1,5 @@
 import { panelGet } from "@/lib/panel-api";
+import { PRICING_PLANS, type PricingPlan } from "@/lib/pricing-plans";
 
 export type PanelPackage = {
   id: number;
@@ -97,6 +98,84 @@ function classifyIcon(index: number, isPopular: boolean, isFree: boolean): Prici
   return index % 2 === 0 ? "crown" : "crown";
 }
 
+function priceFromText(price?: string): number {
+  if (!price) return 0;
+  const cleaned = price.replace(/[^0-9.]/g, "");
+  if (!cleaned) return 0;
+  const parsed = Number.parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function planDuration(plan: PricingPlan): string {
+  if (plan.planId === "weekly") return "7";
+  if (plan.planId === "monthly") return "30";
+  if (plan.planId === "annual") return "365";
+
+  if (plan.interval === "week") return "7";
+  if (plan.interval === "month") return "30";
+  if (plan.interval === "year") return "365";
+
+  const price = plan.price?.toLowerCase() ?? "";
+  if (price.includes("week")) return "7";
+  if (price.includes("mo")) return "30";
+  if (price.includes("yr") || price.includes("year")) return "365";
+
+  return plan.isPaid ? "30" : "unlimited";
+}
+
+function planFinalPrice(plan: PricingPlan): number {
+  if (typeof plan.amountCents === "number" && Number.isFinite(plan.amountCents)) {
+    return plan.amountCents / 100;
+  }
+  return priceFromText(plan.price);
+}
+
+function pricingPlansToPricingCards(plans: PricingPlan[]): PricingCard[] {
+  const normalized = Array.isArray(plans) ? plans : [];
+  const hasHighlight = normalized.some((plan) => plan.highlight);
+  const cheapestPaidId = hasHighlight
+    ? null
+    : normalized.reduce<string | null>((bestId, plan) => {
+        const price = planFinalPrice(plan);
+        if (price <= 0) return bestId;
+        if (!bestId) return plan.id;
+        const bestPlan = normalized.find((candidate) => candidate.id === bestId);
+        if (!bestPlan) return plan.id;
+        return price < planFinalPrice(bestPlan) ? plan.id : bestId;
+      }, null);
+
+  return normalized.map((plan, index) => {
+    const duration = planDuration(plan);
+    const finalPrice = planFinalPrice(plan);
+    const isPaid = plan.isPaid ?? finalPrice > 0;
+    const isPopular = hasHighlight ? Boolean(plan.highlight) : isPaid && cheapestPaidId === plan.id;
+    const isFree = !isPaid;
+    const name = plan.name?.trim() || "Plan";
+    const subtitle = classifySubtitle({ final_price: finalPrice, duration } as PanelPackage);
+    const description = plan.description?.trim() || "";
+    const features = Array.isArray(plan.features) ? plan.features : [];
+    const priceLabel =
+      plan.price?.trim() || packagePriceLabel({ final_price: finalPrice, duration } as PanelPackage);
+    const cta = plan.cta?.trim() || (isPaid ? `Choose ${name}` : "Get Started Free");
+
+    return {
+      packageId: plan.id,
+      isPaid,
+      isPopular,
+      duration,
+      finalPrice,
+      name,
+      subtitle,
+      description,
+      priceLabel,
+      features,
+      cta,
+      gradient: classifyGradient(index, isPopular, isFree),
+      icon: classifyIcon(index, isPopular, isFree),
+    };
+  });
+}
+
 export async function fetchPanelSubscriptionPackages(): Promise<PanelPackage[]> {
   const res = await panelGet<PanelPackage[]>("get-package", { type: "item_listing" });
   return Array.isArray(res.data) ? res.data : [];
@@ -145,6 +224,13 @@ export function panelPackagesToPricingCards(packages: PanelPackage[]): PricingCa
 }
 
 export async function fetchPricingCards(): Promise<PricingCard[]> {
-  const packages = await fetchPanelSubscriptionPackages();
-  return panelPackagesToPricingCards(packages);
+  try {
+    const packages = await fetchPanelSubscriptionPackages();
+    const cards = panelPackagesToPricingCards(packages);
+    if (cards.length > 0) return cards;
+  } catch {
+    // Fall back to static pricing when the Panel API is unreachable.
+  }
+
+  return pricingPlansToPricingCards(PRICING_PLANS);
 }

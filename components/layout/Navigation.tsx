@@ -8,6 +8,7 @@ import { Menu, X, Sun, Moon, Sparkles, FileText, File, LayoutTemplate, FileCode,
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import { RESUME_TEMPLATE_CATEGORIES } from "@/lib/resume-template-catalog";
+import { fetchTemplateCategories } from "@/lib/template-client";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -34,6 +35,13 @@ export function Navigation() {
   const navContentRef = useRef<HTMLDivElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [templateItems, setTemplateItems] = useState(() => [
+    { label: "All Templates", href: "/templates" },
+    ...RESUME_TEMPLATE_CATEGORIES.map((category) => ({
+      label: category.label,
+      href: `/templates/${category.slug}`,
+    })),
+  ]);
 
   // Pages that show the simplified header (Logo + Theme Toggle only)
   const simplifiedPaths = [
@@ -93,13 +101,28 @@ export function Navigation() {
     };
   }, []);
 
-  const templateItems = [
-    { label: "All Templates", href: "/templates" },
-    ...RESUME_TEMPLATE_CATEGORIES.map((category) => ({
-      label: category.label,
-      href: `/templates/${category.slug}`,
-    })),
-  ];
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTemplateCategories = async () => {
+      const categories = await fetchTemplateCategories("resume");
+      if (!categories.length || !isActive) return;
+
+      setTemplateItems([
+        { label: "All Templates", href: "/templates" },
+        ...categories.map((category) => ({
+          label: category.label,
+          href: `/templates/${category.slug}`,
+        })),
+      ]);
+    };
+
+    loadTemplateCategories();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const navDropdowns = [
     {

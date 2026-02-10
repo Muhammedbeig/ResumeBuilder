@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ComponentType } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, 
@@ -38,10 +38,21 @@ import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
 import type { ResumeData, TailoringResult } from "@/types";
 import { resumeTemplates } from "@/lib/resume-templates";
+import { fetchTemplates } from "@/lib/template-client";
+import { normalizeResumeConfig } from "@/lib/panel-templates";
+import { resolveResumeTemplateComponent } from "@/lib/template-resolvers";
 import { ResumePreviewComponent } from "@/components/resume/ResumePreviewComponent";
 import { useResume } from "@/contexts/ResumeContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+
+type TemplateOption = {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  component: ComponentType<{ data: ResumeData }>;
+};
 
 export default function AIResumeOptimizerPage() {
   const { data: session } = useSession();
@@ -54,6 +65,7 @@ export default function AIResumeOptimizerPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [resumeText, setResumeText] = useState("");
+  const [templates, setTemplates] = useState<TemplateOption[]>(resumeTemplates);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [jobUrl, setJobUrl] = useState("");
@@ -78,6 +90,41 @@ export default function AIResumeOptimizerPage() {
     "Optimizing for ATS algorithms...",
     "Finalizing your tailored suggestions..."
   ];
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTemplates = async () => {
+      const panelTemplates = await fetchTemplates("resume", { active: true });
+      if (!panelTemplates.length || !isActive) return;
+
+      const mapped: TemplateOption[] = panelTemplates.map((template) => {
+        const config = normalizeResumeConfig(
+          template.config as any,
+          template.template_id
+        );
+        const component = resolveResumeTemplateComponent(
+          template.template_id,
+          config ?? undefined
+        );
+
+        return {
+          id: template.template_id,
+          name: template.name || config?.name || template.template_id,
+          description: template.description || config?.description || "",
+          premium: template.is_premium,
+          component,
+        };
+      });
+
+      if (isActive) setTemplates(mapped);
+    };
+
+    loadTemplates();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = !!session?.user;
@@ -920,7 +967,7 @@ export default function AIResumeOptimizerPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {resumeTemplates.map((template) => (
+                      {templates.map((template) => (
                           <div 
                             key={template.id}
                             onClick={() => setSelectedTemplate(template.id)}
@@ -1001,7 +1048,7 @@ export default function AIResumeOptimizerPage() {
                                   <ul className="space-y-2 text-sm text-purple-800 dark:text-purple-200">
                                       <li className="flex items-center gap-2"><Check className="w-4 h-4" /> Match Score: {analysisResults?.matchScore}%</li>
                                       <li className="flex items-center gap-2"><Check className="w-4 h-4" /> {analysisResults?.matchedKeywords.length} Keywords Optimized</li>
-                                      <li className="flex items-center gap-2"><Check className="w-4 h-4" /> Template: {resumeTemplates.find(t => t.id === selectedTemplate)?.name}</li>
+                                      <li className="flex items-center gap-2"><Check className="w-4 h-4" /> Template: {templates.find(t => t.id === selectedTemplate)?.name}</li>
                                   </ul>
                               </CardContent>
                           </Card>

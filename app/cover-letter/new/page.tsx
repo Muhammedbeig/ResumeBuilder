@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
+import { useEffect, useMemo, useState, Suspense, useCallback, type ComponentType } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
 import { coverLetterTemplates } from "@/lib/cover-letter-templates";
+import { fetchTemplates } from "@/lib/template-client";
+import { resolveCoverLetterTemplateComponent } from "@/lib/template-resolvers";
+import type { CoverLetterTemplateConfig } from "@/lib/panel-templates";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { Button } from "@/components/ui/button";
@@ -13,6 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
+
+type TemplateOption = {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  component: ComponentType<{ data: any }>;
+};
 
 // Placeholder data for preview
 const previewData = {
@@ -49,6 +60,7 @@ function NewCoverLetterContent() {
   const { createCoverLetter, importedData } = useCoverLetter();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Cover Letter");
+  const [templates, setTemplates] = useState<TemplateOption[]>(() => [...coverLetterTemplates]);
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
@@ -62,6 +74,40 @@ function NewCoverLetterContent() {
       setTitle(`${importedData.personalInfo.fullName}'s Cover Letter`);
     }
   }, [importedData]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTemplates = async () => {
+      const panelTemplates = await fetchTemplates("cover_letter", { active: true });
+      if (!panelTemplates.length || !isActive) return;
+
+      const mapped: TemplateOption[] = panelTemplates.map((template) => {
+        const component = resolveCoverLetterTemplateComponent(
+          template.template_id,
+          template.config as CoverLetterTemplateConfig
+        );
+
+        return {
+          id: template.template_id,
+          name: template.name || template.template_id,
+          description: template.description || "",
+          premium: template.is_premium,
+          component,
+        };
+      });
+
+      if (isActive) {
+        setTemplates(mapped);
+      }
+    };
+
+    loadTemplates();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const hasSubscription = useMemo(
     () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
@@ -113,12 +159,12 @@ function NewCoverLetterContent() {
   // Auto-select template if query param is present
   useEffect(() => {
     if (templateIdFromQuery && isLoaded && status !== "loading") {
-      const template = coverLetterTemplates.find(t => t.id === templateIdFromQuery);
+      const template = templates.find(t => t.id === templateIdFromQuery);
       if (template && !isCreating) {
         handleSelectTemplate(template.id, template.premium);
       }
     }
-  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate]);
+  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate, templates]);
 
   if (status === "loading") {
     return (
@@ -157,7 +203,7 @@ function NewCoverLetterContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {coverLetterTemplates.map((template) => {
+          {templates.map((template) => {
             const Preview = template.component;
             const isLocked = template.premium && !canUsePaid;
             return (

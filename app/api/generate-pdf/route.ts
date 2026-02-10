@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer";
 import { resumeTemplateMap } from "@/lib/resume-templates";
+import { panelGet } from "@/lib/panel-api";
+import type { PanelTemplate } from "@/lib/panel-templates";
+import { resolveResumeTemplateComponent } from "@/lib/template-resolvers";
+import { normalizeResumeConfig } from "@/lib/panel-templates";
 import { ResumeDataSchema } from "@/lib/resume-schema";
 import React from "react";
 
@@ -8,6 +12,15 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const expectedKey = process.env.INTERNAL_EXPORT_KEY;
+  const providedKey = req.headers.get("x-internal-export-key");
+  if (!expectedKey) {
+    return NextResponse.json({ error: "Export key is not configured" }, { status: 500 });
+  }
+  if (providedKey !== expectedKey) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const { renderToStaticMarkup } = await import("react-dom/server");
     const body = await req.json();
@@ -23,13 +36,23 @@ export async function POST(req: NextRequest) {
     }
 
     // Get Template
-    const TemplateComponent = resumeTemplateMap[templateId as keyof typeof resumeTemplateMap];
-    if (!TemplateComponent) {
-      return NextResponse.json(
-        { error: "Invalid template ID" },
-        { status: 400 }
-      );
+    const isStatic = !!resumeTemplateMap[templateId as keyof typeof resumeTemplateMap];
+    let panelConfig: unknown = undefined;
+    if (!isStatic) {
+      try {
+        const res = await panelGet<PanelTemplate>(`templates/${templateId}`, { type: "resume" });
+        panelConfig = res.data?.config;
+      } catch {
+        panelConfig = undefined;
+      }
     }
+
+    const normalizedConfig = normalizeResumeConfig(panelConfig as any, templateId);
+    if (!isStatic && !normalizedConfig) {
+      return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
+    }
+
+    const TemplateComponent = resolveResumeTemplateComponent(templateId, panelConfig as any);
 
     // Render to HTML
     // We wrap it in a simple layout to ensure Tailwind works
@@ -130,3 +153,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
