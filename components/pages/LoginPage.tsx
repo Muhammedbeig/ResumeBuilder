@@ -124,22 +124,6 @@ export function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isFromEditor && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 p-4 rounded-xl mb-4"
-              >
-                <div className="flex gap-3">
-                  <Sparkles className="w-5 h-5 text-purple-600 shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-purple-900 dark:text-purple-100">Don't worry about your progress!</p>
-                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">Your current work will be automatically synced to your account after you sign in.</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
             {googleAvailable && (
               <>
                 <Button
