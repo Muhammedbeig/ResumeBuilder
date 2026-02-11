@@ -11,6 +11,69 @@ import crypto from "crypto";
 // Spatie stores the PHP class name as a single-backslash namespace string.
 // In JS source we escape backslashes, so this results in: App\Models\User
 const MODEL_TYPE_USER = "App\\Models\\User";
+const AUTH_SETTINGS_TTL_MS = 60_000;
+
+type AuthSettings = {
+  googleClientId: string;
+  googleClientSecret: string;
+  googleEnabled: boolean;
+  emailEnabled: boolean;
+};
+
+let cachedAuthSettings: AuthSettings | null = null;
+let cachedAuthSettingsAt = 0;
+
+function parseToggle(value?: string | null): boolean | null {
+  if (!value) return null;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return null;
+  if (["1", "true", "yes", "on", "enabled"].includes(normalized)) return true;
+  if (["0", "false", "no", "off", "disabled"].includes(normalized)) return false;
+  return null;
+}
+
+async function getAuthSettings(): Promise<AuthSettings> {
+  const now = Date.now();
+  if (cachedAuthSettings && now - cachedAuthSettingsAt < AUTH_SETTINGS_TTL_MS) {
+    return cachedAuthSettings;
+  }
+
+  let dbMap: Record<string, string> | null = null;
+  try {
+    const rows = await prisma.$queryRaw<Array<{ name: string; value: string | null }>>`
+      SELECT name, value
+      FROM settings
+      WHERE name IN ('google_client_id', 'google_client_secret', 'google_authentication', 'email_authentication')
+    `;
+    dbMap = {};
+    for (const row of rows) {
+      dbMap[row.name] = row.value ? String(row.value) : "";
+    }
+  } catch {
+    dbMap = null;
+  }
+
+  const envClientId = process.env.GOOGLE_CLIENT_ID?.trim() ?? "";
+  const envClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() ?? "";
+
+  const googleClientId = (dbMap?.google_client_id ?? "").trim() || envClientId;
+  const googleClientSecret = (dbMap?.google_client_secret ?? "").trim() || envClientSecret;
+
+  const googleEnabledFromSetting = parseToggle(dbMap?.google_authentication ?? null);
+  const googleEnabled = googleEnabledFromSetting ?? true;
+
+  const emailEnabledFromSetting = parseToggle(dbMap?.email_authentication ?? null);
+  const emailEnabled = emailEnabledFromSetting ?? true;
+
+  cachedAuthSettings = {
+    googleClientId,
+    googleClientSecret,
+    googleEnabled,
+    emailEnabled,
+  };
+  cachedAuthSettingsAt = now;
+  return cachedAuthSettings;
+}
 
 async function getRoleIdByName(roleName: string): Promise<bigint | null> {
   const rows = await prisma.$queryRaw<Array<{ id: bigint }>>`
@@ -169,58 +232,11 @@ const panelPrismaAdapter = (): Adapter => {
   };
 };
 
-export const authOptions: NextAuthOptions = {
+const baseAuthOptions: Omit<NextAuthOptions, "providers"> = {
   adapter: panelPrismaAdapter(),
   session: {
     strategy: "jwt",
   },
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user || user.deletedAt) {
-          return null;
-        }
-
-        const isValid = await verifyPassword(credentials.password, user.passwordHash);
-        if (!isValid) {
-          return null;
-        }
-
-        // Only allow website/customer users to sign into the website.
-        if (!(await userHasRole(user.id, "User"))) {
-          return null;
-        }
-
-        return {
-          id: user.id.toString(),
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          subscription: "free",
-          subscriptionPlanId: null,
-          hasPassword: true,
-        };
-      },
-    }),
-  ],
   callbacks: {
     async signIn({ user }: any) {
       // For OAuth flows, `user.id` can be the provider id (e.g. Google `sub`), not the DB id.
@@ -319,4 +335,93 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
+};
+
+function buildProviders(settings: AuthSettings | null) {
+  const providers = [];
+
+  if (
+    settings &&
+    settings.googleEnabled &&
+    settings.googleClientId &&
+    settings.googleClientSecret
+  ) {
+    providers.push(
+      GoogleProvider({
+        clientId: settings.googleClientId,
+        clientSecret: settings.googleClientSecret,
+        allowDangerousEmailAccountLinking: true,
+      })
+    );
+  }
+
+  if (settings?.emailEnabled ?? true) {
+    providers.push(
+      CredentialsProvider({
+        name: "Credentials",
+        credentials: {
+          email: { label: "Email", type: "email" },
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+          if (!credentials?.email || !credentials?.password) {
+            return null;
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+
+          if (!user || user.deletedAt) {
+            return null;
+          }
+
+          const isValid = await verifyPassword(credentials.password, user.passwordHash);
+          if (!isValid) {
+            return null;
+          }
+
+          // Only allow website/customer users to sign into the website.
+          if (!(await userHasRole(user.id, "User"))) {
+            return null;
+          }
+
+          return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            subscription: "free",
+            subscriptionPlanId: null,
+            hasPassword: true,
+          };
+        },
+      })
+    );
+  }
+
+  return providers;
+}
+
+export async function buildAuthOptions(): Promise<NextAuthOptions> {
+  const settings = await getAuthSettings();
+  return {
+    ...baseAuthOptions,
+    providers: buildProviders(settings),
+  };
+}
+
+export async function getEmailAuthEnabled(): Promise<boolean> {
+  const settings = await getAuthSettings();
+  return settings.emailEnabled;
+}
+
+export const authOptions: NextAuthOptions = {
+  ...baseAuthOptions,
+  providers: buildProviders({
+    googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    googleEnabled: true,
+    emailEnabled: true,
+  }),
 };

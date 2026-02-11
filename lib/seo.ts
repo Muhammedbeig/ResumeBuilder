@@ -113,6 +113,18 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
     title: "Contact | ResuPro",
     description: "Send a message to the ResuPro team. Your request is handled through our Admin Panel.",
   },
+  "/privacy-policy": {
+    title: "Privacy Policy | ResuPro",
+    description: "Learn how ResuPro collects, uses, and protects your information.",
+  },
+  "/terms-of-service": {
+    title: "Terms of Service | ResuPro",
+    description: "Review the terms and conditions for using ResuPro.",
+  },
+  "/refund-policy": {
+    title: "Refund Policy | ResuPro",
+    description: "Understand our refund and cancellation policy.",
+  },
 };
 
 const DYNAMIC_ROUTES: Array<{ pattern: RegExp; key: string; param: string }> = [

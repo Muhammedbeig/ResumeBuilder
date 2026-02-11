@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const prompt = `Parse this resume text and extract structured data. Return valid JSON with the following structure:
   {
     "basics": {
@@ -85,3 +85,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

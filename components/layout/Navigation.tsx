@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import { RESUME_TEMPLATE_CATEGORIES } from "@/lib/resume-template-catalog";
 import { fetchTemplateCategories } from "@/lib/template-client";
+import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/accordion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSession } from "next-auth/react";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 export function Navigation() {
   const pathname = usePathname();
@@ -35,6 +37,7 @@ export function Navigation() {
   const navContentRef = useRef<HTMLDivElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { settings: siteSettings } = useSiteSettings();
   const [templateItems, setTemplateItems] = useState(() => [
     { label: "All Templates", href: "/templates" },
     ...RESUME_TEMPLATE_CATEGORIES.map((category) => ({
@@ -124,6 +127,9 @@ export function Navigation() {
     };
   }, []);
 
+  const logoSrc = siteSettings.headerLogoUrl || siteSettings.companyLogoUrl;
+  const brandName = siteSettings.companyName || DEFAULT_SITE_SETTINGS.companyName;
+
   const navDropdowns = [
     {
       label: "Templates",
@@ -204,12 +210,20 @@ export function Navigation() {
         >
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative">
-              <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
+            {logoSrc ? (
+              <img
+                src={logoSrc}
+                alt={`${brandName} logo`}
+                className="h-7 w-auto object-contain"
+              />
+            ) : (
+              <div className="relative">
+                <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
             <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
-              ResuPro
+              {brandName}
             </span>
           </Link>
 

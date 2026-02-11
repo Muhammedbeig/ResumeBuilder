@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const prompt = `You are a career expert. Suggest relevant technical skills (hard skills) and soft skills for a professional with the following job title and/or description.
 
 Job Title: ${jobTitle}
@@ -61,3 +61,4 @@ Format:
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

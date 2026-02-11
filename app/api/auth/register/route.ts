@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { json } from "@/lib/json";
+import { getEmailAuthEnabled } from "@/lib/auth";
 
 const MODEL_TYPE_USER = "App\\Models\\User";
 
@@ -18,6 +19,14 @@ async function assignUserRole(userId: bigint) {
 }
 
 export async function POST(request: Request) {
+  const emailAuthEnabled = await getEmailAuthEnabled();
+  if (!emailAuthEnabled) {
+    return json(
+      { error: "Email sign-up is currently disabled." },
+      { status: 403 }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const name = String(body?.name || "");
   const email = String(body?.email || "").toLowerCase();

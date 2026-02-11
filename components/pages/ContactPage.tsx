@@ -10,6 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+type ContactPageProps = {
+  introHtml?: string;
+  companyEmail?: string;
+  companyTel1?: string;
+  companyTel2?: string;
+  companyAddress?: string;
+};
+
 type FormState = {
   name: string;
   email: string;
@@ -24,9 +32,21 @@ const initialState: FormState = {
   message: "",
 };
 
-export function ContactPage() {
+export function ContactPage({
+  introHtml,
+  companyEmail,
+  companyTel1,
+  companyTel2,
+  companyAddress,
+}: ContactPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormState>(initialState);
+  const contactDetails = [
+    companyEmail ? { label: "Email", value: companyEmail, href: `mailto:${companyEmail}` } : null,
+    companyTel1 ? { label: "Phone", value: companyTel1, href: `tel:${companyTel1}` } : null,
+    companyTel2 ? { label: "Alt Phone", value: companyTel2, href: `tel:${companyTel2}` } : null,
+    companyAddress ? { label: "Address", value: companyAddress } : null,
+  ].filter(Boolean) as Array<{ label: string; value: string; href?: string }>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +80,16 @@ export function ContactPage() {
           <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
             Send a message to the team
           </h1>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">
-            Your message is stored directly in the Admin Panel so our support team can reply faster.
-          </p>
+          {introHtml ? (
+            <div
+              className="mt-4 text-gray-600 dark:text-gray-300 space-y-4"
+              dangerouslySetInnerHTML={{ __html: introHtml }}
+            />
+          ) : (
+            <p className="mt-4 text-gray-600 dark:text-gray-300">
+              Your message is stored directly in the Admin Panel so our support team can reply faster.
+            </p>
+          )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/career-blog"
@@ -158,26 +185,51 @@ export function ContactPage() {
             </Card>
           </motion.div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">What happens next?</h2>
-            <ul className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
-              <li className="flex gap-2">
-                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
-                Your message is saved in the Admin Panel under Contact Us.
-              </li>
-              <li className="flex gap-2">
-                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
-                Our team can review and respond using the details you provide.
-              </li>
-              <li className="flex gap-2">
-                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
-                For common questions, check the FAQ section first.
-              </li>
-            </ul>
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">What happens next?</h2>
+              <ul className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                <li className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
+                  Your message is saved in the Admin Panel under Contact Us.
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
+                  Our team can review and respond using the details you provide.
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
+                  For common questions, check the FAQ section first.
+                </li>
+              </ul>
+            </div>
+
+            {contactDetails.length > 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Contact details</h2>
+                <div className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                  {contactDetails.map((detail) => (
+                    <div key={detail.label} className="flex flex-col gap-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-gray-400">
+                        {detail.label}
+                      </span>
+                      {detail.href ? (
+                        <a href={detail.href} className="font-semibold text-purple-600 hover:text-purple-500">
+                          {detail.value}
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-gray-700 dark:text-gray-200">
+                          {detail.value}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
     </main>
   );
 }
-

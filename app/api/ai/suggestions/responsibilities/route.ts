@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const prompt = `You are a professional resume writer. Generate a list of impactful resume bullet points for the following role.
 
 Role: ${jobTitle}
@@ -63,3 +63,4 @@ Format:
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

@@ -1,8 +1,18 @@
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
+type PdfWatermarkOptions = {
+  text: string;
+  opacity?: number;
+  size?: number;
+  rotation?: number;
+  style?: string;
+  position?: string;
+};
+
 type PdfBrandingOptions = {
   watermarkText?: string;
+  watermark?: PdfWatermarkOptions;
   footerText?: string;
   qrDataUrl?: string;
   qrSizeMm?: number;
@@ -43,15 +53,76 @@ export async function generatePDF(
     let heightLeft = imgHeight;
     let position = 0;
 
-    const addBranding = () => {
-      if (options?.watermarkText) {
-        pdf.setTextColor(200, 200, 200);
-        pdf.setFontSize(46);
-        pdf.text(options.watermarkText, pdfWidth / 2, pdfHeight / 2, {
-          angle: 30,
-          align: 'center',
-        });
+    const resolveWatermark = (): PdfWatermarkOptions | null => {
+      if (options?.watermark) return options.watermark;
+      if (options?.watermarkText) return { text: options.watermarkText };
+      return null;
+    };
+
+    const addWatermark = () => {
+      const watermark = resolveWatermark();
+      if (!watermark?.text) return;
+
+      const opacity = Math.min(1, Math.max(0, watermark.opacity ?? 0.18));
+      const sizePx = Math.min(160, Math.max(10, watermark.size ?? 46));
+      const fontSize = Math.round(sizePx * 0.75);
+      const rotation = Number.isFinite(watermark.rotation) ? watermark.rotation : 30;
+      const style = watermark.style ?? "single";
+      const position = watermark.position ?? "center";
+      const shade = Math.round(255 * (1 - opacity));
+
+      pdf.setTextColor(shade, shade, shade);
+      pdf.setFontSize(fontSize);
+
+      if (style === "tile") {
+        const cols = 3;
+        const rows = 4;
+        const stepX = pdfWidth / cols;
+        const stepY = pdfHeight / rows;
+        for (let row = 0; row < rows; row += 1) {
+          for (let col = 0; col < cols; col += 1) {
+            const x = stepX * col + stepX / 2;
+            const y = stepY * row + stepY / 2;
+            pdf.text(watermark.text, x, y, {
+              angle: rotation,
+              align: "center",
+            });
+          }
+        }
+        return;
       }
+
+      const margin = 12;
+      let x = pdfWidth / 2;
+      let y = pdfHeight / 2;
+      let align: "center" | "left" | "right" = "center";
+
+      if (position === "top-left") {
+        x = margin;
+        y = margin + fontSize;
+        align = "left";
+      } else if (position === "top-right") {
+        x = pdfWidth - margin;
+        y = margin + fontSize;
+        align = "right";
+      } else if (position === "bottom-left") {
+        x = margin;
+        y = pdfHeight - margin;
+        align = "left";
+      } else if (position === "bottom-right") {
+        x = pdfWidth - margin;
+        y = pdfHeight - margin;
+        align = "right";
+      }
+
+      pdf.text(watermark.text, x, y, {
+        angle: rotation,
+        align,
+      });
+    };
+
+    const addBranding = () => {
+      addWatermark();
 
       if (options?.footerText) {
         pdf.setTextColor(120, 120, 120);

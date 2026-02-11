@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
        if (!text) return NextResponse.json({ error: "Could not extract text from file (empty)" }, { status: 400 });
     }
 
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     
     const prompt = `
       You are an expert ATS (Applicant Tracking System) scanner and professional resume reviewer. 
@@ -107,3 +107,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

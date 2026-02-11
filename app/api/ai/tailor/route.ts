@@ -31,7 +31,7 @@ export async function POST(request: Request) {
           .join("\n");
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     
     const prompt = `You are a strict ATS (Applicant Tracking System) Auditor and Expert Resume Optimizer.
 
@@ -113,3 +113,4 @@ Return a SINGLE JSON object:
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

@@ -13,6 +13,7 @@ import { APP_DOWNLOAD_URL } from "@/lib/app-links";
 import { createQrDataUrl } from "@/lib/qr";
 import type { PlanChoice } from "@/contexts/PlanChoiceContext";
 import { Crown, QrCode } from "lucide-react";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 interface DownloadGateModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function DownloadGateModal({
   resourceId,
   isActivating = false,
 }: DownloadGateModalProps) {
+  const { settings } = useSiteSettings();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [resolverUrl, setResolverUrl] = useState<string | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
@@ -45,7 +47,18 @@ export function DownloadGateModal({
 
   const isPaidSelected = planChoice === "paid";
   const hasAccess = !isPaidSelected || hasSubscription;
-  const downloadHref = resolverUrl ?? APP_DOWNLOAD_URL;
+  const appStoreLink = settings.appStoreLink;
+  const playStoreLink = settings.playStoreLink;
+  const appFallbackUrl = (() => {
+    if (typeof window !== "undefined") {
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isIos = /iphone|ipad|ipod/.test(ua);
+      if (isIos && appStoreLink) return appStoreLink;
+      if (!isIos && playStoreLink) return playStoreLink;
+    }
+    return playStoreLink || appStoreLink || APP_DOWNLOAD_URL;
+  })();
+  const downloadHref = resolverUrl ?? appFallbackUrl;
 
   useEffect(() => {
     let isMounted = true;
@@ -61,7 +74,7 @@ export function DownloadGateModal({
 
     if (!resourceType || !resourceId) {
       setIsQrLoading(true);
-      createQrDataUrl(APP_DOWNLOAD_URL, 220)
+      createQrDataUrl(appFallbackUrl, 220)
         .then((dataUrl) => {
           if (isMounted) setQrDataUrl(dataUrl);
         })
@@ -118,7 +131,7 @@ export function DownloadGateModal({
 
         // Fallback: still show a QR to install the app.
         try {
-          const qr = await createQrDataUrl(APP_DOWNLOAD_URL, 220);
+          const qr = await createQrDataUrl(appFallbackUrl, 220);
           if (isMounted) setQrDataUrl(qr);
         } catch {
           if (isMounted) setQrDataUrl(null);

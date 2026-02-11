@@ -9,6 +9,14 @@ export type StripeGatewayConfig = {
   webhookSecretKey: string;
 };
 
+export type PayPalGatewayConfig = {
+  currencyCode: string; // uppercase ISO code for PayPal API
+  clientId: string;
+  secretKey: string;
+  webhookId: string | null;
+  mode: "live" | "sandbox";
+};
+
 export async function getStripeGatewayConfig(): Promise<StripeGatewayConfig | null> {
   const row = await prisma.paymentConfiguration.findFirst({
     where: {
@@ -39,5 +47,47 @@ export async function getStripeGatewayConfig(): Promise<StripeGatewayConfig | nu
     publishableKey,
     secretKey,
     webhookSecretKey,
+  };
+}
+
+export async function getPayPalGatewayConfig(): Promise<PayPalGatewayConfig | null> {
+  const row = await prisma.paymentConfiguration.findFirst({
+    where: {
+      paymentMethod: "Paypal",
+      status: true,
+    },
+    select: {
+      apiKey: true,
+      secretKey: true,
+      webhookSecretKey: true,
+      currencyCode: true,
+      paymentMode: true,
+      additionalData1: true,
+    },
+  });
+
+  if (!row) return null;
+
+  const clientId = String(row.apiKey ?? "").trim();
+  const secretKey = String(row.secretKey ?? "").trim();
+  if (!clientId || !secretKey) return null;
+
+  const currencyCode = String(row.currencyCode ?? "USD")
+    .trim()
+    .toUpperCase();
+
+  const modeRaw = String(row.paymentMode ?? row.additionalData1 ?? "")
+    .trim()
+    .toLowerCase();
+  const mode = modeRaw.includes("live") || modeRaw.includes("prod") ? "live" : "sandbox";
+
+  const webhookId = String(row.webhookSecretKey ?? "").trim() || null;
+
+  return {
+    currencyCode,
+    clientId,
+    secretKey,
+    webhookId,
+    mode,
   };
 }

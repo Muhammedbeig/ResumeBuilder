@@ -10,3 +10,16 @@ export const BANK_TRANSFER_DETAILS = {
 };
 
 export const BANK_TRANSFER_ADMIN_EMAIL = "abcdef@gmail.com";
+
+export type BankTransferSettings = {
+  enabled: boolean;
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  ifscSwiftCode: string;
+};
+
+export type BankTransferSettingsResponse = {
+  bankTransfer?: BankTransferSettings | null;
+  adminEmail?: string | null;
+};

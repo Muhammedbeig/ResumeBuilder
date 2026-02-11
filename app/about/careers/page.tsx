@@ -47,12 +47,12 @@ export default function CareersPage() {
             tools that make job search feel faster, fairer, and more human.
           </p>
           <div className="mt-6">
-            <a
-              href="mailto:careers@resupro.com"
+            <Link
+              href="/contact"
               className="rounded-full bg-purple-600 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition"
             >
               Join the talent network
-            </a>
+            </Link>
           </div>
         </div>
 

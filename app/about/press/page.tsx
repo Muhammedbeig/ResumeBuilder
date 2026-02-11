@@ -72,9 +72,11 @@ export default function PressPage() {
         <div className="mt-16 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Press contact</h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            For media inquiries, interviews, or brand assets, email:
+            For media inquiries, interviews, or brand assets, use the contact page.
           </p>
-          <p className="mt-3 text-sm font-semibold text-purple-600">press@resupro.com</p>
+          <Link href="/contact" className="mt-4 inline-flex text-sm font-semibold text-purple-600 hover:text-purple-500">
+            Contact the team
+          </Link>
         </div>
       </section>
       <div className="mt-20">

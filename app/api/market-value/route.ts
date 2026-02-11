@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     return json({ error: "resumeJson is required" }, { status: 400 });
   }
 
-  const model = getGeminiModel();
+  const model = await getGeminiModel();
   const periodLabel = getQuarterLabel();
 
   const prompt = `
@@ -150,3 +150,4 @@ ${JSON.stringify(resumeJson)}
     return json({ error: "Failed to generate report" }, { status: 500 });
   }
 }
+

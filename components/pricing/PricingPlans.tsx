@@ -9,7 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PricingSection } from "@/components/pricing/PricingSection";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { BANK_TRANSFER_ADMIN_EMAIL, BANK_TRANSFER_DETAILS } from "@/lib/bank-transfer";
+import {
+  BANK_TRANSFER_ADMIN_EMAIL,
+  BANK_TRANSFER_DETAILS,
+  type BankTransferSettings,
+  type BankTransferSettingsResponse,
+} from "@/lib/bank-transfer";
 import type { PricingCard } from "@/lib/panel-pricing";
 import {
   Dialog,
@@ -33,6 +38,10 @@ const normalizeReturnUrl = (returnUrl?: string) => {
 
 type PaymentMethod = "card" | "paypal" | "bank";
 
+type PaymentSettingsResponse = {
+  stripeEnabled?: boolean;
+  paypalEnabled?: boolean;
+};
 
 export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const router = useRouter();
@@ -43,31 +52,70 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isPayPalRedirecting, setIsPayPalRedirecting] = useState(false);
   const safeReturnUrl = useMemo(() => normalizeReturnUrl(returnUrl), [returnUrl]);
-  const [isStripeConfirming, setIsStripeConfirming] = useState(false);
+  const [isPaymentConfirming, setIsPaymentConfirming] = useState(false);
+  const [bankTransferDetails, setBankTransferDetails] = useState<BankTransferSettings>({
+    enabled: true,
+    accountHolderName: BANK_TRANSFER_DETAILS.accountName,
+    bankName: BANK_TRANSFER_DETAILS.bankName,
+    accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
+    ifscSwiftCode: BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
+  });
+  const [bankTransferEmail, setBankTransferEmail] = useState(BANK_TRANSFER_ADMIN_EMAIL);
+  const [bankTransferLoaded, setBankTransferLoaded] = useState(false);
+  const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
+  const [stripeEnabled, setStripeEnabled] = useState(true);
+  const [paypalEnabled, setPaypalEnabled] = useState(true);
+  const stripeVisible = !paymentSettingsLoaded || stripeEnabled;
+  const paypalVisible = !paymentSettingsLoaded || paypalEnabled;
+  const bankTransferAvailable = bankTransferLoaded && bankTransferDetails.enabled;
+  const bankTransferVisible = !bankTransferLoaded || bankTransferDetails.enabled;
+  const bankTransferLabel = !bankTransferLoaded
+    ? "Loading bank details..."
+    : bankTransferAvailable
+    ? "Manual verification required"
+    : "Currently unavailable";
+  const bankDetailRows = [
+    { label: "Account Holder Name", value: bankTransferDetails.accountHolderName },
+    { label: "Bank Name", value: bankTransferDetails.bankName },
+    { label: "Account Number", value: bankTransferDetails.accountNumber },
+    { label: "IFSC/SWIFT Code", value: bankTransferDetails.ifscSwiftCode },
+  ].filter((row) => row.value);
+  const availableMethods: PaymentMethod[] = [
+    stripeVisible ? "card" : null,
+    paypalVisible ? "paypal" : null,
+    bankTransferAvailable ? "bank" : null,
+  ].filter(Boolean) as PaymentMethod[];
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const current = new URL(window.location.href);
     const stripeStatus = current.searchParams.get("stripe");
-    if (!stripeStatus) return;
+    const paypalStatus = current.searchParams.get("paypal");
+    if (!stripeStatus && !paypalStatus) return;
 
     const paymentTransactionId = current.searchParams.get("payment_transaction_id");
     const checkoutSessionId = current.searchParams.get("session_id");
+    const paypalOrderId = current.searchParams.get("order_id") ?? current.searchParams.get("token");
 
-    // Remove Stripe params from the pricing URL so refresh/back doesn't re-run the handler.
+    // Remove payment params from the pricing URL so refresh/back doesn't re-run the handler.
     current.searchParams.delete("stripe");
+    current.searchParams.delete("paypal");
     current.searchParams.delete("payment_transaction_id");
     current.searchParams.delete("session_id");
+    current.searchParams.delete("order_id");
+    current.searchParams.delete("token");
+    current.searchParams.delete("PayerID");
     window.history.replaceState({}, "", current.pathname + current.search);
 
-    if (stripeStatus === "cancel") {
+    if (stripeStatus === "cancel" || paypalStatus === "cancel") {
       toast.info("Payment canceled.");
       return;
     }
 
-    if (stripeStatus !== "success") return;
+    if (stripeStatus !== "success" && paypalStatus !== "success") return;
 
     const origin = window.location.origin;
     const target = new URL(safeReturnUrl, origin);
@@ -75,12 +123,22 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     // If this purchase was triggered by a download flow, hand off to the editor page
     // so it can open the QR/download modal.
     if (flow === "download" && target.pathname !== "/pricing") {
-      target.searchParams.set("stripe", "success");
-      if (paymentTransactionId) {
-        target.searchParams.set("payment_transaction_id", paymentTransactionId);
-      }
-      if (checkoutSessionId) {
-        target.searchParams.set("session_id", checkoutSessionId);
+      if (stripeStatus === "success") {
+        target.searchParams.set("stripe", "success");
+        if (paymentTransactionId) {
+          target.searchParams.set("payment_transaction_id", paymentTransactionId);
+        }
+        if (checkoutSessionId) {
+          target.searchParams.set("session_id", checkoutSessionId);
+        }
+      } else if (paypalStatus === "success") {
+        target.searchParams.set("paypal", "success");
+        if (paymentTransactionId) {
+          target.searchParams.set("payment_transaction_id", paymentTransactionId);
+        }
+        if (paypalOrderId) {
+          target.searchParams.set("order_id", paypalOrderId);
+        }
       }
       router.replace(target.pathname + target.search);
       return;
@@ -89,15 +147,25 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     let cancelled = false;
 
     void (async () => {
-      setIsStripeConfirming(true);
+      setIsPaymentConfirming(true);
       try {
-        if (paymentTransactionId && checkoutSessionId) {
+        if (stripeStatus === "success" && paymentTransactionId && checkoutSessionId) {
           await fetchWithTimeout("/api/stripe/confirm", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               paymentTransactionId,
               sessionId: checkoutSessionId,
+            }),
+          }, 15000).catch(() => null);
+        }
+        if (paypalStatus === "success" && paymentTransactionId && paypalOrderId) {
+          await fetchWithTimeout("/api/paypal/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              paymentTransactionId,
+              orderId: paypalOrderId,
             }),
           }, 15000).catch(() => null);
         }
@@ -119,7 +187,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
         toast.success("Subscription activated.");
         if (!cancelled) router.replace(target.pathname + target.search);
       } finally {
-        if (!cancelled) setIsStripeConfirming(false);
+        if (!cancelled) setIsPaymentConfirming(false);
       }
     })();
 
@@ -128,8 +196,69 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     };
   }, [flow, router, safeReturnUrl]);
 
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      try {
+        const res = await fetch("/api/bank-transfer/settings", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as BankTransferSettingsResponse;
+        if (!active) return;
+        if (data?.bankTransfer) {
+          setBankTransferDetails(data.bankTransfer);
+        }
+        if (data?.adminEmail) {
+          setBankTransferEmail(data.adminEmail);
+        }
+      } catch {
+        // Keep defaults if Panel settings are unavailable.
+      } finally {
+        if (active) setBankTransferLoaded(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      try {
+        const res = await fetch("/api/payment/settings", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as PaymentSettingsResponse;
+        if (!active) return;
+        if (typeof data?.stripeEnabled === "boolean") {
+          setStripeEnabled(data.stripeEnabled);
+        }
+        if (typeof data?.paypalEnabled === "boolean") {
+          setPaypalEnabled(data.paypalEnabled);
+        }
+      } catch {
+        // Keep defaults if Panel settings are unavailable.
+      } finally {
+        if (active) setPaymentSettingsLoaded(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!availableMethods.length) return;
+    if (!availableMethods.includes(paymentMethod)) {
+      setPaymentMethod(availableMethods[0]);
+    }
+  }, [availableMethods, paymentMethod]);
+
   const handleSelectPackage = (packageId?: string) => {
-    if (isStripeConfirming) return;
+    if (isPaymentConfirming) return;
     if (!packageId) {
       setPlanChoice("free");
       router.push(safeReturnUrl);
@@ -138,11 +267,16 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     setPlanChoice("paid");
     setSelectedPackageId(packageId);
-    setPaymentMethod("card");
+    const nextMethod = availableMethods[0] ?? "card";
+    setPaymentMethod(nextMethod);
     setIsPaymentOpen(true);
   };
   const handleStripeCheckout = async () => {
     if (!selectedPackageId) return;
+    if (paymentSettingsLoaded && !stripeEnabled) {
+      toast.error("Stripe is currently disabled.");
+      return;
+    }
 
     if (!/^\d+$/.test(selectedPackageId)) {
       toast.error("Stripe checkout is only available when Panel packages are loaded.");
@@ -178,6 +312,50 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       toast.error("Unable to start Stripe checkout. Please try again.");
     } finally {
       setIsRedirecting(false);
+    }
+  };
+
+  const handlePayPalCheckout = async () => {
+    if (!selectedPackageId) return;
+    if (paymentSettingsLoaded && !paypalEnabled) {
+      toast.error("PayPal is currently disabled.");
+      return;
+    }
+
+    if (!/^\d+$/.test(selectedPackageId)) {
+      toast.error("PayPal checkout is only available when Panel packages are loaded.");
+      return;
+    }
+
+    setIsPayPalRedirecting(true);
+    try {
+      const response = await fetch("/api/paypal/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: safeReturnUrl }),
+      });
+      if (response.status === 401) {
+        const callbackUrl = `/pricing?flow=${encodeURIComponent(flow ?? "download")}&returnUrl=${encodeURIComponent(
+          safeReturnUrl
+        )}`;
+        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        return;
+      }
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        toast.error(data?.error || "Unable to start PayPal checkout. Please try again.");
+        return;
+      }
+      const data = await response.json();
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      toast.error("Missing checkout URL.");
+    } catch {
+      toast.error("Unable to start PayPal checkout. Please try again.");
+    } finally {
+      setIsPayPalRedirecting(false);
     }
   };
   const handleReceiptUpload = async () => {
@@ -227,7 +405,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {isStripeConfirming && (
+      {isPaymentConfirming && (
         <div className="mx-auto max-w-4xl px-4 pt-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
             <span className="inline-flex items-center gap-2">
@@ -266,47 +444,54 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
             <div className="space-y-4">
               <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("card")}
-                  className={`rounded-2xl border px-4 py-5 text-left transition ${
-                    paymentMethod === "card"
-                      ? "border-purple-500 bg-purple-500/10"
-                      : "border-slate-800 bg-slate-950"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-white">Card (Stripe)</p>
-                  <p className="text-xs text-slate-400">Visa, Mastercard, AMEX</p>
-                </button>
+                {stripeVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`rounded-2xl border px-4 py-5 text-left transition ${
+                      paymentMethod === "card"
+                        ? "border-purple-500 bg-purple-500/10"
+                        : "border-slate-800 bg-slate-950"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-white">Card (Stripe)</p>
+                    <p className="text-xs text-slate-400">Visa, Mastercard, AMEX</p>
+                  </button>
+                )}
 
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("paypal")}
-                  className={`rounded-2xl border px-4 py-5 text-left transition ${
-                    paymentMethod === "paypal"
-                      ? "border-purple-500 bg-purple-500/10"
-                      : "border-slate-800 bg-slate-950"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-white">PayPal</p>
-                  <p className="text-xs text-slate-400">Coming soon</p>
-                </button>
+                {paypalVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("paypal")}
+                    className={`rounded-2xl border px-4 py-5 text-left transition ${
+                      paymentMethod === "paypal"
+                        ? "border-purple-500 bg-purple-500/10"
+                        : "border-slate-800 bg-slate-950"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-white">PayPal</p>
+                    <p className="text-xs text-slate-400">Pay with your PayPal account</p>
+                  </button>
+                )}
 
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("bank")}
-                  className={`rounded-2xl border px-4 py-5 text-left transition ${
-                    paymentMethod === "bank"
-                      ? "border-purple-500 bg-purple-500/10"
-                      : "border-slate-800 bg-slate-950"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-white">Bank Transfer</p>
-                  <p className="text-xs text-slate-400">Manual verification (Admin Panel)</p>
-                </button>
+                {bankTransferVisible && (
+                  <button
+                    type="button"
+                    onClick={() => bankTransferAvailable && setPaymentMethod("bank")}
+                    disabled={!bankTransferAvailable}
+                    className={`rounded-2xl border px-4 py-5 text-left transition ${
+                      paymentMethod === "bank"
+                        ? "border-purple-500 bg-purple-500/10"
+                        : "border-slate-800 bg-slate-950"
+                    } ${!bankTransferAvailable ? "cursor-not-allowed opacity-60" : ""}`}
+                  >
+                    <p className="text-sm font-semibold text-white">Bank Transfer</p>
+                    <p className="text-xs text-slate-400">{bankTransferLabel}</p>
+                  </button>
+                )}
               </div>
 
-              {paymentMethod === "card" && (
+              {stripeVisible && paymentMethod === "card" && (
                 <div className="rounded-2xl border border-slate-800 p-5">
                   <h4 className="text-sm font-semibold text-white">Stripe Checkout</h4>
                   <p className="mt-2 text-sm text-slate-400">
@@ -324,52 +509,48 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                 </div>
               )}
 
-              {paymentMethod === "paypal" && (
+              {paypalVisible && paymentMethod === "paypal" && (
                 <div className="rounded-2xl border border-slate-800 p-5">
                   <h4 className="text-sm font-semibold text-white">PayPal</h4>
                   <p className="mt-2 text-sm text-slate-400">
-                    PayPal is not enabled yet. We can activate it when the gateway is configured.
+                    Complete payment with PayPal, then return to unlock your plan.
                   </p>
+                  <div className="mt-4">
+                    <Button
+                      onClick={handlePayPalCheckout}
+                      disabled={isPayPalRedirecting}
+                      className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
+                    >
+                      {isPayPalRedirecting ? "Redirecting..." : "Continue to PayPal"}
+                    </Button>
+                  </div>
                 </div>
               )}
 
-              {paymentMethod === "bank" && (
+              {paymentMethod === "bank" && bankTransferAvailable && (
                 <>
                   <div className="rounded-2xl border border-slate-800 p-5">
                     <h4 className="text-sm font-semibold text-white">Bank Details</h4>
-                    <div className="mt-3 grid gap-2 text-sm text-slate-300">
-                      <p>
-                        <strong>Bank:</strong> {BANK_TRANSFER_DETAILS.bankName}
+                    {bankDetailRows.length > 0 ? (
+                      <div className="mt-3 grid gap-2 text-sm text-slate-300">
+                        {bankDetailRows.map((row) => (
+                          <p key={row.label}>
+                            <strong>{row.label}:</strong> {row.value}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-slate-400">
+                        Bank details are not available yet. Please check back later.
                       </p>
-                      <p>
-                        <strong>Account Name:</strong> {BANK_TRANSFER_DETAILS.accountName}
-                      </p>
-                      <p>
-                        <strong>Account Number:</strong> {BANK_TRANSFER_DETAILS.accountNumber}
-                      </p>
-                      <p>
-                        <strong>IBAN:</strong> {BANK_TRANSFER_DETAILS.iban}
-                      </p>
-                      <p>
-                        <strong>SWIFT:</strong> {BANK_TRANSFER_DETAILS.swift}
-                      </p>
-                      <p>
-                        <strong>Branch:</strong> {BANK_TRANSFER_DETAILS.branch}
-                      </p>
-                      <p>
-                        <strong>Country:</strong> {BANK_TRANSFER_DETAILS.country}
-                      </p>
-                      <p>
-                        <strong>Currency:</strong> {BANK_TRANSFER_DETAILS.currency}
-                      </p>
-                    </div>
+                    )}
                   </div>
 
                   <div className="rounded-2xl border border-slate-800 p-5">
                     <h4 className="text-sm font-semibold text-white">Upload Receipt</h4>
                     <p className="mt-2 text-sm text-slate-400">
-                      After payment, upload your receipt and email it to {BANK_TRANSFER_ADMIN_EMAIL}. We will verify
-                      and activate your subscription from the Admin Panel.
+                      After payment, upload your receipt and email it to {bankTransferEmail}. We will verify
+                      and activate your subscription.
                     </p>
                     <div className="mt-4 space-y-3">
                       <Label htmlFor="receipt-upload">Receipt File</Label>

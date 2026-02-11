@@ -60,6 +60,7 @@ import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { resumeTemplateMap } from "@/lib/resume-templates";
 import { resolveResumeTemplateComponent } from "@/lib/template-resolvers";
 import { usePanelTemplate } from "@/hooks/use-panel-template";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import { normalizeResumeConfig } from "@/lib/panel-templates";
 import { generatePDF } from "@/lib/pdf";
 import { buildResumeText, downloadTextFile } from "@/lib/resume-text";
@@ -73,6 +74,7 @@ import {
 } from "@/lib/experience-suggestions";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { DesignControls } from "@/components/editor/DesignControls";
+import { WatermarkOverlay } from "@/components/editor/WatermarkOverlay";
 import { RichTextarea } from "@/components/editor/RichTextarea";
 import { FormattingToolbar } from "@/components/editor/FormattingToolbar";
 import { RESUME_TEMPLATE_DEFAULT_FONTS } from "@/lib/template-defaults";
@@ -81,6 +83,7 @@ import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
 const AI_SUGGESTION_DELAY_MS = 1200;
@@ -91,6 +94,9 @@ export function ResumeEditorPage() {
   const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
+  const { settings: siteSettings, loaded: siteSettingsLoaded } = useSiteSettings();
+  const watermarkAvailable = siteSettingsLoaded ? siteSettings.watermark.enabled : true;
+  const watermarkText = siteSettings.companyName || DEFAULT_SITE_SETTINGS.companyName;
   const [subscriptionOverride, setSubscriptionOverride] = useState(false);
   const [serverSubscription, setServerSubscription] = useState<string | null>(null);
   const hasSubscription = useMemo(
@@ -201,9 +207,10 @@ export function ResumeEditorPage() {
   }, [resumeData, draftExperience, draftSkillGroup]);
 
   const watermarkEnabled = useMemo(() => {
+    if (!watermarkAvailable) return false;
     if (!canUsePaid) return true;
     return resumeData.metadata?.watermarkEnabled ?? false;
-  }, [canUsePaid, resumeData.metadata?.watermarkEnabled]);
+  }, [canUsePaid, resumeData.metadata?.watermarkEnabled, watermarkAvailable]);
 
   const availableSummarySuggestions = useMemo(() => {
     const used = new Set(usedSummarySuggestions.map((item) => item.toLowerCase()));
@@ -254,28 +261,40 @@ export function ResumeEditorPage() {
     if (typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search);
-    const status = params.get("stripe");
-    if (!status) return;
+    const stripeStatus = params.get("stripe");
+    const paypalStatus = params.get("paypal");
+    if (!stripeStatus && !paypalStatus) return;
 
     const paymentTransactionId = params.get("payment_transaction_id");
     const checkoutSessionId = params.get("session_id");
+    const paypalOrderId = params.get("order_id") ?? params.get("token");
 
     let cancelled = false;
 
-    if (status === "success") {
+    if (stripeStatus === "success" || paypalStatus === "success") {
       setIsDownloadModalOpen(true);
       toast.success("Payment successful.");
 
       void (async () => {
         setIsSubscriptionActivating(true);
         try {
-          if (paymentTransactionId && checkoutSessionId) {
+          if (stripeStatus === "success" && paymentTransactionId && checkoutSessionId) {
             await fetchWithTimeout("/api/stripe/confirm", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 paymentTransactionId,
                 sessionId: checkoutSessionId,
+              }),
+            }, 15000).catch(() => null);
+          }
+          if (paypalStatus === "success" && paymentTransactionId && paypalOrderId) {
+            await fetchWithTimeout("/api/paypal/confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentTransactionId,
+                orderId: paypalOrderId,
               }),
             }, 15000).catch(() => null);
           }
@@ -292,7 +311,7 @@ export function ResumeEditorPage() {
           if (!isUnmountingRef.current) setIsSubscriptionActivating(false);
         }
       })();
-    } else if (status === "cancel") {
+    } else if (stripeStatus === "cancel" || paypalStatus === "cancel") {
       toast.info("Payment canceled.");
     }
 
@@ -425,11 +444,7 @@ export function ResumeEditorPage() {
           >
             <ActiveTemplate key={JSON.stringify(resumeData.structure)} data={previewData} />
             {watermarkEnabled && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="select-none text-5xl font-bold uppercase tracking-[0.45em] text-white/25 mix-blend-soft-light rotate-[-25deg]">
-                  ResuPro.com
-                </div>
-              </div>
+              <WatermarkOverlay text={watermarkText} settings={siteSettings.watermark} />
             )}
           </div>
         </div>
@@ -451,6 +466,10 @@ export function ResumeEditorPage() {
   };
 
   const handleWatermarkToggle = (nextValue: boolean) => {
+    if (!watermarkAvailable) {
+      toast.info("Watermarks are currently disabled.");
+      return;
+    }
     if (!canUsePaid && nextValue === false) {
       toast.info("Upgrade to remove the watermark.");
       openPlanModal();
@@ -501,9 +520,18 @@ export function ResumeEditorPage() {
   const exportFreePDF = async () => {
     const shareUrl = buildShareUrl();
     const qrDataUrl = shareUrl ? await createQrDataUrl(shareUrl, 160) : undefined;
-    const footerText = shareUrl ? `View online: ${shareUrl}` : "Created with ResuPro";
+    const footerText = shareUrl ? `View online: ${shareUrl}` : `Created with ${watermarkText}`;
     const pdfUrl = await generatePDF(exportElementId, 'resume.pdf', {
-      watermarkText: "ResuPro.com",
+      watermark: watermarkEnabled
+        ? {
+            text: watermarkText,
+            opacity: siteSettings.watermark.opacity,
+            size: siteSettings.watermark.size,
+            rotation: siteSettings.watermark.rotation,
+            style: siteSettings.watermark.style,
+            position: siteSettings.watermark.position,
+          }
+        : undefined,
       footerText,
       qrDataUrl,
       qrSizeMm: 18,
@@ -626,18 +654,20 @@ export function ResumeEditorPage() {
               {/* Desktop Buttons */}
               <div className="hidden lg:flex items-center gap-2">
                 <SharePopover />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleWatermarkToggle(!watermarkEnabled)}
-                  className={
-                    !watermarkEnabled
-                      ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
-                      : undefined
-                  }
-                >
-                  Watermark {watermarkEnabled ? "On" : "Off"}
-                </Button>
+                {watermarkAvailable && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleWatermarkToggle(!watermarkEnabled)}
+                    className={
+                      !watermarkEnabled
+                        ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
+                        : undefined
+                    }
+                  >
+                    Watermark {watermarkEnabled ? "On" : "Off"}
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
                   <Save className="w-4 h-4 mr-2" />
                   {isSaving ? "Saving..." : "Save"}
@@ -678,10 +708,12 @@ export function ResumeEditorPage() {
                     <div className="p-2 border-b border-gray-100 dark:border-gray-800">
                       <SharePopover />
                     </div>
-                    <DropdownMenuItem onClick={() => handleWatermarkToggle(!watermarkEnabled)}>
-                      <CheckCircle2 className={`w-4 h-4 mr-2 ${!watermarkEnabled ? "text-purple-600" : "text-gray-400"}`} />
-                      Watermark {watermarkEnabled ? "Off" : "On"}
-                    </DropdownMenuItem>
+                    {watermarkAvailable && (
+                      <DropdownMenuItem onClick={() => handleWatermarkToggle(!watermarkEnabled)}>
+                        <CheckCircle2 className={`w-4 h-4 mr-2 ${!watermarkEnabled ? "text-purple-600" : "text-gray-400"}`} />
+                        Watermark {watermarkEnabled ? "Off" : "On"}
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={handleExportTxt} disabled={isExporting}>
                       <FileText className="w-4 h-4 mr-2" />
                       Export TXT
@@ -955,9 +987,9 @@ export function ResumeEditorPage() {
                   templateConfig={templateConfig}
                   advancedFormatting={advancedFormatting}
                   onAdvancedFormattingChange={setAdvancedFormatting}
-                  watermarkEnabled={watermarkEnabled}
+                  watermarkEnabled={watermarkAvailable ? watermarkEnabled : undefined}
                   onWatermarkToggle={handleWatermarkToggle}
-                  watermarkLocked={!canUsePaid}
+                  watermarkLocked={!canUsePaid || !watermarkAvailable}
                 />
                 </TabsContent>
 
@@ -2813,9 +2845,9 @@ function DesignSection({
   templateConfig?: ReturnType<typeof normalizeResumeConfig> | null;
   advancedFormatting: boolean;
   onAdvancedFormattingChange: (value: boolean) => void;
-  watermarkEnabled: boolean;
+  watermarkEnabled?: boolean;
   onWatermarkToggle: (value: boolean) => void;
-  watermarkLocked: boolean;
+  watermarkLocked?: boolean;
 }) {
   const { resumeData, updateMetadata } = useResume();
   const defaultFont =

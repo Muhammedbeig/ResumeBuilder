@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const prompt = `Parse this text (which could be a Cover Letter or a Resume) and extract structured data for a Cover Letter. 
     If it's a Resume, map the personal details to 'personalInfo' and leave content/recipient empty or generic.
     If it's a Cover Letter, extract all fields.
@@ -76,3 +76,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

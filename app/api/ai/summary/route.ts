@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const experienceSummaries = resumeData.experiences
       .slice(0, 3)
       .map((exp) => {
@@ -75,3 +75,4 @@ Return JSON only in this exact shape:
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

@@ -66,6 +66,52 @@ const resolveInitialCategory = (value: string | null | undefined, slugs: string[
   return slugs.includes(value) ? value : null;
 };
 
+const FALLBACK_TEMPLATE_BASE = {
+  bodyFont: "Inter",
+  headingFont: "Inter",
+  layout: "sidebar-left" as const,
+  headerStyle: "center" as const,
+  sectionStyle: "caps" as const,
+  bulletStyle: "dot" as const,
+  ornament: "none" as const,
+  palette: {
+    text: "#0f172a",
+    muted: "#475569",
+    surface: "rgba(255,255,255,0.75)",
+    border: "rgba(148,163,184,0.35)",
+  },
+  background: {
+    backgroundColor: "#ffffff",
+    backgroundImage: "linear-gradient(135deg, #ede9fe 0%, #ecfeff 100%)",
+  },
+};
+
+const ensureCategoryDefaults = (
+  categories: ResumeTemplateCategory[],
+  groupedTemplates: Record<string, ResumeTemplateCatalogEntry[]>
+) => {
+  const merged: Record<string, ResumeTemplateCatalogEntry[]> = { ...groupedTemplates };
+
+  categories.forEach((category, index) => {
+    if (merged[category.slug] && merged[category.slug].length > 0) return;
+
+    const fallback =
+      RESUME_TEMPLATE_CATALOG_BY_CATEGORY[category.slug]?.[0] ||
+      ({
+        id: `cat-${category.slug}`,
+        name: `${category.label} Starter`,
+        category: category.slug,
+        description: category.description ?? "",
+        hasPhoto: index % 3 === 0,
+        ...FALLBACK_TEMPLATE_BASE,
+      } as ResumeTemplateCatalogEntry);
+
+    merged[category.slug] = [fallback];
+  });
+
+  return merged;
+};
+
 export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: string | null }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -134,7 +180,7 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
       if (!isActive) return;
       setCategoryOptions(resolvedCategories);
-      setTemplatesByCategory(grouped);
+      setTemplatesByCategory(ensureCategoryDefaults(resolvedCategories, grouped));
     };
 
     loadPanelTemplates();

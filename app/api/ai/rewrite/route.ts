@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const prompt = `You are an expert resume writer. Rewrite this bullet point to be more impactful using the STAR method (Situation, Task, Action, Result).
 
 Focus on:
@@ -39,3 +39,4 @@ Rewritten bullet:`;
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+

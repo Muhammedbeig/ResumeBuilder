@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { json } from "@/lib/json";
 import { parseUserIdBigInt } from "@/lib/user-id";
+import { getBankTransferSettings } from "@/lib/bank-transfer-settings";
 import crypto from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
@@ -38,6 +39,14 @@ export async function POST(request: Request) {
   const userId = parseUserIdBigInt(session.user.id);
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const bankSettings = await getBankTransferSettings();
+  if (!bankSettings.enabled) {
+    return NextResponse.json(
+      { error: "Bank transfer is currently disabled." },
+      { status: 403 }
+    );
   }
 
   const formData = await request.formData();
@@ -138,4 +147,3 @@ export async function POST(request: Request) {
     },
   });
 }
-

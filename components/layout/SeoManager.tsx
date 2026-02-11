@@ -71,5 +71,33 @@ export function SeoManager() {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/site/settings", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { faviconUrl?: string; themeColor?: string };
+        if (!active) return;
+        if (data?.faviconUrl) {
+          setLinkTag("icon", data.faviconUrl);
+          setLinkTag("shortcut icon", data.faviconUrl);
+          setLinkTag("apple-touch-icon", data.faviconUrl);
+        }
+        if (data?.themeColor) {
+          setMetaTag('meta[name="theme-color"]', {
+            name: "theme-color",
+            content: data.themeColor,
+          });
+        }
+      } catch {
+        // Ignore errors, keep defaults.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return null;
 }

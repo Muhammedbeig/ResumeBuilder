@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { getProviders, signIn, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Sparkles, Chrome } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ export function LoginPage() {
     : rawCallback;
 
   const [isLoading, setIsLoading] = useState(false);
+  const [googleAvailable, setGoogleAvailable] = useState(false);
+  const [credentialsAvailable, setCredentialsAvailable] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -37,8 +39,32 @@ export function LoginPage() {
     }
   }, [status, router, callbackUrl]);
 
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const providers = await getProviders();
+        if (!active) return;
+        setGoogleAvailable(Boolean(providers?.google));
+        setCredentialsAvailable(Boolean(providers?.credentials));
+      } catch {
+        if (active) {
+          setGoogleAvailable(false);
+          setCredentialsAvailable(false);
+        }
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!credentialsAvailable) {
+      toast.error("Email sign-in is currently disabled.");
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await signIn("credentials", {
@@ -58,6 +84,10 @@ export function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    if (!googleAvailable) {
+      toast.error("Google sign-in is currently unavailable.");
+      return;
+    }
     setIsLoading(true);
     try {
       await signIn("google", { callbackUrl });
@@ -110,63 +140,75 @@ export function LoginPage() {
               </motion.div>
             )}
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleLogin}
-              disabled={isLoading}
-            >
-              <Chrome className="w-4 h-4 mr-2" />
-              Continue with Google
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">
-                  Or continue with email
-                </span>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="email"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="pl-10"
-                  required
+            {googleAvailable && (
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleLogin}
                   disabled={isLoading}
-                />
-              </div>
+                >
+                  <Chrome className="w-4 h-4 mr-2" />
+                  Continue with Google
+                </Button>
 
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10"
-                  required
+                {credentialsAvailable && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">
+                        Or continue with email
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {credentialsAvailable ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="email"
+                    placeholder="Email address"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="pl-10"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="pl-10"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
                   disabled={isLoading}
-                />
+                >
+                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </form>
+            ) : (
+              <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-700 dark:border-purple-900/50 dark:bg-purple-900/20 dark:text-purple-200">
+                Email sign-in is disabled. Please use an available provider.
               </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Signing in...' : 'Sign In'}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </form>
+            )}
 
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}

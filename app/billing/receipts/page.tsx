@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BANK_TRANSFER_ADMIN_EMAIL, BANK_TRANSFER_DETAILS } from "@/lib/bank-transfer";
+import {
+  BANK_TRANSFER_ADMIN_EMAIL,
+  BANK_TRANSFER_DETAILS,
+  type BankTransferSettings,
+  type BankTransferSettingsResponse,
+} from "@/lib/bank-transfer";
 import type { PricingCard } from "@/lib/panel-pricing";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +39,15 @@ export default function ReceiptsPage() {
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [bankTransferDetails, setBankTransferDetails] = useState<BankTransferSettings>({
+    enabled: true,
+    accountHolderName: BANK_TRANSFER_DETAILS.accountName,
+    bankName: BANK_TRANSFER_DETAILS.bankName,
+    accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
+    ifscSwiftCode: BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
+  });
+  const [bankTransferEmail, setBankTransferEmail] = useState(BANK_TRANSFER_ADMIN_EMAIL);
+  const [bankTransferLoaded, setBankTransferLoaded] = useState(false);
 
   const paidCards = useMemo(() => cards.filter((c) => c.isPaid), [cards]);
   const packageOptions = useMemo(
@@ -44,6 +58,13 @@ export default function ReceiptsPage() {
       })),
     [paidCards]
   );
+  const bankTransferAvailable = bankTransferLoaded && bankTransferDetails.enabled;
+  const bankDetailRows = [
+    { label: "Account Holder Name", value: bankTransferDetails.accountHolderName },
+    { label: "Bank Name", value: bankTransferDetails.bankName },
+    { label: "Account Number", value: bankTransferDetails.accountNumber },
+    { label: "IFSC/SWIFT Code", value: bankTransferDetails.ifscSwiftCode },
+  ].filter((row) => row.value);
 
   const loadCards = async () => {
     try {
@@ -75,12 +96,47 @@ export default function ReceiptsPage() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      try {
+        const res = await fetch("/api/bank-transfer/settings", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as BankTransferSettingsResponse;
+        if (!active) return;
+        if (data?.bankTransfer) {
+          setBankTransferDetails(data.bankTransfer);
+        }
+        if (data?.adminEmail) {
+          setBankTransferEmail(data.adminEmail);
+        }
+      } catch {
+        // Keep defaults if Panel settings are unavailable.
+      } finally {
+        if (active) setBankTransferLoaded(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (selectedPackageId) return;
     const firstPaid = paidCards[0]?.packageId ?? null;
     if (firstPaid) setSelectedPackageId(firstPaid);
   }, [paidCards, selectedPackageId]);
 
   const handleUpload = async () => {
+    if (!bankTransferAvailable) {
+      toast.error(
+        bankTransferLoaded
+          ? "Bank transfer is currently disabled."
+          : "Bank transfer settings are still loading."
+      );
+      return;
+    }
     if (!selectedPackageId) {
       toast.error("Please select a package.");
       return;
@@ -125,7 +181,7 @@ export default function ReceiptsPage() {
         <div>
           <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Receipts</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Upload your bank transfer receipt and email it to {BANK_TRANSFER_ADMIN_EMAIL}. We verify and activate
+            Upload your bank transfer receipt and email it to {bankTransferEmail}. We verify and activate
             manually.
           </p>
         </div>
@@ -134,32 +190,28 @@ export default function ReceiptsPage() {
           <CardContent className="p-6 space-y-6">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bank Transfer Details</h2>
-              <div className="mt-3 grid gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <p>
-                  <strong>Bank:</strong> {BANK_TRANSFER_DETAILS.bankName}
+              {!bankTransferLoaded ? (
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  Loading bank transfer details...
                 </p>
-                <p>
-                  <strong>Account Name:</strong> {BANK_TRANSFER_DETAILS.accountName}
+              ) : bankDetailRows.length > 0 ? (
+                <div className="mt-3 grid gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  {bankDetailRows.map((row) => (
+                    <p key={row.label}>
+                      <strong>{row.label}:</strong> {row.value}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  Bank transfer details are not available yet.
                 </p>
-                <p>
-                  <strong>Account Number:</strong> {BANK_TRANSFER_DETAILS.accountNumber}
+              )}
+              {bankTransferLoaded && !bankTransferDetails.enabled ? (
+                <p className="mt-3 text-sm text-amber-600 dark:text-amber-400">
+                  Bank transfer is currently disabled.
                 </p>
-                <p>
-                  <strong>IBAN:</strong> {BANK_TRANSFER_DETAILS.iban}
-                </p>
-                <p>
-                  <strong>SWIFT:</strong> {BANK_TRANSFER_DETAILS.swift}
-                </p>
-                <p>
-                  <strong>Branch:</strong> {BANK_TRANSFER_DETAILS.branch}
-                </p>
-                <p>
-                  <strong>Country:</strong> {BANK_TRANSFER_DETAILS.country}
-                </p>
-                <p>
-                  <strong>Currency:</strong> {BANK_TRANSFER_DETAILS.currency}
-                </p>
-              </div>
+              ) : null}
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
@@ -183,12 +235,13 @@ export default function ReceiptsPage() {
                 <Input
                   type="file"
                   accept="image/png,image/jpeg"
+                  disabled={!bankTransferAvailable}
                   onChange={(event) => setReceiptFile(event.target.files?.[0] || null)}
                 />
               </div>
             </div>
 
-            <Button onClick={handleUpload} disabled={isUploading}>
+            <Button onClick={handleUpload} disabled={isUploading || !bankTransferAvailable}>
               {isUploading ? "Uploading..." : "Submit Receipt"}
             </Button>
           </CardContent>
@@ -249,4 +302,3 @@ export default function ReceiptsPage() {
     </div>
   );
 }
-
