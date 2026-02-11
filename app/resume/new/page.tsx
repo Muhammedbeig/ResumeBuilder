@@ -40,8 +40,6 @@ function NewResumeContent() {
   
   const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
-  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
-  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
 
   useEffect(() => {
     if (importedData?.basics?.name) {
@@ -107,7 +105,25 @@ function NewResumeContent() {
     setIsPlanModalOpen(true);
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!templateIdFromQuery) return;
+    if (!isAuthenticated) return;
+    if (!planChoice) {
+      openPlanModal();
+    }
+  }, [templateIdFromQuery, isAuthenticated, planChoice, openPlanModal]);
+
+  const ensurePlanChosen = useCallback(() => {
+    if (!isAuthenticated) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
+  }, [isAuthenticated, planChoice, openPlanModal]);
+
   const handleSelectTemplate = useCallback(async (templateId: string, premium: boolean) => {
+    if (!ensurePlanChosen()) return;
     if (premium && !canUsePaid) {
       if (!isAuthenticated) {
         toast.error("Please sign in to unlock premium templates");
@@ -136,12 +152,13 @@ function NewResumeContent() {
   // Auto-select template if query param is present
   useEffect(() => {
     if (!templateIdFromQuery || !isLoaded || status === "loading") return;
+    if (isAuthenticated && !planChoice) return;
     const template = templates.find((t) => t.id === templateIdFromQuery);
     if (!template || creatingTemplateId) return;
     if (autoCreateRef.current === templateIdFromQuery) return;
     autoCreateRef.current = templateIdFromQuery;
     handleSelectTemplate(template.id, template.premium);
-  }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate, templates]);
+  }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate, templates, isAuthenticated, planChoice]);
 
   if (status === "loading") {
     return (
@@ -153,11 +170,7 @@ function NewResumeContent() {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
-      <PlanChoiceModal
-        open={shouldShowPlanModal}
-        onOpenChange={setIsPlanModalOpen}
-        forceChoice={forcePlanChoice}
-      />
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

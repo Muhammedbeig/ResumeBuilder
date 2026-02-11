@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
@@ -115,11 +114,22 @@ const ensureCategoryDefaults = (
 export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: string | null }) {
   const router = useRouter();
   const { data: session } = useSession();
-  const { planChoice, isLoaded } = usePlanChoice();
+  const { planChoice } = usePlanChoice();
   const isAuthenticated = !!session?.user;
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
-  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+  const openPlanModal = () => {
+    if (!isAuthenticated) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!isAuthenticated) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
 
   const [categoryOptions, setCategoryOptions] = useState<ResumeTemplateCategory[]>(
     RESUME_TEMPLATE_CATEGORIES
@@ -214,11 +224,7 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-white pt-24 pb-16">
-      <PlanChoiceModal
-        open={shouldShowPlanModal}
-        onOpenChange={setIsPlanModalOpen}
-        forceChoice={forcePlanChoice}
-      />
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
         <motion.div
@@ -272,11 +278,16 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
                     <CatalogTemplate data={previewResumeData} config={template} />
                   </RescaleContainer>
                   <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl dark:bg-slate-950/70">
-                    <Link href={`/resume/new?template=${template.id}`}>
-                      <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-200 font-semibold">
-                        Use This Template
-                      </Button>
-                    </Link>
+                    <Button
+                      size="lg"
+                      className="bg-white text-slate-900 hover:bg-slate-200 font-semibold"
+                      onClick={() => {
+                        if (!ensurePlanChosen()) return;
+                        router.push(`/resume/new?template=${template.id}`);
+                      }}
+                    >
+                      Use This Template
+                    </Button>
                   </div>
                 </div>
 
@@ -308,11 +319,17 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
           <p className="text-lg opacity-90 mb-8 max-w-xl mx-auto">
             Start with any category template and customize every detail in the editor.
           </p>
-          <Link href="/resume/new">
-            <Button size="lg" variant="secondary" className="gap-2">
-              Create My Resume <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            variant="secondary"
+            className="gap-2"
+            onClick={() => {
+              if (!ensurePlanChosen()) return;
+              router.push("/resume/new");
+            }}
+          >
+            Create My Resume <ArrowRight className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>

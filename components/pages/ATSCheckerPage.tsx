@@ -38,16 +38,22 @@ export function ATSCheckerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
-  const { planChoice, isLoaded } = usePlanChoice();
+  const { planChoice } = usePlanChoice();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   const isAuthenticated = !!session?.user;
-  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
-  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
-
   const openPlanModal = () => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!isAuthenticated) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
   };
 
   useEffect(() => {
@@ -120,11 +126,7 @@ export function ATSCheckerPage() {
   if (analysis) {
     return (
       <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
-        <PlanChoiceModal
-          open={shouldShowPlanModal}
-          onOpenChange={setIsPlanModalOpen}
-          forceChoice={forcePlanChoice}
-        />
+        <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
         <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
                 <div>
@@ -307,11 +309,7 @@ export function ATSCheckerPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-      <PlanChoiceModal
-        open={shouldShowPlanModal}
-        onOpenChange={setIsPlanModalOpen}
-        forceChoice={forcePlanChoice}
-      />
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center space-y-4">
           <motion.h1 
@@ -384,7 +382,15 @@ export function ATSCheckerPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Link href="/templates" className="block h-full">
+            <Link
+              href="/templates"
+              className="block h-full"
+              onClick={(event) => {
+                if (!ensurePlanChosen()) {
+                  event.preventDefault();
+                }
+              }}
+            >
                 <Card className="h-full border-2 border-transparent bg-white dark:bg-gray-800 hover:shadow-xl transition-all duration-300 group">
                 <CardContent className="p-8 flex flex-col items-center text-center h-full justify-center space-y-6">
                     <div className="w-16 h-16 bg-cyan-100 dark:bg-cyan-900/30 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">

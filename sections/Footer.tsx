@@ -30,7 +30,6 @@ const footerLinks = {
     { name: "Resume Examples", href: "/templates" },
     // Panel blog uses tags (keywords). Keep this link generic to avoid implying categories.
     { name: "Career Blog", href: "/career-blog" },
-    { name: "API Docs", href: "#" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacy-policy" },

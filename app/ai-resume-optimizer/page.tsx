@@ -58,7 +58,7 @@ export default function AIResumeOptimizerPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const { createResume } = useResume();
-  const { planChoice, isLoaded } = usePlanChoice();
+  const { planChoice } = usePlanChoice();
   
   // State
   const [step, setStep] = useState(1);
@@ -127,9 +127,6 @@ export default function AIResumeOptimizerPage() {
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const isAuthenticated = !!session?.user;
-  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
-  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
   const hasJobUrlAccess =
     session?.user?.subscription === "business" ||
     session?.user?.subscriptionPlanId === "monthly" ||
@@ -509,11 +506,7 @@ export default function AIResumeOptimizerPage() {
 
   return (
     <>
-      <PlanChoiceModal
-        open={shouldShowPlanModal}
-        onOpenChange={setIsPlanModalOpen}
-        forceChoice={forcePlanChoice}
-      />
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
       <div ref={containerRef} className="relative min-h-screen pt-24 pb-20 overflow-hidden bg-gray-50 dark:bg-gray-950 flex flex-col">
       
       {/* Magical Loading Overlay */}

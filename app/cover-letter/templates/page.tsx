@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, type ComponentType } from 'react';
-import Link from 'next/link';
+import { useRouter } from "next/navigation";
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,12 +92,24 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
 
 export default function CoverLetterTemplatesPage() {
   const { data: session } = useSession();
-  const { planChoice, isLoaded } = usePlanChoice();
+  const { planChoice } = usePlanChoice();
   const isAuthenticated = !!session?.user;
+  const router = useRouter();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [templates, setTemplates] = useState<TemplateOption[]>(coverLetterTemplates);
-  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
-  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+  const openPlanModal = () => {
+    if (!isAuthenticated) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!isAuthenticated) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -128,11 +140,7 @@ export default function CoverLetterTemplatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
-      <PlanChoiceModal
-        open={shouldShowPlanModal}
-        onOpenChange={setIsPlanModalOpen}
-        forceChoice={forcePlanChoice}
-      />
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
         <motion.div
@@ -172,11 +180,16 @@ export default function CoverLetterTemplatesPage() {
                   
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl z-10">
-                    <Link href={`/cover-letter/new?template=${template.id}`}>
-                      <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-xl scale-105">
-                        Use This Template
-                      </Button>
-                    </Link>
+                    <Button
+                      size="lg"
+                      className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-xl scale-105"
+                      onClick={() => {
+                        if (!ensurePlanChosen()) return;
+                        router.push(`/cover-letter/new?template=${template.id}`);
+                      }}
+                    >
+                      Use This Template
+                    </Button>
                   </div>
                 </div>
 

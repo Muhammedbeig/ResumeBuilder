@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FileText, FileCode, Mail, Upload, Sparkles, ChevronRight, Zap, Target, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,11 +12,28 @@ import { useState } from "react";
 
 export default function ChooseBuilderPage() {
   const { data: session } = useSession();
-  const { planChoice, isLoaded } = usePlanChoice();
+  const { planChoice } = usePlanChoice();
+  const router = useRouter();
   const isAuthenticated = !!session?.user;
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-  const forcePlanChoice = isAuthenticated && isLoaded && !planChoice;
-  const shouldShowPlanModal = isAuthenticated && (forcePlanChoice || isPlanModalOpen);
+  const openPlanModal = () => {
+    if (!isAuthenticated) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!isAuthenticated) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
+
+  const handleNavigate = (href: string) => {
+    if (!ensurePlanChosen()) return;
+    router.push(href);
+  };
 
   const builders = [
     {
@@ -56,11 +73,7 @@ export default function ChooseBuilderPage() {
 
   return (
     <div className="min-h-screen pt-32 pb-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
-      <PlanChoiceModal
-        open={shouldShowPlanModal}
-        onOpenChange={setIsPlanModalOpen}
-        forceChoice={forcePlanChoice}
-      />
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
       {/* Background Decor */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]" />
@@ -134,12 +147,13 @@ export default function ChooseBuilderPage() {
                 </div>
 
                 <CardContent className="p-8 pt-0 mt-auto space-y-4">
-                  <Link href={builder.startHref} className="block">
-                    <Button className={`w-full py-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded-xl font-bold text-base shadow-xl transition-all group/btn`}>
-                      Start from Scratch
-                      <ChevronRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
+                  <Button
+                    onClick={() => handleNavigate(builder.startHref)}
+                    className={`w-full py-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded-xl font-bold text-base shadow-xl transition-all group/btn`}
+                  >
+                    Start from Scratch
+                    <ChevronRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                  </Button>
                   
                   <div className="flex items-center gap-4 py-2">
                     <div className="flex-1 h-px bg-gray-200 dark:border-gray-800" />
@@ -147,12 +161,14 @@ export default function ChooseBuilderPage() {
                     <div className="flex-1 h-px bg-gray-200 dark:border-gray-800" />
                   </div>
 
-                  <Link href={builder.importHref} className="block">
-                    <Button variant="outline" className="w-full py-6 rounded-xl border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 font-bold transition-all">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Import Existing
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleNavigate(builder.importHref)}
+                    className="w-full py-6 rounded-xl border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 font-bold transition-all"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import Existing
+                  </Button>
 
                   <p className="text-[10px] text-center text-amber-600 dark:text-amber-500 font-bold mt-4 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-900/30">
                     IMPORT REQUIRES LOGIN

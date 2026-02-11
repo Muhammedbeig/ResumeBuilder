@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -27,10 +26,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useResume } from "@/contexts/ResumeContext";
+import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 
 export function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { planChoice } = usePlanChoice();
   const user = session?.user;
   const { resumes, deleteResume } = useResume();
   const [isCreating, setIsCreating] = useState(false);
@@ -38,6 +40,7 @@ export function DashboardPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -62,7 +65,27 @@ export function DashboardPage() {
     };
   }, [session?.user]);
 
+  const openPlanModal = () => {
+    if (!session?.user) return;
+    setIsPlanModalOpen(true);
+  };
+
+  const ensurePlanChosen = () => {
+    if (!session?.user) return true;
+    if (!planChoice) {
+      openPlanModal();
+      return false;
+    }
+    return true;
+  };
+
+  const handleNavigate = (href: string) => {
+    if (!ensurePlanChosen()) return;
+    router.push(href);
+  };
+
   const handleCreateResume = async () => {
+    if (!ensurePlanChosen()) return;
     setIsCreating(true);
     router.push("/resume/new");
     setIsCreating(false);
@@ -77,12 +100,14 @@ export function DashboardPage() {
   };
 
   const SidebarItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => (
-    <Link href={href} className="w-full">
-      <Button variant="ghost" className="w-full justify-start gap-2 h-10 px-4 font-normal">
-        <Icon className="w-4 h-4 text-gray-500" />
-        {label}
-      </Button>
-    </Link>
+    <Button
+      variant="ghost"
+      onClick={() => handleNavigate(href)}
+      className="w-full justify-start gap-2 h-10 px-4 font-normal"
+    >
+      <Icon className="w-4 h-4 text-gray-500" />
+      {label}
+    </Button>
   );
 
   const SidebarGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -94,6 +119,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
+      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -201,11 +227,9 @@ export function DashboardPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Link href={`/resume/${resume.id}`}>
-                                <Button size="sm" variant="outline">
-                                  Edit
-                                </Button>
-                              </Link>
+                              <Button size="sm" variant="outline" onClick={() => handleNavigate(`/resume/${resume.id}`)}>
+                                Edit
+                              </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
@@ -239,11 +263,12 @@ export function DashboardPage() {
                       Quarterly Market Value insights and history.
                     </p>
                   </div>
-                  <Link href="/career-management">
-                    <Button className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full">
-                      New Report
-                    </Button>
-                  </Link>
+                  <Button
+                    className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                    onClick={() => handleNavigate("/career-management")}
+                  >
+                    New Report
+                  </Button>
                 </div>
 
                 {reportsLoading ? (
@@ -289,9 +314,13 @@ export function DashboardPage() {
                             )}
                             <div className="flex items-center justify-between text-xs text-gray-400">
                               <span>Created {new Date(report.createdAt).toLocaleDateString()}</span>
-                              <Link href={`/reports/${report.id}`} className="text-purple-600 dark:text-purple-400 hover:underline">
+                              <button
+                                type="button"
+                                onClick={() => handleNavigate(`/reports/${report.id}`)}
+                                className="text-purple-600 dark:text-purple-400 hover:underline"
+                              >
                                 View details
-                              </Link>
+                              </button>
                             </div>
                           </CardContent>
                         </Card>
