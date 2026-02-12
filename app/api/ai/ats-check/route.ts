@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { requirePaidAiAccess } from "@/lib/ai-access";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 const PDFParser = require("pdf2json");
 
 export async function POST(req: NextRequest) {
   const access = await requirePaidAiAccess();
   if (access) return access;
+
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(req, {
+    prefix: "ai-ats-check",
+    limit: resourceSettings.rateLimits.aiHeavy,
+    windowMs: resourceSettings.rateLimits.windowMs,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
 
   try {
     const formData = await req.formData();
@@ -45,6 +56,8 @@ export async function POST(req: NextRequest) {
       // Fallback for plain text
       text = buffer.toString("utf-8");
     }
+
+    text = truncateText(text, resourceSettings.limits.aiText);
 
     if (!text || !text.trim()) {
        // If empty, try to see if JSON content has text

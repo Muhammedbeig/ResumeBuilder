@@ -178,7 +178,6 @@ export function MinimalistPhotoTemplate({ data, className = '' }: MinimalistPhot
         {/* Photo Placeholder */}
         <div className="w-40 h-40 mx-auto rounded-full bg-gray-200 border-4 border-white shadow-md flex items-center justify-center overflow-hidden">
             {basics.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={basics.image} alt={basics.name} className="w-full h-full object-cover" />
             ) : (
               <User className="w-20 h-20 text-gray-400" />

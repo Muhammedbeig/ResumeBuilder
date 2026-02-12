@@ -50,7 +50,6 @@ export function MinimalistProfessionalTemplate({
           <div className="flex flex-col items-start gap-6">
             <div className="w-40 h-40 rounded-full bg-white border border-slate-200 shadow-sm overflow-hidden flex items-center justify-center">
               {basics.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={basics.image}
                   alt={basics.name}

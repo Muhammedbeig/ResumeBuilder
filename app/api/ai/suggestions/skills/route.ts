@@ -2,14 +2,32 @@ import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
 import { requirePaidAiAccess } from "@/lib/ai-access";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 
 export async function POST(request: Request) {
   const access = await requirePaidAiAccess();
   if (access) return access;
 
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-suggestions-skills",
+    limit: resourceSettings.rateLimits.ai,
+    windowMs: resourceSettings.rateLimits.windowMs,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = await request.json().catch(() => ({}));
-  const jobTitle = String(body?.jobTitle || "").trim();
-  const description = String(body?.description || "").trim();
+  const jobTitle = truncateText(
+    String(body?.jobTitle || "").trim(),
+    resourceSettings.limits.aiText
+  );
+  const description = truncateText(
+    String(body?.description || "").trim(),
+    resourceSettings.limits.aiText
+  );
 
   if (!jobTitle && !description) {
     return NextResponse.json({ error: "Job title or description is required" }, { status: 400 });

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import puppeteer from "puppeteer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { withPuppeteerPage } from "@/lib/puppeteer";
+import { rateLimit } from "@/lib/rate-limit";
+import { getResourceSettings } from "@/lib/resource-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,6 +52,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-job-url",
+    limit: resourceSettings.rateLimits.puppeteer,
+    windowMs: resourceSettings.rateLimits.windowMs,
+    key: session?.user?.id ? `user:${session.user.id}` : undefined,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const { url } = (await request.json()) as { url?: string };
   if (!url) {
     return NextResponse.json({ error: "Job URL is required" }, { status: 400 });
@@ -68,67 +80,70 @@ export async function POST(request: Request) {
   let text = "";
 
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      pipe: true,
-    });
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    );
-    await page.goto(normalized, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    if (resourceSettings.puppeteer.enabled) {
+      const extracted = await withPuppeteerPage(
+        async (page) => {
+        await page.setUserAgent(
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        );
+        await page.goto(normalized, { waitUntil: "domcontentloaded", timeout: 30000 });
+        await new Promise((resolve) => setTimeout(resolve, 1200));
 
-    const extracted = await page.evaluate(() => {
-      const keywords = [
-        "responsibilities",
-        "requirements",
-        "qualification",
-        "skills",
-        "experience",
-        "about the role",
-        "what you'll do",
-        "what you will do",
-        "job description",
-      ];
+        return page.evaluate(() => {
+          const keywords = [
+            "responsibilities",
+            "requirements",
+            "qualification",
+            "skills",
+            "experience",
+            "about the role",
+            "what you'll do",
+            "what you will do",
+            "job description",
+          ];
 
-      const candidates = Array.from(
-        document.querySelectorAll(
-          [
-            "main",
-            "article",
-            "section",
-            "[class*='job']",
-            "[id*='job']",
-            "[class*='description']",
-            "[id*='description']",
-            "[class*='content']",
-            "[data-testid*='job']",
-          ].join(",")
-        )
+          const candidates = Array.from(
+            document.querySelectorAll(
+              [
+                "main",
+                "article",
+                "section",
+                "[class*='job']",
+                "[id*='job']",
+                "[class*='description']",
+                "[id*='description']",
+                "[class*='content']",
+                "[data-testid*='job']",
+              ].join(",")
+            )
+          );
+
+          const score = (text: string) => {
+            const lower = text.toLowerCase();
+            const keywordScore = keywords.reduce(
+              (acc, keyword) => acc + (lower.includes(keyword) ? 1 : 0),
+              0
+            );
+            return text.length + keywordScore * 500;
+          };
+
+          const best = candidates
+            .map((el) => (el as HTMLElement).innerText || "")
+            .filter((text) => text.trim().length > 200)
+            .map((text) => ({ text, score: score(text) }))
+            .sort((a, b) => b.score - a.score)[0];
+
+          return best?.text || document.body?.innerText || "";
+        });
+        },
+        {
+          concurrency: resourceSettings.puppeteer.concurrency,
+          enabled: resourceSettings.puppeteer.enabled,
+        }
       );
 
-      const score = (text: string) => {
-        const lower = text.toLowerCase();
-        const keywordScore = keywords.reduce(
-          (acc, keyword) => acc + (lower.includes(keyword) ? 1 : 0),
-          0
-        );
-        return text.length + keywordScore * 500;
-      };
-
-      const best = candidates
-        .map((el) => (el as HTMLElement).innerText || "")
-        .filter((text) => text.trim().length > 200)
-        .map((text) => ({ text, score: score(text) }))
-        .sort((a, b) => b.score - a.score)[0];
-
-      return best?.text || document.body?.innerText || "";
-    });
-
-    text = cleanText(extracted || "");
-    await browser.close();
+      text = cleanText(extracted || "");
+    }
   } catch (error) {
     console.error("Job URL puppeteer extraction failed", error);
   }
@@ -152,5 +167,8 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ text: trimToMax(text), sourceUrl: normalized });
+  return NextResponse.json({
+    text: trimToMax(text, resourceSettings.limits.aiText),
+    sourceUrl: normalized,
+  });
 }

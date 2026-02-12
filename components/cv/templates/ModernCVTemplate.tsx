@@ -214,7 +214,6 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
         <div className="mb-8 text-center md:text-left">
             {basics.image && (
                 <div className="w-32 h-32 mx-auto md:mx-0 mb-4 rounded-full overflow-hidden border-4 shadow-lg" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={basics.image} alt={basics.name} className="w-full h-full object-cover" />
                 </div>
             )}

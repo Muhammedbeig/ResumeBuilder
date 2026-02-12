@@ -367,6 +367,9 @@ export function CoverLetterEditor() {
         isActivating={isSubscriptionActivating}
         resourceType="cover_letter"
         resourceId={currentCoverLetter?.id ?? null}
+        resourceTemplateId={currentCoverLetter?.template ?? "modern"}
+        resourcePayload={coverLetterData as unknown as Record<string, unknown>}
+        resourceTitle={currentCoverLetter?.title ?? "Cover Letter"}
       />
       <div className="flex h-full flex-col lg:flex-row overflow-hidden relative">
       {/* Editor Side (Left) */}

@@ -175,7 +175,6 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
              {/* Photo */}
              <div className="w-32 h-32 shrink-0 bg-slate-800 rounded-xl border-2 border-slate-700 flex items-center justify-center overflow-hidden shadow-2xl rotate-3">
                  {data.basics.image ? (
-                   // eslint-disable-next-line @next/next/no-img-element
                    <img src={data.basics.image} alt={data.basics.name} className="w-full h-full object-cover" />
                  ) : (
                    <User className="w-16 h-16 text-slate-600" />

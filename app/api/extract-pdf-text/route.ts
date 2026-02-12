@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
 import PDFParser from "pdf2json";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 
 export async function POST(request: Request) {
   try {
+    const resourceSettings = await getResourceSettings();
+
+    const rateLimitResponse = rateLimit(request, {
+      prefix: "extract-pdf-text",
+      limit: resourceSettings.rateLimits.pdf,
+      windowMs: resourceSettings.rateLimits.windowMs,
+    });
+    if (rateLimitResponse) return rateLimitResponse;
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -26,7 +38,8 @@ export async function POST(request: Request) {
       pdfParser.parseBuffer(buffer);
     });
 
-    return NextResponse.json({ text });
+    const limitedText = truncateText(text, resourceSettings.limits.pdfText);
+    return NextResponse.json({ text: limitedText });
   } catch (error) {
     console.error("PDF extraction error:", error);
     return NextResponse.json({ error: "Failed to extract text from PDF" }, { status: 500 });

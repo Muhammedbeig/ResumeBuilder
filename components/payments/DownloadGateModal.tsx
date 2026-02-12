@@ -22,6 +22,9 @@ interface DownloadGateModalProps {
   hasSubscription: boolean;
   resourceType?: "resume" | "cv" | "cover_letter";
   resourceId?: string | null;
+  resourceTemplateId?: string | null;
+  resourcePayload?: Record<string, unknown> | null;
+  resourceTitle?: string | null;
   isActivating?: boolean;
 }
 
@@ -37,6 +40,9 @@ export function DownloadGateModal({
   hasSubscription,
   resourceType,
   resourceId,
+  resourceTemplateId,
+  resourcePayload,
+  resourceTitle,
   isActivating = false,
 }: DownloadGateModalProps) {
   const { settings } = useSiteSettings();
@@ -99,6 +105,9 @@ export function DownloadGateModal({
           body: JSON.stringify({
             resourceType,
             resourceId,
+            templateId: resourceTemplateId ?? undefined,
+            data: resourcePayload ?? undefined,
+            title: resourceTitle ?? undefined,
           }),
         });
 
@@ -217,7 +226,6 @@ export function DownloadGateModal({
                   {isQrLoading || !qrDataUrl ? (
                     <div className="h-full w-full animate-pulse rounded-xl bg-slate-200" />
                   ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={qrDataUrl} alt="Download QR code" className="h-full w-full" />
                   )}
                 </div>

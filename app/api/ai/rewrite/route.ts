@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { requirePaidAiAccess } from "@/lib/ai-access";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 
 export async function POST(request: Request) {
   const access = await requirePaidAiAccess();
   if (access) return access;
+
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-rewrite",
+    limit: resourceSettings.rateLimits.ai,
+    windowMs: resourceSettings.rateLimits.windowMs,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
 
   const body = await request.json().catch(() => ({}));
   const bullet = String(body?.bullet || "").trim();
@@ -13,6 +25,8 @@ export async function POST(request: Request) {
   if (!bullet) {
     return NextResponse.json({ error: "Bullet text is required" }, { status: 400 });
   }
+  const limitedBullet = truncateText(bullet, resourceSettings.limits.aiText);
+  const limitedContext = truncateText(context, resourceSettings.limits.aiText);
 
   try {
     const model = await getGeminiModel();
@@ -24,8 +38,8 @@ Focus on:
 - Be concise and specific
 - Avoid generic phrases
 
-Original: ${bullet}
-${context ? `Context: ${context}` : ""}
+Original: ${limitedBullet}
+${limitedContext ? `Context: ${limitedContext}` : ""}
 
 Rewritten bullet:`;
 

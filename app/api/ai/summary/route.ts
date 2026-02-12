@@ -2,15 +2,30 @@ import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { requirePaidAiAccess } from "@/lib/ai-access";
 import { extractSummarySuggestions } from "@/lib/summary-suggestions";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 import type { ResumeData } from "@/types";
 
 export async function POST(request: Request) {
   const access = await requirePaidAiAccess();
   if (access) return access;
 
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-summary",
+    limit: resourceSettings.rateLimits.ai,
+    windowMs: resourceSettings.rateLimits.windowMs,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = await request.json().catch(() => ({}));
   const resumeData = body?.resumeData as ResumeData | undefined;
-  const targetRole = body?.targetRole ? String(body.targetRole) : undefined;
+  const targetRoleRaw = body?.targetRole ? String(body.targetRole) : undefined;
+  const targetRole = targetRoleRaw
+    ? truncateText(targetRoleRaw, resourceSettings.limits.aiText)
+    : undefined;
 
   if (!resumeData) {
     return NextResponse.json({ error: "Resume data is required" }, { status: 400 });

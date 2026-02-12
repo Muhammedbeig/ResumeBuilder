@@ -2,11 +2,23 @@ import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
 import { requirePaidAiAccess } from "@/lib/ai-access";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 import type { ResumeData, TailoringResult } from "@/types";
 
 export async function POST(request: Request) {
   const access = await requirePaidAiAccess();
   if (access) return access;
+
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-tailor",
+    limit: resourceSettings.rateLimits.ai,
+    windowMs: resourceSettings.rateLimits.windowMs,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
 
   const body = await request.json().catch(() => ({}));
   const resumeData = body?.resumeData as ResumeData | undefined;
@@ -29,6 +41,7 @@ export async function POST(request: Request) {
         ]
           .filter(Boolean)
           .join("\n");
+  const limitedJobText = truncateText(jobText, resourceSettings.limits.aiText);
 
   try {
     const model = await getGeminiModel();
@@ -40,7 +53,7 @@ Role:
 2. Rewrite resume content to ACTIVELY INTEGRATE missing keywords with strict length constraints.
 
 Job Description:
-${jobText}
+${limitedJobText}
 
 Resume Data (JSON):
 ${JSON.stringify(resumeData)}

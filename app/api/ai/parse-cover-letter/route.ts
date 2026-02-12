@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { getGeminiModel } from "@/lib/gemini";
 import { extractJson } from "@/lib/ai-utils";
 import { requirePaidAiAccess } from "@/lib/ai-access";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
 import type { CoverLetterData } from "@/types";
 
 export async function POST(request: Request) {
@@ -14,12 +17,23 @@ export async function POST(request: Request) {
   const access = await requirePaidAiAccess();
   if (access) return access;
 
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-parse-cover-letter",
+    limit: resourceSettings.rateLimits.ai,
+    windowMs: resourceSettings.rateLimits.windowMs,
+    key: session?.user?.id ? `user:${session.user.id}` : undefined,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = await request.json().catch(() => ({}));
   const text = String(body?.text || "").trim();
 
   if (!text) {
     return NextResponse.json({ error: "Text is required" }, { status: 400 });
   }
+  const limitedText = truncateText(text, resourceSettings.limits.aiText);
 
   try {
     const model = await getGeminiModel();
@@ -56,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   Text to parse:
-  ${text}
+  ${limitedText}
 
   Extract as much information as possible. Use empty string for missing data. Return valid JSON only.`;
 
