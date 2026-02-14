@@ -1,0 +1,275 @@
+{
+  "info": {
+    "_postman_id": "d34a8f72-8f6f-4f0a-8af5-9fb8a6b781ac",
+    "name": "ResuPro Payment Status Debug",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Debug collection for Stripe/PayPal pending transactions in Panel + Web app confirm flow."
+  },
+  "item": [
+    {
+      "name": "1) Panel - Get Transaction",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-ResuPro-Internal-Key",
+            "value": "{{internal_key}}"
+          },
+          {
+            "key": "X-ResuPro-User-Id",
+            "value": "{{user_id}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_panel_internal}}/payment/transactions/{{tx_id}}",
+          "host": [
+            "{{base_panel_internal}}"
+          ],
+          "path": [
+            "payment",
+            "transactions",
+            "{{tx_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2) Panel - Activation Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-ResuPro-Internal-Key",
+            "value": "{{internal_key}}"
+          },
+          {
+            "key": "X-ResuPro-User-Id",
+            "value": "{{user_id}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_panel_internal}}/payment/activation-status?paymentTransactionId={{tx_id}}",
+          "host": [
+            "{{base_panel_internal}}"
+          ],
+          "path": [
+            "payment",
+            "activation-status"
+          ],
+          "query": [
+            {
+              "key": "paymentTransactionId",
+              "value": "{{tx_id}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3) Web - Stripe Confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"paymentTransactionId\": \"{{tx_id}}\",\n  \"sessionId\": \"{{session_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_web}}/api/stripe/confirm",
+          "host": [
+            "{{base_web}}"
+          ],
+          "path": [
+            "api",
+            "stripe",
+            "confirm"
+          ]
+        },
+        "description": "Works with logged-in cookie, or without cookie if session_id belongs to the transaction."
+      }
+    },
+    {
+      "name": "4) Web - PayPal Confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"paymentTransactionId\": \"{{tx_id}}\",\n  \"orderId\": \"{{paypal_order_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_web}}/api/paypal/confirm",
+          "host": [
+            "{{base_web}}"
+          ],
+          "path": [
+            "api",
+            "paypal",
+            "confirm"
+          ]
+        },
+        "description": "Works with logged-in cookie, or without cookie if PayPal order belongs to the transaction."
+      }
+    },
+    {
+      "name": "5) Web - Activation Status (requires logged-in cookie)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_web}}/api/payment/activation-status?paymentTransactionId={{tx_id}}",
+          "host": [
+            "{{base_web}}"
+          ],
+          "path": [
+            "api",
+            "payment",
+            "activation-status"
+          ],
+          "query": [
+            {
+              "key": "paymentTransactionId",
+              "value": "{{tx_id}}"
+            }
+          ]
+        },
+        "description": "If this returns 401, same issue: missing login cookie in Postman/browser host mismatch."
+      }
+    },
+    {
+      "name": "6) Panel - Force Activate Transaction",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-ResuPro-Internal-Key",
+            "value": "{{internal_key}}"
+          },
+          {
+            "key": "X-ResuPro-User-Id",
+            "value": "{{user_id}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": \"{{order_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_panel_internal}}/payment/transactions/{{tx_id}}/activate",
+          "host": [
+            "{{base_panel_internal}}"
+          ],
+          "path": [
+            "payment",
+            "transactions",
+            "{{tx_id}}",
+            "activate"
+          ]
+        }
+      }
+    },
+    {
+      "name": "7) Panel - User Subscription",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-ResuPro-Internal-Key",
+            "value": "{{internal_key}}"
+          },
+          {
+            "key": "X-ResuPro-User-Id",
+            "value": "{{user_id}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_panel_internal}}/user/subscription",
+          "host": [
+            "{{base_panel_internal}}"
+          ],
+          "path": [
+            "user",
+            "subscription"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_web",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "base_panel_internal",
+      "value": "http://localhost/Panel/public/api/internal"
+    },
+    {
+      "key": "internal_key",
+      "value": "cc15883cf31ff93e8313c59772e16b55f54b5415284945dbceaf779e5c88ac2e838bdeb31b2522d7d6e039d4070e016d"
+    },
+    {
+      "key": "user_id",
+      "value": "25"
+    },
+    {
+      "key": "tx_id",
+      "value": "26"
+    },
+    {
+      "key": "session_id",
+      "value": "cs_test_a1NwxalIIJoTpK13vxICfqYuOouoRL7lmll3b8ySAqdTii9ZSO9wWvw6k3"
+    },
+    {
+      "key": "order_id",
+      "value": "pi_3T0cSr9FwbGOUNVR04adOq2x"
+    },
+    {
+      "key": "paypal_order_id",
+      "value": "5O190127TN364715T"
+    }
+  ]
+}

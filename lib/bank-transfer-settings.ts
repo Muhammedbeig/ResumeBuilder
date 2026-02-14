@@ -1,9 +1,8 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/bank-transfer";
 import type { BankTransferSettings } from "@/lib/bank-transfer";
+import { panelInternalPost } from "@/lib/panel-internal-api";
 
 const CACHE_TTL_MS = 60_000;
 
@@ -39,13 +38,12 @@ function parseEnabled(value: string): boolean | null {
 }
 
 async function readSettings(): Promise<Record<string, string>> {
-  const rows = await prisma.$queryRaw<Array<{ name: string; value: string | null }>>(
-    Prisma.sql`SELECT name, value FROM settings WHERE name IN (${Prisma.join(SETTINGS_KEYS)})`
-  );
-
+  const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+    body: { keys: [...SETTINGS_KEYS] },
+  });
   const map: Record<string, string> = {};
-  for (const row of rows) {
-    map[row.name] = row.value ? String(row.value) : "";
+  for (const [k, v] of Object.entries(data.settings ?? {})) {
+    map[k] = v ? String(v) : "";
   }
   return map;
 }
@@ -90,8 +88,7 @@ async function getBankTransferSettingsBundle(): Promise<BankTransferSettingsBund
     ifscSwiftCode: normalize(settings.ifsc_swift_code),
   };
 
-  const adminEmail =
-    normalize(settings.bank_transfer_admin_email) || normalize(settings.company_email);
+  const adminEmail = normalize(settings.bank_transfer_admin_email) || normalize(settings.company_email);
 
   cached = {
     bankTransfer: resolvedBank,

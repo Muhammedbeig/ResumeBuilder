@@ -9,8 +9,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useSession } from "next-auth/react";
+import {
+  getPlanChoiceCookieKey,
+  getPlanChoiceStorageKey,
+  parsePlanChoice,
+  type PlanChoice,
+} from "@/lib/plan-choice";
 
-export type PlanChoice = "free" | "paid";
+export type { PlanChoice } from "@/lib/plan-choice";
 
 interface PlanChoiceContextType {
   planChoice: PlanChoice | null;
@@ -21,8 +28,6 @@ interface PlanChoiceContextType {
 
 const PlanChoiceContext = createContext<PlanChoiceContextType | undefined>(undefined);
 
-const STORAGE_KEY = "resupro_plan_choice";
-const COOKIE_KEY = "resupro_plan_choice";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 function readCookieValue(name: string) {
@@ -47,42 +52,52 @@ function clearCookieValue(name: string) {
 }
 
 export function PlanChoiceProvider({ children }: { children: ReactNode }) {
+  const { data: session, status } = useSession();
   const [planChoice, setPlanChoiceState] = useState<PlanChoice | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const userId = status === "authenticated" ? session?.user?.id ?? null : null;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = localStorage.getItem(STORAGE_KEY);
-    let initialChoice: PlanChoice | null =
-      stored === "free" || stored === "paid" ? stored : null;
+    setPlanChoiceState(null);
+    setIsLoaded(false);
+    if (status === "loading") return;
 
+    const storageKey = getPlanChoiceStorageKey(userId);
+    const cookieKey = getPlanChoiceCookieKey(userId);
+    const stored = localStorage.getItem(storageKey);
+    let initialChoice: PlanChoice | null = parsePlanChoice(stored);
     if (!initialChoice) {
-      const cookieChoice = readCookieValue(COOKIE_KEY);
-      if (cookieChoice === "free" || cookieChoice === "paid") {
+      const cookieChoice = parsePlanChoice(readCookieValue(cookieKey));
+      if (cookieChoice) {
         initialChoice = cookieChoice;
-        localStorage.setItem(STORAGE_KEY, cookieChoice);
+        localStorage.setItem(storageKey, cookieChoice);
       }
     }
 
     setPlanChoiceState(initialChoice);
     setIsLoaded(true);
-  }, []);
+  }, [status, userId]);
 
   const setPlanChoice = useCallback((choice: PlanChoice) => {
     setPlanChoiceState(choice);
     if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, choice);
-      writeCookieValue(COOKIE_KEY, choice);
+      const storageKey = getPlanChoiceStorageKey(userId);
+      const cookieKey = getPlanChoiceCookieKey(userId);
+      localStorage.setItem(storageKey, choice);
+      writeCookieValue(cookieKey, choice);
     }
-  }, []);
+  }, [userId]);
 
   const clearPlanChoice = useCallback(() => {
     setPlanChoiceState(null);
     if (typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
-      clearCookieValue(COOKIE_KEY);
+      const storageKey = getPlanChoiceStorageKey(userId);
+      const cookieKey = getPlanChoiceCookieKey(userId);
+      localStorage.removeItem(storageKey);
+      clearCookieValue(cookieKey);
     }
-  }, []);
+  }, [userId]);
 
   const value = useMemo(
     () => ({

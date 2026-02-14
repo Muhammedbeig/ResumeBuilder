@@ -1,128 +1,92 @@
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { json } from "@/lib/json";
+import {
+  panelInternalDelete,
+  panelInternalGet,
+  panelInternalPut,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { normalizeResumeData } from "@/lib/resume-data";
-import { parseUserIdBigInt } from "@/lib/user-id";
-import type { Prisma } from "@prisma/client";
+import { getSessionUserId } from "@/lib/session-user";
 
 interface RouteContext {
-  params: Promise<{
-    id: string;
-  }>;
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(_request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: cvId } = await context.params;
-  const cv = await prisma.cv.findFirst({
-    where: { id: cvId, userId },
-  });
+  const { id } = await context.params;
 
-  if (!cv) {
-    return json({ error: "CV not found" }, { status: 404 });
-  }
-
-  let version = null;
-  if (cv.activeVersionId) {
-    version = await prisma.cvVersion.findUnique({
-      where: { id: cv.activeVersionId },
+  try {
+    const result = await panelInternalGet<{ cv: any; data: Record<string, unknown> }>(`cvs/${id}`, { userId });
+    return json({
+      cv: result.cv,
+      data: normalizeResumeData(result.data),
     });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to load CV" }, { status: 500 });
   }
-
-  if (!version) {
-    version = await prisma.cvVersion.findFirst({
-      where: { cvId: cv.id },
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
-  const data = normalizeResumeData(version?.jsonData as Record<string, unknown>);
-  return json({ cv, data });
 }
 
 export async function PUT(request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: cvId } = await context.params;
+  const { id } = await context.params;
   const body = await request.json().catch(() => ({}));
+  const payload: Record<string, unknown> = {};
+  if (typeof body?.title === "string") payload.title = body.title;
+  if (typeof body?.template === "string") payload.template = body.template;
+  if (typeof body?.isPublic === "boolean") payload.isPublic = body.isPublic;
+  if (typeof body?.source === "string") payload.source = body.source;
+  if ("data" in body) payload.data = normalizeResumeData(body?.data);
 
-  const cv = await prisma.cv.findFirst({
-    where: { id: cvId, userId },
-  });
-
-  if (!cv) {
-    return json({ error: "CV not found" }, { status: 404 });
-  }
-
-  const title = typeof body?.title === "string" ? body.title : cv.title;
-  const template = typeof body?.template === "string" ? body.template : cv.template;
-  const isPublic = typeof body?.isPublic === "boolean" ? body.isPublic : cv.isPublic;
-  const cvData = normalizeResumeData(body?.data);
-  const source = typeof body?.source === "string" ? body.source : "manual";
-
-  const result = await prisma.$transaction(async (tx) => {
-    const updatedCV = await tx.cv.update({
-      where: { id: cv.id },
-      data: {
-        title,
-        template,
-        isPublic,
-      },
+  try {
+    const result = await panelInternalPut<{ cv: any; data: Record<string, unknown> }>(`cvs/${id}`, {
+      userId,
+      body: payload,
     });
-
-    let data = cvData;
-    if (body?.data) {
-      const version = await tx.cvVersion.create({
-        data: {
-          cvId: cv.id,
-          jsonData: cvData as unknown as Prisma.InputJsonValue,
-          source,
-        },
-      });
-
-      const updatedWithVersion = await tx.cv.update({
-        where: { id: cv.id },
-        data: { activeVersionId: version.id },
-      });
-
-      return { cv: updatedWithVersion, data };
+    return json({
+      cv: result.cv,
+      data: normalizeResumeData(result.data),
+    });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
     }
-
-    return { cv: updatedCV, data: cvData };
-  }, {
-    maxWait: 10000,
-    timeout: 20000,
-  });
-
-  return json(result);
+    return json({ error: "Failed to update CV" }, { status: 500 });
+  }
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: cvId } = await context.params;
-  const cv = await prisma.cv.findFirst({
-    where: { id: cvId, userId },
-  });
+  const { id } = await context.params;
 
-  if (!cv) {
-    return json({ error: "CV not found" }, { status: 404 });
+  try {
+    const result = await panelInternalDelete<{ success: boolean }>(`cvs/${id}`, { userId });
+    return json({ success: Boolean(result.success) });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to delete CV" }, { status: 500 });
   }
-
-  await prisma.cv.delete({ where: { id: cv.id } });
-  return json({ success: true });
 }

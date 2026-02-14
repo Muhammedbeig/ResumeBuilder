@@ -21,7 +21,7 @@ export const RATE_LIMITS = {
   ai: envInt("RATE_LIMIT_AI", 20),
   aiHeavy: envInt("RATE_LIMIT_AI_HEAVY", 10),
   pdf: envInt("RATE_LIMIT_PDF", 20),
-  puppeteer: envInt("RATE_LIMIT_PUPPETEER", 6),
+  pdfExport: envInt("RATE_LIMIT_PDF_EXPORT", envInt("RATE_LIMIT_PUPPETEER", 12)),
 };
 
 function getClientIp(req: Request): string {

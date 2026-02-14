@@ -1,14 +1,11 @@
 import { json } from "@/lib/json";
-import { getPayPalGatewayConfig, getStripeGatewayConfig } from "@/lib/panel-payment-gateways";
+import { getGatewayConfigs } from "@/lib/panel-payment-gateways";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const [stripeCfg, paypalCfg] = await Promise.all([
-    getStripeGatewayConfig(),
-    getPayPalGatewayConfig(),
-  ]);
+  const { stripe: stripeCfg, paypal: paypalCfg } = await getGatewayConfigs();
 
   return json({
     stripeEnabled: Boolean(stripeCfg),

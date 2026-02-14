@@ -1,63 +1,44 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+
+import { Button } from "@/components/ui/button";
+import { panelInternalGet } from "@/lib/panel-internal-api";
 import { panelGet } from "@/lib/panel-api";
-import { resolveResumeTemplateComponent, resolveCvTemplateComponent } from "@/lib/template-resolvers";
+import { resolveCvTemplateComponent, resolveResumeTemplateComponent } from "@/lib/template-resolvers";
 import type { PanelTemplate } from "@/lib/panel-templates";
 import { normalizeResumeData } from "@/lib/resume-data";
 import { ResumeData } from "@/types";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 interface SharedResumePageProps {
   params: Promise<{ id: string }>;
 }
 
+type SharedInternalResponse = {
+  docType: "resume" | "cv";
+  doc: {
+    id: string;
+    template: string;
+  };
+  latestVersionJson: Partial<ResumeData>;
+};
+
 export default async function SharedResumePage({ params }: SharedResumePageProps) {
   const { id } = await params;
 
-  // Try finding a resume first
-  let doc: any = await prisma.resume.findFirst({
-    where: {
-      OR: [
-        { id },
-        { shortId: id }
-      ]
-    },
-    include: {
-      versions: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
-    },
-  });
-
-  let docType = 'resume';
-
-  if (!doc) {
-    // Try finding a CV
-    doc = await prisma.cv.findFirst({
-      where: {
-        OR: [
-          { id },
-          { shortId: id }
-        ]
-      },
-      include: {
-        versions: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-      },
-    });
-    docType = 'cv';
+  let shared: SharedInternalResponse | null = null;
+  try {
+    shared = await panelInternalGet<SharedInternalResponse>(`shared/${id}`);
+  } catch {
+    shared = null;
   }
 
-  if (!doc || doc.versions.length === 0) {
+  if (!shared?.doc || !shared?.latestVersionJson) {
     notFound();
   }
 
-  const latestVersion = doc.versions[0];
-  const resumeData = normalizeResumeData(latestVersion.jsonData as unknown as Partial<ResumeData>);
+  const docType = shared.docType;
+  const doc = shared.doc;
+  const resumeData = normalizeResumeData(shared.latestVersionJson as Partial<ResumeData>);
 
   const fetchPanelTemplate = async (type: "resume" | "cv", templateId: string) => {
     try {
@@ -68,24 +49,19 @@ export default async function SharedResumePage({ params }: SharedResumePageProps
     }
   };
 
-  let TemplateComponent = docType === "resume"
-    ? resolveResumeTemplateComponent(doc.template, undefined)
-    : resolveCvTemplateComponent(doc.template, undefined);
+  let TemplateComponent =
+    docType === "resume"
+      ? resolveResumeTemplateComponent(doc.template, undefined)
+      : resolveCvTemplateComponent(doc.template, undefined);
 
   if (docType === "resume") {
     const panelTemplate = await fetchPanelTemplate("resume", doc.template);
-    TemplateComponent = resolveResumeTemplateComponent(
-      doc.template,
-      (panelTemplate?.config as any) ?? undefined
-    );
+    TemplateComponent = resolveResumeTemplateComponent(doc.template, (panelTemplate?.config as any) ?? undefined);
   }
 
   if (docType === "cv") {
     const panelTemplate = await fetchPanelTemplate("cv", doc.template);
-    TemplateComponent = resolveCvTemplateComponent(
-      doc.template,
-      (panelTemplate?.config as any) ?? undefined
-    );
+    TemplateComponent = resolveCvTemplateComponent(doc.template, (panelTemplate?.config as any) ?? undefined);
   }
 
   return (
@@ -95,7 +71,7 @@ export default async function SharedResumePage({ params }: SharedResumePageProps
           ResuPro
         </Link>
         <Link href="/">
-            <Button variant="outline">Create Your Own {docType === 'resume' ? 'Resume' : 'CV'}</Button>
+          <Button variant="outline">Create Your Own {docType === "resume" ? "Resume" : "CV"}</Button>
         </Link>
       </div>
 
@@ -103,9 +79,7 @@ export default async function SharedResumePage({ params }: SharedResumePageProps
         <TemplateComponent data={resumeData} />
       </div>
 
-      <div className="max-w-4xl mx-auto mt-8 text-center text-sm text-gray-500">
-        Generated with ResuPro AI Builder
-      </div>
+      <div className="max-w-4xl mx-auto mt-8 text-center text-sm text-gray-500">Generated with ResuPro AI Builder</div>
     </div>
   );
 }

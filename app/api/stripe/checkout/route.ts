@@ -1,19 +1,48 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { getStripeGatewayConfig } from "@/lib/panel-payment-gateways";
-import { parseUserIdBigInt } from "@/lib/user-id";
+import { panelInternalGet, panelInternalPatch, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import { getSessionUserId } from "@/lib/session-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const resolveBaseUrl = () =>
+const resolveHeaderValue = (value: string | null) => {
+  if (!value) return "";
+  return value.split(",")[0]?.trim() ?? "";
+};
+
+const resolveRequestOrigin = (request: Request) => {
+  try {
+    const reqUrl = new URL(request.url);
+    const forwardedHost = resolveHeaderValue(request.headers.get("x-forwarded-host"));
+    const host = forwardedHost || resolveHeaderValue(request.headers.get("host")) || reqUrl.host;
+    if (!host) return null;
+
+    const forwardedProto = resolveHeaderValue(request.headers.get("x-forwarded-proto")).toLowerCase();
+    const isLocalHost =
+      host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+    const protocol =
+      forwardedProto === "http" || forwardedProto === "https"
+        ? forwardedProto
+        : isLocalHost
+        ? "http"
+        : "https";
+
+    return `${protocol}://${host}`;
+  } catch {
+    return null;
+  }
+};
+
+const resolveBaseUrl = (request: Request) =>
   process.env.NEXT_PUBLIC_APP_URL ||
   process.env.NEXTAUTH_URL ||
-  "http://localhost:3000";
+  resolveRequestOrigin(request) ||
+  new URL(request.url).origin;
 
 const resolveReturnUrl = (returnUrl: string | undefined, baseUrl: string) => {
   if (!returnUrl) return baseUrl;
@@ -32,131 +61,107 @@ const resolveReturnUrl = (returnUrl: string | undefined, baseUrl: string) => {
   return baseUrl;
 };
 
-function parsePackageId(raw: unknown): bigint | null {
+function parsePackageId(raw: unknown): string | null {
   const value = String(raw ?? "").trim();
   if (!/^\d+$/.test(value)) return null;
-  try {
-    return BigInt(value);
-  } catch {
-    return null;
-  }
+  return value;
 }
+
+type InternalPackage = {
+  id: string;
+  name: string;
+  description: string;
+  finalPrice: number;
+  type: string;
+  status: number;
+};
+
+type UserPaymentProfile = {
+  id: string;
+  email: string;
+  name: string;
+  stripeCustomerId: string | null;
+};
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const userId = parseUserIdBigInt(session.user.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json()) as {
-    packageId?: string;
-    returnUrl?: string;
-  };
-
+  const body = (await request.json().catch(() => ({}))) as { packageId?: string; returnUrl?: string };
   const packageId = parsePackageId(body.packageId);
   if (!packageId) {
-    return NextResponse.json(
-      { error: "Missing or invalid packageId" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing or invalid packageId" }, { status: 400 });
   }
 
-  const pkg = await prisma.package.findUnique({
-    where: { id: packageId },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      finalPrice: true,
-      type: true,
-      status: true,
-    },
-  });
-
-  if (!pkg || pkg.status !== 1 || pkg.type !== "item_listing") {
-    return NextResponse.json({ error: "Package not found" }, { status: 404 });
-  }
-
-  if (!(pkg.finalPrice > 0)) {
-    return NextResponse.json(
-      { error: "This package does not require payment" },
-      { status: 400 }
-    );
-  }
-
-  const stripeCfg = await getStripeGatewayConfig();
-  if (!stripeCfg) {
-    return NextResponse.json(
-      { error: "Stripe is not enabled or not configured in the Admin Panel." },
-      { status: 503 }
-    );
-  }
-
-  const stripe = new Stripe(stripeCfg.secretKey, { typescript: true });
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true, name: true, stripeCustomerId: true },
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  // Create a local transaction record first so Stripe metadata can reference it.
-  const now = new Date();
-  const paymentTransaction = await prisma.paymentTransaction.create({
-    data: {
-      userId: user.id,
-      packageId: pkg.id,
-      amount: pkg.finalPrice,
-      paymentGateway: "Stripe",
-      paymentStatus: "pending",
-      createdAt: now,
-      updatedAt: now,
-    },
-    select: { id: true },
-  });
+  let paymentTransactionId: string | null = null;
 
   try {
-    let customerId = user.stripeCustomerId;
+    const packageRes = await panelInternalGet<{ package: InternalPackage }>(`packages/${packageId}`);
+    const pkg = packageRes.package;
+
+    if (!pkg || pkg.status !== 1 || pkg.type !== "item_listing") {
+      return NextResponse.json({ error: "Package not found" }, { status: 404 });
+    }
+    if (!(pkg.finalPrice > 0)) {
+      return NextResponse.json({ error: "This package does not require payment" }, { status: 400 });
+    }
+
+    const stripeCfg = await getStripeGatewayConfig();
+    if (!stripeCfg) {
+      return NextResponse.json(
+        { error: "Stripe is not enabled or not configured in the Admin Panel." },
+        { status: 503 }
+      );
+    }
+
+    const stripe = new Stripe(stripeCfg.secretKey, { typescript: true });
+
+    const profile = await panelInternalGet<UserPaymentProfile>("user/payment-profile", { userId });
+    if (!profile?.id) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const txRes = await panelInternalPost<{ transaction: { id: string } }>("payment/transactions", {
+      userId,
+      body: {
+        packageId: pkg.id,
+        amount: pkg.finalPrice,
+        gateway: "Stripe",
+        status: "pending",
+      },
+    });
+    paymentTransactionId = txRes.transaction.id;
+
+    let customerId = profile.stripeCustomerId;
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: user.email ?? undefined,
-        name: user.name ?? undefined,
-        metadata: { userId: user.id.toString() },
+        email: profile.email || undefined,
+        name: profile.name || undefined,
+        metadata: { userId: profile.id },
       });
       customerId = customer.id;
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { stripeCustomerId: customerId },
+      await panelInternalPatch("user/payment-profile", {
+        userId,
+        body: { stripeCustomerId: customerId },
       });
     }
 
-    const baseUrl = resolveBaseUrl();
+    const baseUrl = resolveBaseUrl(request);
     const resolvedReturnUrl = resolveReturnUrl(body.returnUrl, baseUrl);
 
-    const successUrl = new URL(resolvedReturnUrl);
-    successUrl.searchParams.set("stripe", "success");
-    successUrl.searchParams.set(
-      "payment_transaction_id",
-      paymentTransaction.id.toString()
-    );
+    const callbackBase = new URL("/api/stripe/return", baseUrl);
+    callbackBase.searchParams.set("return_url", resolvedReturnUrl);
+    callbackBase.searchParams.set("payment_transaction_id", paymentTransactionId);
 
-    // Stripe replaces this exact token. Keep braces unencoded so the value is substituted.
+    const successUrl = new URL(callbackBase);
+    successUrl.searchParams.set("stripe", "success");
     const successUrlString = `${successUrl.toString()}&session_id={CHECKOUT_SESSION_ID}`;
 
-    const cancelUrl = new URL(resolvedReturnUrl);
+    const cancelUrl = new URL(callbackBase);
     cancelUrl.searchParams.set("stripe", "cancel");
-    cancelUrl.searchParams.set(
-      "payment_transaction_id",
-      paymentTransaction.id.toString()
-    );
 
     const unitAmount = Math.round(pkg.finalPrice * 100);
     if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
@@ -166,7 +171,7 @@ export async function POST(request: Request) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       customer: customerId,
-      client_reference_id: user.id.toString(),
+      client_reference_id: profile.id,
       success_url: successUrlString,
       cancel_url: cancelUrl.toString(),
       line_items: [
@@ -182,21 +187,19 @@ export async function POST(request: Request) {
           },
         },
       ],
-      // This metadata is what the Panel webhook expects on payment_intent.succeeded.
       payment_intent_data: {
         metadata: {
-          payment_transaction_id: paymentTransaction.id.toString(),
-          package_id: pkg.id.toString(),
-          user_id: user.id.toString(),
-          email: user.email ?? "",
+          payment_transaction_id: paymentTransactionId,
+          package_id: pkg.id,
+          user_id: profile.id,
+          email: profile.email || "",
           platform_type: "web",
         },
       },
-      // Optional, but helpful for debugging in Stripe dashboard.
       metadata: {
-        payment_transaction_id: paymentTransaction.id.toString(),
-        package_id: pkg.id.toString(),
-        user_id: user.id.toString(),
+        payment_transaction_id: paymentTransactionId,
+        package_id: pkg.id,
+        user_id: profile.id,
       },
       expand: ["payment_intent"],
     });
@@ -205,13 +208,10 @@ export async function POST(request: Request) {
       typeof checkoutSession.payment_intent === "string"
         ? checkoutSession.payment_intent
         : checkoutSession.payment_intent?.id;
-
-    if (paymentIntentId) {
-      await prisma.paymentTransaction.update({
-        where: { id: paymentTransaction.id },
-        data: { orderId: paymentIntentId, updatedAt: new Date() },
-      });
-    }
+    await panelInternalPatch(`payment/transactions/${paymentTransactionId}`, {
+      userId,
+      body: { orderId: paymentIntentId ?? checkoutSession.id },
+    });
 
     if (!checkoutSession.url) {
       throw new Error("Missing checkout URL");
@@ -219,17 +219,21 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
+    if (paymentTransactionId) {
+      try {
+        await panelInternalPatch(`payment/transactions/${paymentTransactionId}`, {
+          userId,
+          body: { status: "failed" },
+        });
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+
+    if (error instanceof PanelInternalApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+    }
     console.error("Stripe checkout error:", error);
-
-    // Keep the record for audit, but mark it failed.
-    await prisma.paymentTransaction.update({
-      where: { id: paymentTransaction.id },
-      data: { paymentStatus: "failed", updatedAt: new Date() },
-    });
-
-    return NextResponse.json(
-      { error: "Unable to start Stripe checkout. Please try again." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Unable to start Stripe checkout. Please try again." }, { status: 500 });
   }
 }

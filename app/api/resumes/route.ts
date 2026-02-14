@@ -1,30 +1,32 @@
-import { json } from "@/lib/json";
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { json } from "@/lib/json";
+import { panelInternalGet, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
 import { normalizeResumeData } from "@/lib/resume-data";
-import { generateShortId } from "@/lib/utils";
-import { parseUserIdBigInt } from "@/lib/user-id";
-import type { Prisma } from "@prisma/client";
+import { getSessionUserId } from "@/lib/session-user";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resumes = await prisma.resume.findMany({
-    where: { userId },
-    orderBy: { updatedAt: "desc" },
-  });
-
-  return json({ resumes });
+  try {
+    const data = await panelInternalGet<{ resumes: any[] }>("resumes", { userId });
+    return json({ resumes: data.resumes ?? [] });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to load resumes" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -32,37 +34,27 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const title = typeof body?.title === "string" ? body.title : "Untitled Resume";
   const template = typeof body?.template === "string" ? body.template : "modern";
-  const resumeData = normalizeResumeData(body?.data);
+  const data = normalizeResumeData(body?.data);
   const source = typeof body?.source === "string" ? body.source : "manual";
 
-  const result = await prisma.$transaction(async (tx) => {
-    const resume = await tx.resume.create({
-      data: {
-        userId,
+  try {
+    const result = await panelInternalPost<{ resume: any; data: Record<string, unknown> }>("resumes", {
+      userId,
+      body: {
         title,
         template,
-        shortId: generateShortId(),
-      },
-    });
-
-    const version = await tx.resumeVersion.create({
-      data: {
-        resumeId: resume.id,
-        jsonData: resumeData as unknown as Prisma.InputJsonValue,
+        data,
         source,
       },
     });
-
-    const updated = await tx.resume.update({
-      where: { id: resume.id },
-      data: { activeVersionId: version.id },
+    return json({
+      resume: result.resume,
+      data: normalizeResumeData(result.data),
     });
-
-    return { resume: updated, data: resumeData };
-  }, {
-    maxWait: 10000, // default: 2000
-    timeout: 20000, // default: 5000
-  });
-
-  return json(result);
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to create resume" }, { status: 500 });
+  }
 }

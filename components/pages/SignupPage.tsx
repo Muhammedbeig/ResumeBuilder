@@ -5,10 +5,17 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getProviders, signIn, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, ArrowRight, Sparkles, Chrome } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Sparkles, Chrome, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  getPasswordPolicyError,
+  isValidEmail,
+  normalizeEmail,
+  normalizeName,
+  PASSWORD_POLICY_TEXT,
+} from "@/lib/auth-validation";
 import { toast } from "sonner";
 
 export function SignupPage() {
@@ -25,6 +32,8 @@ export function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const [credentialsAvailable, setCredentialsAvailable] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -64,6 +73,23 @@ export function SignupPage() {
       return;
     }
 
+    const name = normalizeName(formData.name);
+    const email = normalizeEmail(formData.email);
+    if (!name || name.length < 2 || name.length > 80) {
+      toast.error("Please enter your full name (2-80 characters).");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    const passwordError = getPasswordPolicyError(formData.password);
+    if (passwordError) {
+      toast.error(passwordError);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -75,8 +101,8 @@ export function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
+          name,
+          email,
           password: formData.password,
         }),
       });
@@ -88,7 +114,7 @@ export function SignupPage() {
       }
 
       const result = await signIn("credentials", {
-        email: formData.email,
+        email,
         password: formData.password,
         redirect: false,
       });
@@ -183,6 +209,7 @@ export function SignupPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="pl-10"
+                    autoComplete="name"
                     required
                     disabled={isLoading}
                   />
@@ -196,6 +223,7 @@ export function SignupPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="pl-10"
+                    autoComplete="email"
                     required
                     disabled={isLoading}
                   />
@@ -204,27 +232,52 @@ export function SignupPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    autoComplete="new-password"
                     required
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    disabled={isLoading}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Password must be {PASSWORD_POLICY_TEXT}
+                  </p>
                 </div>
 
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    autoComplete="new-password"
                     required
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
 
                 <Button 

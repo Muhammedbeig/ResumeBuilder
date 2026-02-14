@@ -1,43 +1,26 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { envBool, envInt } from "@/lib/env";
+import { envInt } from "@/lib/env";
+import { panelInternalPost } from "@/lib/panel-internal-api";
 
 const CACHE_TTL_MS = 60_000;
 
 const SETTINGS_KEYS = [
-  "PUPPETEER_ENABLED",
-  "PUPPETEER_CONCURRENCY",
-  "RATE_LIMIT_WINDOW_MS",
-  "RATE_LIMIT_PUPPETEER",
-  "RATE_LIMIT_AI",
-  "RATE_LIMIT_AI_HEAVY",
-  "RATE_LIMIT_PDF",
   "AI_TEXT_LIMIT",
-  "PDF_TEXT_LIMIT",
-  "puppeteer_enabled",
-  "puppeteer_concurrency",
-  "rate_limit_window_ms",
-  "rate_limit_puppeteer",
-  "rate_limit_ai",
-  "rate_limit_ai_heavy",
-  "rate_limit_pdf",
   "ai_text_limit",
-  "pdf_text_limit",
 ] as const;
 
 export type ResourceSettings = {
-  puppeteer: {
-    enabled: boolean;
+  pdfRender: {
     concurrency: number;
+    timeoutMs: number;
   };
   rateLimits: {
     windowMs: number;
-    puppeteer: number;
+    pdfExport: number;
+    pdf: number;
     ai: number;
     aiHeavy: number;
-    pdf: number;
   };
   limits: {
     aiText: number;
@@ -49,31 +32,22 @@ let cached: ResourceSettings | null = null;
 let cachedAt = 0;
 
 const DEFAULTS: ResourceSettings = {
-  puppeteer: {
-    enabled: envBool("PUPPETEER_ENABLED", true),
-    concurrency: envInt("PUPPETEER_CONCURRENCY", 2),
+  pdfRender: {
+    concurrency: envInt("PDF_RENDER_CONCURRENCY", envInt("PUPPETEER_CONCURRENCY", 2)),
+    timeoutMs: envInt("PDF_RENDER_TIMEOUT_MS", 45_000),
   },
   rateLimits: {
     windowMs: envInt("RATE_LIMIT_WINDOW_MS", 60_000),
-    puppeteer: envInt("RATE_LIMIT_PUPPETEER", 6),
+    pdfExport: envInt("RATE_LIMIT_PDF_EXPORT", envInt("RATE_LIMIT_PUPPETEER", envInt("RATE_LIMIT_PDF", 12))),
+    pdf: envInt("RATE_LIMIT_PDF", 20),
     ai: envInt("RATE_LIMIT_AI", 20),
     aiHeavy: envInt("RATE_LIMIT_AI_HEAVY", 10),
-    pdf: envInt("RATE_LIMIT_PDF", 20),
   },
   limits: {
     aiText: envInt("AI_TEXT_LIMIT", 20_000),
     pdfText: envInt("PDF_TEXT_LIMIT", 20_000),
   },
 };
-
-function parseToggle(value: string | undefined, fallback: boolean): boolean {
-  if (!value) return fallback;
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return fallback;
-  if (["1", "true", "yes", "on", "enabled"].includes(normalized)) return true;
-  if (["0", "false", "no", "off", "disabled"].includes(normalized)) return false;
-  return fallback;
-}
 
 function parseIntValue(
   value: string | undefined,
@@ -98,13 +72,13 @@ function pickSetting(map: Record<string, string>, key: string): string | undefin
 }
 
 async function readSettings(): Promise<Record<string, string>> {
-  const rows = await prisma.$queryRaw<Array<{ name: string; value: string | null }>>(
-    Prisma.sql`SELECT name, value FROM settings WHERE name IN (${Prisma.join(SETTINGS_KEYS)})`
-  );
+  const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+    body: { keys: [...SETTINGS_KEYS] },
+  });
 
   const map: Record<string, string> = {};
-  for (const row of rows) {
-    map[row.name] = row.value ? String(row.value) : "";
+  for (const [key, value] of Object.entries(data.settings ?? {})) {
+    map[key] = value ? String(value) : "";
   }
   return map;
 }
@@ -128,65 +102,12 @@ export async function getResourceSettings(): Promise<ResourceSettings> {
     return DEFAULTS;
   }
 
-  const puppeteerEnabled = parseToggle(
-    pickSetting(settings, "PUPPETEER_ENABLED"),
-    DEFAULTS.puppeteer.enabled
-  );
-  const puppeteerConcurrency = parseIntValue(
-    pickSetting(settings, "PUPPETEER_CONCURRENCY"),
-    DEFAULTS.puppeteer.concurrency,
-    { min: 1 }
-  );
-
-  const windowMs = parseIntValue(
-    pickSetting(settings, "RATE_LIMIT_WINDOW_MS"),
-    DEFAULTS.rateLimits.windowMs,
-    { min: 1000 }
-  );
-  const ratePuppeteer = parseIntValue(
-    pickSetting(settings, "RATE_LIMIT_PUPPETEER"),
-    DEFAULTS.rateLimits.puppeteer,
-    { min: 1 }
-  );
-  const rateAi = parseIntValue(
-    pickSetting(settings, "RATE_LIMIT_AI"),
-    DEFAULTS.rateLimits.ai,
-    { min: 1 }
-  );
-  const rateAiHeavy = parseIntValue(
-    pickSetting(settings, "RATE_LIMIT_AI_HEAVY"),
-    DEFAULTS.rateLimits.aiHeavy,
-    { min: 1 }
-  );
-  const ratePdf = parseIntValue(
-    pickSetting(settings, "RATE_LIMIT_PDF"),
-    DEFAULTS.rateLimits.pdf,
-    { min: 1 }
-  );
-
-  const aiTextLimit = parseIntValue(
-    pickSetting(settings, "AI_TEXT_LIMIT"),
-    DEFAULTS.limits.aiText,
-    { min: 500 }
-  );
-  const pdfTextLimit = parseIntValue(
-    pickSetting(settings, "PDF_TEXT_LIMIT"),
-    DEFAULTS.limits.pdfText,
-    { min: 500 }
-  );
+  const aiTextLimit = parseIntValue(pickSetting(settings, "AI_TEXT_LIMIT"), DEFAULTS.limits.aiText, { min: 500 });
+  const pdfTextLimit = DEFAULTS.limits.pdfText;
 
   cached = {
-    puppeteer: {
-      enabled: puppeteerEnabled,
-      concurrency: puppeteerConcurrency,
-    },
-    rateLimits: {
-      windowMs,
-      puppeteer: ratePuppeteer,
-      ai: rateAi,
-      aiHeavy: rateAiHeavy,
-      pdf: ratePdf,
-    },
+    pdfRender: DEFAULTS.pdfRender,
+    rateLimits: DEFAULTS.rateLimits,
     limits: {
       aiText: aiTextLimit,
       pdfText: pdfTextLimit,

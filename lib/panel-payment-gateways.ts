@@ -1,93 +1,81 @@
 import "server-only";
 
-import { prisma } from "@/lib/prisma";
+import { panelInternalGet } from "@/lib/panel-internal-api";
 
 export type StripeGatewayConfig = {
-  currencyCode: string; // lowercase ISO code for Stripe API
+  currencyCode: string;
   publishableKey: string;
   secretKey: string;
   webhookSecretKey: string;
 };
 
 export type PayPalGatewayConfig = {
-  currencyCode: string; // uppercase ISO code for PayPal API
+  currencyCode: string;
   clientId: string;
   secretKey: string;
   webhookId: string | null;
   mode: "live" | "sandbox";
 };
 
-export async function getStripeGatewayConfig(): Promise<StripeGatewayConfig | null> {
-  const row = await prisma.paymentConfiguration.findFirst({
-    where: {
-      paymentMethod: "Stripe",
-      status: true,
-    },
-    select: {
-      apiKey: true,
-      secretKey: true,
-      webhookSecretKey: true,
-      currencyCode: true,
-    },
-  });
+type InternalGatewayResponse = {
+  stripe: StripeGatewayConfig | null;
+  paypal: PayPalGatewayConfig | null;
+};
 
-  if (!row) return null;
+async function readGatewayConfig(): Promise<InternalGatewayResponse> {
+  return panelInternalGet<InternalGatewayResponse>("payment/gateways");
+}
 
-  const secretKey = String(row.secretKey ?? "").trim();
+function normalizeStripeGatewayConfig(stripe: StripeGatewayConfig | null | undefined): StripeGatewayConfig | null {
+  if (!stripe) return null;
+  const secretKey = String(stripe.secretKey ?? "").trim();
   if (!secretKey) return null;
-
-  const publishableKey = String(row.apiKey ?? "").trim();
-  const webhookSecretKey = String(row.webhookSecretKey ?? "").trim();
-  const currencyCode = String(row.currencyCode ?? "USD")
-    .trim()
-    .toLowerCase();
-
   return {
-    currencyCode,
-    publishableKey,
+    currencyCode: String(stripe.currencyCode ?? "usd").trim().toLowerCase(),
+    publishableKey: String(stripe.publishableKey ?? "").trim(),
     secretKey,
-    webhookSecretKey,
+    webhookSecretKey: String(stripe.webhookSecretKey ?? "").trim(),
   };
 }
 
-export async function getPayPalGatewayConfig(): Promise<PayPalGatewayConfig | null> {
-  const row = await prisma.paymentConfiguration.findFirst({
-    where: {
-      paymentMethod: "Paypal",
-      status: true,
-    },
-    select: {
-      apiKey: true,
-      secretKey: true,
-      webhookSecretKey: true,
-      currencyCode: true,
-      paymentMode: true,
-      additionalData1: true,
-    },
-  });
+function normalizePayPalGatewayConfig(paypal: PayPalGatewayConfig | null | undefined): PayPalGatewayConfig | null {
+  if (!paypal) return null;
 
-  if (!row) return null;
-
-  const clientId = String(row.apiKey ?? "").trim();
-  const secretKey = String(row.secretKey ?? "").trim();
+  const clientId = String(paypal.clientId ?? "").trim();
+  const secretKey = String(paypal.secretKey ?? "").trim();
   if (!clientId || !secretKey) return null;
 
-  const currencyCode = String(row.currencyCode ?? "USD")
-    .trim()
-    .toUpperCase();
-
-  const modeRaw = String(row.paymentMode ?? row.additionalData1 ?? "")
+  const modeRaw = String(paypal.mode ?? "")
     .trim()
     .toLowerCase();
-  const mode = modeRaw.includes("live") || modeRaw.includes("prod") ? "live" : "sandbox";
-
-  const webhookId = String(row.webhookSecretKey ?? "").trim() || null;
+  const mode: "live" | "sandbox" = modeRaw === "live" ? "live" : "sandbox";
 
   return {
-    currencyCode,
+    currencyCode: String(paypal.currencyCode ?? "USD").trim().toUpperCase(),
     clientId,
     secretKey,
-    webhookId,
+    webhookId: String(paypal.webhookId ?? "").trim() || null,
     mode,
   };
+}
+
+export async function getGatewayConfigs(): Promise<{
+  stripe: StripeGatewayConfig | null;
+  paypal: PayPalGatewayConfig | null;
+}> {
+  const data = await readGatewayConfig();
+  return {
+    stripe: normalizeStripeGatewayConfig(data?.stripe),
+    paypal: normalizePayPalGatewayConfig(data?.paypal),
+  };
+}
+
+export async function getStripeGatewayConfig(): Promise<StripeGatewayConfig | null> {
+  const gateways = await getGatewayConfigs();
+  return gateways.stripe;
+}
+
+export async function getPayPalGatewayConfig(): Promise<PayPalGatewayConfig | null> {
+  const gateways = await getGatewayConfigs();
+  return gateways.paypal;
 }

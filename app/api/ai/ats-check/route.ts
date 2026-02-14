@@ -4,7 +4,7 @@ import { requirePaidAiAccess } from "@/lib/ai-access";
 import { rateLimit } from "@/lib/rate-limit";
 import { truncateText } from "@/lib/limits";
 import { getResourceSettings } from "@/lib/resource-settings";
-const PDFParser = require("pdf2json");
+import { extractPdfText } from "@/lib/pdf-text";
 
 export async function POST(req: NextRequest) {
   const access = await requirePaidAiAccess();
@@ -32,26 +32,7 @@ export async function POST(req: NextRequest) {
     let text = "";
     
     if (file.type === "application/pdf") {
-      const pdfParser = new PDFParser(null, 1); // 1 = text only
-
-      text = await new Promise((resolve, reject) => {
-        pdfParser.on("pdfParser_dataError", (errData: any) => reject(errData.parserError));
-        pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
-          // Check if it's raw text or JSON
-          // When constructor second arg is 1, it emits text content in `pdfParser_dataReady`?
-          // Actually, looking at docs/examples, getRawTextContent() is simpler if available, 
-          // or we parse the JSON.
-          // Let's assume standard behavior: dataReady returns the data.
-          // If we pass 1 to constructor, it should be text.
-          
-          // Re-checking standard usage:
-          // For text extraction:
-          const rawText = pdfParser.getRawTextContent();
-          resolve(rawText);
-        });
-
-        pdfParser.parseBuffer(buffer);
-      });
+      text = await extractPdfText(buffer, 1);
     } else {
       // Fallback for plain text
       text = buffer.toString("utf-8");

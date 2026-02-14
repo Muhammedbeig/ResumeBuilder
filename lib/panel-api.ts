@@ -13,8 +13,6 @@ type PanelApiError = {
   details?: string;
 } & Record<string, unknown>;
 
-const DEFAULT_PANEL_API_BASE_URL = "http://localhost/Panel/public/api";
-
 function panelApiBaseUrl() {
   const explicit = process.env.PANEL_API_BASE_URL;
   if (explicit) return explicit.replace(/\/+$/, "");
@@ -23,7 +21,7 @@ function panelApiBaseUrl() {
   const legacyBase = process.env.NEXT_PUBLIC_API_URL;
   if (legacyBase) return `${legacyBase.replace(/\/+$/, "")}/api`;
 
-  return DEFAULT_PANEL_API_BASE_URL.replace(/\/+$/, "");
+  throw new Error("Missing PANEL_API_BASE_URL (or NEXT_PUBLIC_API_URL)");
 }
 
 function withLeadingSlash(path: string) {

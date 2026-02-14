@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { json } from "@/lib/json";
-import { parseUserIdBigInt } from "@/lib/user-id";
 import { getGeminiModel } from "@/lib/gemini";
+import { panelInternalGet, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import { getSessionUserId } from "@/lib/session-user";
 import { requireAnnualAccess } from "@/lib/ai-access";
-import type { Prisma } from "@prisma/client";
 
 function getQuarterLabel(date = new Date()) {
   const year = date.getFullYear();
@@ -21,21 +21,18 @@ function tryParseJson(raw: string) {
 function normalizeJsonString(raw: string) {
   return raw
     .replace(/^[\uFEFF\xA0]+/, "")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
+    .replace(/[â€œâ€]/g, '"')
+    .replace(/[â€˜â€™]/g, "'")
     .replace(/,\s*([}\]])/g, "$1");
 }
 
 function extractJson(textResponse: string) {
-  const fenced =
-    textResponse.match(/```json([\s\S]*?)```/) ||
-    textResponse.match(/```([\s\S]*?)```/);
+  const fenced = textResponse.match(/```json([\s\S]*?)```/) || textResponse.match(/```([\s\S]*?)```/);
   const candidate = fenced ? fenced[1] : textResponse;
 
   try {
     return tryParseJson(candidate);
   } catch {
-    // Try to extract the first top-level JSON object
     const start = candidate.indexOf("{");
     const end = candidate.lastIndexOf("}");
     if (start !== -1 && end !== -1 && end > start) {
@@ -55,17 +52,20 @@ function extractJson(textResponse: string) {
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const reports = await prisma.marketValueReport.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return json({ reports });
+  try {
+    const data = await panelInternalGet<{ reports: any[] }>("market-value", { userId });
+    return json({ reports: data.reports ?? [] });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to load reports" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   if (access) return access;
 
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -130,24 +130,25 @@ ${JSON.stringify(resumeJson)}
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const textResponse = response.text();
-    const reportJson = extractJson(textResponse);
+    const reportJson = extractJson(response.text());
 
-    const record = await prisma.marketValueReport.create({
-      data: {
-        userId,
+    const stored = await panelInternalPost<{ report: any }>("market-value", {
+      userId,
+      body: {
         resumeId,
         source,
         periodLabel,
-        reportJson: reportJson as Prisma.InputJsonValue,
-        resumeJson: resumeJson as Prisma.InputJsonValue,
+        reportJson,
+        resumeJson,
       },
     });
 
-    return json({ report: record });
+    return json({ report: stored.report });
   } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Market value report error:", error);
     return json({ error: "Failed to generate report" }, { status: 500 });
   }
 }
-

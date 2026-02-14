@@ -1,64 +1,59 @@
-import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/password";
 import { json } from "@/lib/json";
 import { getEmailAuthEnabled } from "@/lib/auth";
-
-const MODEL_TYPE_USER = "App\\Models\\User";
-
-async function assignUserRole(userId: bigint) {
-  const roles = await prisma.$queryRaw<Array<{ id: bigint }>>`
-    SELECT id FROM roles WHERE name = 'User' LIMIT 1
-  `;
-  const roleId = roles[0]?.id;
-  if (!roleId) return;
-
-  await prisma.$executeRaw`
-    INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
-    VALUES (${roleId}, ${MODEL_TYPE_USER}, ${userId})
-  `;
-}
+import {
+  getPasswordPolicyError,
+  isValidEmail,
+  normalizeEmail,
+  normalizeName,
+} from "@/lib/auth-validation";
+import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit";
+import { panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
 
 export async function POST(request: Request) {
+  const limited = rateLimit(request, {
+    prefix: "auth:register",
+    limit: 6,
+    windowMs: RATE_LIMITS.windowMs,
+    message: "Too many sign-up attempts. Please try again in a minute.",
+  });
+  if (limited) {
+    return limited;
+  }
+
   const emailAuthEnabled = await getEmailAuthEnabled();
   if (!emailAuthEnabled) {
-    return json(
-      { error: "Email sign-up is currently disabled." },
-      { status: 403 }
-    );
+    return json({ error: "Email sign-up is currently disabled." }, { status: 403 });
   }
 
   const body = await request.json().catch(() => ({}));
-  const name = String(body?.name || "");
-  const email = String(body?.email || "").toLowerCase();
+  const name = normalizeName(body?.name);
+  const email = normalizeEmail(body?.email);
   const password = String(body?.password || "");
 
-  if (!email || !password) {
-    return json(
-      { error: "Email and password are required" },
-      { status: 400 }
-    );
+  if (!name || name.length < 2 || name.length > 80) {
+    return json({ error: "Please enter your full name (2-80 characters)." }, { status: 400 });
   }
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-
-  if (existingUser) {
-    return json({ error: "Email already in use" }, { status: 409 });
+  if (!email || !isValidEmail(email)) {
+    return json({ error: "Please enter a valid email address." }, { status: 400 });
   }
 
-  const passwordHash = await hashPassword(password);
+  const passwordError = getPasswordPolicyError(password);
+  if (passwordError) {
+    return json({ error: passwordError }, { status: 400 });
+  }
 
-  const user = await prisma.user.create({
-    data: {
-      name: name || email.split("@")[0] || "user",
-      email,
-      passwordHash,
-      type: "email",
-      fcmId: "",
-      notification: true,
-    },
-  });
-
-  await assignUserRole(user.id);
-
-  return json({ id: user.id.toString() });
+  try {
+    const data = await panelInternalPost<{ id: string }>("auth/register", {
+      body: { name, email, password },
+    });
+    return json({ id: data.id });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      const payload = error.payload as { message?: string } | null;
+      const message = payload?.message || "Registration failed";
+      return json({ error: message }, { status: error.status || 500 });
+    }
+    return json({ error: "Registration failed" }, { status: 500 });
+  }
 }

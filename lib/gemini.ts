@@ -1,20 +1,21 @@
 import "server-only";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { prisma } from "@/lib/prisma";
+import { panelInternalPost } from "@/lib/panel-internal-api";
 
-let cachedKey: string | undefined;
+let cachedResolvedKey: string | undefined;
 let cachedClient: GoogleGenerativeAI | null = null;
+let cachedClientKey: string | undefined;
 let cachedAt = 0;
 
 const KEY_CACHE_TTL_MS = 60_000;
 
 async function getKeyFromSettings(): Promise<string | null> {
   try {
-    const rows = await prisma.$queryRaw<Array<{ value: string | null }>>`
-      SELECT value FROM settings WHERE name = 'gemini_api_key' LIMIT 1
-    `;
-    const value = rows?.[0]?.value ?? null;
+    const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+      body: { keys: ["gemini_api_key"] },
+    });
+    const value = data.settings?.gemini_api_key ?? null;
     return value ? String(value).trim() : null;
   } catch {
     return null;
@@ -23,8 +24,8 @@ async function getKeyFromSettings(): Promise<string | null> {
 
 async function resolveApiKey(): Promise<string> {
   const now = Date.now();
-  if (cachedKey && now - cachedAt < KEY_CACHE_TTL_MS) {
-    return cachedKey;
+  if (cachedResolvedKey && now - cachedAt < KEY_CACHE_TTL_MS) {
+    return cachedResolvedKey;
   }
 
   const dbKey = await getKeyFromSettings();
@@ -35,16 +36,16 @@ async function resolveApiKey(): Promise<string> {
     throw new Error("Missing GEMINI_API_KEY (panel setting or environment variable)");
   }
 
-  cachedKey = apiKey;
+  cachedResolvedKey = apiKey;
   cachedAt = now;
   return apiKey;
 }
 
 async function getClient(): Promise<GoogleGenerativeAI> {
   const apiKey = await resolveApiKey();
-  if (!cachedClient || cachedKey !== apiKey) {
-    cachedKey = apiKey;
+  if (!cachedClient || cachedClientKey !== apiKey) {
     cachedClient = new GoogleGenerativeAI(apiKey);
+    cachedClientKey = apiKey;
   }
   return cachedClient;
 }

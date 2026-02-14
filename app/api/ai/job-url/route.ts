@@ -1,15 +1,85 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { load as loadHtml } from "cheerio";
+
 import { authOptions } from "@/lib/auth";
-import { withPuppeteerPage } from "@/lib/puppeteer";
 import { rateLimit } from "@/lib/rate-limit";
 import { getResourceSettings } from "@/lib/resource-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const normalizeUrl = (url: string) => {
-  const parsed = new URL(url);
+const PRIORITY_SELECTORS = [
+  "main",
+  "article",
+  "section",
+  "[class*='job']",
+  "[id*='job']",
+  "[class*='description']",
+  "[id*='description']",
+  "[class*='content']",
+  "[data-testid*='job']",
+  "#jobDescriptionText",
+  "[id*='jobDescriptionText']",
+  "[class*='job-description']",
+  "[class*='show-more-less-html']",
+  "[data-testid*='job-description']",
+  "[data-test='jobsearch-JobComponent-description']",
+];
+
+const KEYWORDS = [
+  "responsibilities",
+  "requirements",
+  "qualification",
+  "skills",
+  "experience",
+  "about the role",
+  "what you'll do",
+  "what you will do",
+  "job description",
+];
+
+const DESKTOP_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+const normalizeWhitespace = (value: string) =>
+  value
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const stripTrailingPunctuation = (value: string) => {
+  let candidate = value.trim();
+  while (candidate.length > 0 && /[)\].,;!?]$/.test(candidate)) {
+    if (candidate.endsWith(")")) {
+      const openCount = (candidate.match(/\(/g) ?? []).length;
+      const closeCount = (candidate.match(/\)/g) ?? []).length;
+      if (openCount >= closeCount) break;
+    }
+    candidate = candidate.slice(0, -1);
+  }
+  return candidate;
+};
+
+const extractFirstUrl = (input: string) => {
+  const normalized = normalizeWhitespace(input);
+  const directCandidate = stripTrailingPunctuation(normalized);
+  if (/^https?:\/\//i.test(directCandidate)) {
+    return directCandidate;
+  }
+
+  const matched = normalized.match(/https?:\/\/[^\s<>"']+/i);
+  if (!matched) return "";
+  return stripTrailingPunctuation(matched[0]);
+};
+
+const normalizeUrl = (urlInput: string) => {
+  const candidate = extractFirstUrl(urlInput);
+  if (!candidate) {
+    throw new Error("Invalid URL");
+  }
+
+  const parsed = new URL(candidate);
   if (!["http:", "https:"].includes(parsed.protocol)) {
     throw new Error("Only http/https URLs are supported.");
   }
@@ -23,18 +93,87 @@ const cleanText = (text: string) =>
     .replace(/\s{2,}/g, " ")
     .trim();
 
-const extractFromHtml = (html: string) => {
-  const cleaned = html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<\/(p|div|section|article|br|li|h1|h2|h3|h4|h5|h6)>/gi, "\n")
-    .replace(/<[^>]+>/g, " ");
-  return cleanText(cleaned);
+const scoreCandidate = (text: string) => {
+  const lower = text.toLowerCase();
+  const keywordScore = KEYWORDS.reduce((acc, keyword) => acc + (lower.includes(keyword) ? 1 : 0), 0);
+  return text.length + keywordScore * 500;
 };
 
-const trimToMax = (text: string, max = 12000) =>
-  text.length > max ? text.slice(0, max) : text;
+const trimToMax = (text: string, max = 12000) => (text.length > max ? text.slice(0, max) : text);
+
+function extractFromJsonLd(html: string): string {
+  const $ = loadHtml(html);
+  let best = "";
+
+  $("script[type='application/ld+json']").each((_, node) => {
+    const raw = $(node).text();
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      const queue = Array.isArray(parsed) ? [...parsed] : [parsed];
+
+      while (queue.length > 0) {
+        const item = queue.shift();
+        if (!item) continue;
+        if (Array.isArray(item)) {
+          queue.push(...item);
+          continue;
+        }
+        if (typeof item !== "object") continue;
+        const typed = item as Record<string, unknown>;
+        const typeValue = String(typed["@type"] ?? "").toLowerCase();
+        const description = String(typed.description ?? "").trim();
+        if (description && (typeValue.includes("jobposting") || typeValue.includes("job"))) {
+          if (description.length > best.length) best = description;
+        }
+        if (typed["@graph"] && Array.isArray(typed["@graph"])) {
+          queue.push(...typed["@graph"]);
+        }
+      }
+    } catch {
+      // ignore malformed json-ld blocks
+    }
+  });
+
+  return cleanText(best);
+}
+
+function extractFromHtml(html: string): string {
+  const $ = loadHtml(html);
+  $("script, style, noscript").remove();
+
+  const candidates: string[] = [];
+
+  for (const selector of PRIORITY_SELECTORS) {
+    $(selector).each((_, node) => {
+      const text = cleanText($(node).text() || "");
+      if (text.length > 120) candidates.push(text);
+    });
+  }
+
+  const bodyText = cleanText($("body").text() || "");
+  if (bodyText.length > 120) candidates.push(bodyText);
+
+  if (candidates.length === 0) return "";
+
+  candidates.sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
+  return candidates[0] ?? "";
+}
+
+function extractFromMeta(html: string): string {
+  const $ = loadHtml(html);
+  const candidates = [
+    $("meta[property='og:description']").attr("content") || "",
+    $("meta[name='description']").attr("content") || "",
+    $("meta[name='twitter:description']").attr("content") || "",
+  ]
+    .map((value) => cleanText(value))
+    .filter((value) => value.length > 40);
+
+  if (candidates.length === 0) return "";
+  candidates.sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
+  return candidates[0] ?? "";
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -53,12 +192,11 @@ export async function POST(request: Request) {
   }
 
   const resourceSettings = await getResourceSettings();
-
   const rateLimitResponse = rateLimit(request, {
     prefix: "ai-job-url",
-    limit: resourceSettings.rateLimits.puppeteer,
+    limit: resourceSettings.rateLimits.aiHeavy,
     windowMs: resourceSettings.rateLimits.windowMs,
-    key: session?.user?.id ? `user:${session.user.id}` : undefined,
+    key: session.user.id ? `user:${session.user.id}` : undefined,
   });
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -80,87 +218,37 @@ export async function POST(request: Request) {
   let text = "";
 
   try {
-    if (resourceSettings.puppeteer.enabled) {
-      const extracted = await withPuppeteerPage(
-        async (page) => {
-        await page.setUserAgent(
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        );
-        await page.goto(normalized, { waitUntil: "domcontentloaded", timeout: 30000 });
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+    const response = await fetch(normalized, {
+      headers: {
+        "User-Agent": DESKTOP_USER_AGENT,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      redirect: "follow",
+      cache: "no-store",
+    });
 
-        return page.evaluate(() => {
-          const keywords = [
-            "responsibilities",
-            "requirements",
-            "qualification",
-            "skills",
-            "experience",
-            "about the role",
-            "what you'll do",
-            "what you will do",
-            "job description",
-          ];
-
-          const candidates = Array.from(
-            document.querySelectorAll(
-              [
-                "main",
-                "article",
-                "section",
-                "[class*='job']",
-                "[id*='job']",
-                "[class*='description']",
-                "[id*='description']",
-                "[class*='content']",
-                "[data-testid*='job']",
-              ].join(",")
-            )
-          );
-
-          const score = (text: string) => {
-            const lower = text.toLowerCase();
-            const keywordScore = keywords.reduce(
-              (acc, keyword) => acc + (lower.includes(keyword) ? 1 : 0),
-              0
-            );
-            return text.length + keywordScore * 500;
-          };
-
-          const best = candidates
-            .map((el) => (el as HTMLElement).innerText || "")
-            .filter((text) => text.trim().length > 200)
-            .map((text) => ({ text, score: score(text) }))
-            .sort((a, b) => b.score - a.score)[0];
-
-          return best?.text || document.body?.innerText || "";
-        });
-        },
-        {
-          concurrency: resourceSettings.puppeteer.concurrency,
-          enabled: resourceSettings.puppeteer.enabled,
-        }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Unable to extract job description from this URL. Please paste it manually." },
+        { status: 422 }
       );
-
-      text = cleanText(extracted || "");
     }
+
+    const html = await response.text();
+    const jsonLdText = extractFromJsonLd(html);
+    const htmlText = extractFromHtml(html);
+    const metaText = extractFromMeta(html);
+
+    const candidates = [jsonLdText, htmlText, metaText].filter(Boolean);
+    candidates.sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
+    text = candidates[0] ?? "";
+    text = cleanText(text);
   } catch (error) {
-    console.error("Job URL puppeteer extraction failed", error);
+    console.error("Job URL extraction failed", error);
   }
 
-  if (!text || text.length < 200) {
-    try {
-      const response = await fetch(normalized);
-      if (response.ok) {
-        const html = await response.text();
-        text = cleanText(extractFromHtml(html));
-      }
-    } catch (error) {
-      console.error("Job URL fetch fallback failed", error);
-    }
-  }
-
-  if (!text || text.length < 200) {
+  if (!text || text.length < 120) {
     return NextResponse.json(
       { error: "Unable to extract job description from this URL. Please paste it manually." },
       { status: 422 }

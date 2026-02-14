@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Settings, LogOut, CreditCard, Receipt } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Settings, LogOut, CreditCard, Receipt, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,32 +21,142 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getPasswordPolicyError, normalizeName } from "@/lib/auth-validation";
 import { toast } from "sonner";
+
+type SubscriptionLevel = "free" | "pro" | "business";
+type SubscriptionPlanId = "weekly" | "monthly" | "annual" | null;
+type SettingsTab = "general" | "security" | "plan";
+
+function normalizeSubscription(value?: string | null): SubscriptionLevel {
+  if (value === "pro" || value === "business") return value;
+  return "free";
+}
+
+function normalizeSubscriptionPlanId(value?: string | null): SubscriptionPlanId {
+  if (value === "weekly" || value === "monthly" || value === "annual") return value;
+  return null;
+}
+
+function getPlanMeta(subscription: SubscriptionLevel, planId: SubscriptionPlanId) {
+  if (subscription === "free") {
+    return {
+      badge: "FREE",
+      title: "Freemium",
+      subtitle: "You are currently using the free plan.",
+      isFree: true,
+    };
+  }
+
+  if (subscription === "business" || planId === "annual") {
+    return {
+      badge: "ANNUAL",
+      title: "Annual Pro",
+      subtitle: "Your yearly premium plan is active.",
+      isFree: false,
+    };
+  }
+
+  if (planId === "weekly") {
+    return {
+      badge: "WEEKLY",
+      title: "Job Hunt Pass (Weekly)",
+      subtitle: "Your weekly premium plan is active.",
+      isFree: false,
+    };
+  }
+
+  return {
+    badge: "PRO",
+    title: "Pro Monthly",
+    subtitle: "Your monthly premium plan is active.",
+    isFree: false,
+  };
+}
 
 export function UserNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, update } = useSession();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
   const [newName, setNewName] = useState(session?.user?.name || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionLevel>(
+    normalizeSubscription(session?.user?.subscription)
+  );
+  const [subscriptionPlanId, setSubscriptionPlanId] = useState<SubscriptionPlanId>(
+    normalizeSubscriptionPlanId(session?.user?.subscriptionPlanId)
+  );
 
   const user = session?.user;
+  const planMeta = useMemo(
+    () => getPlanMeta(subscription, subscriptionPlanId),
+    [subscription, subscriptionPlanId]
+  );
   const initials = user?.name
     ?.split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2) || "U";
+
+  useEffect(() => {
+    setNewName(session?.user?.name || "");
+  }, [session?.user?.name]);
+
+  useEffect(() => {
+    setSubscription(normalizeSubscription(session?.user?.subscription));
+    setSubscriptionPlanId(normalizeSubscriptionPlanId(session?.user?.subscriptionPlanId));
+  }, [session?.user?.subscription, session?.user?.subscriptionPlanId]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    let active = true;
+    void (async () => {
+      try {
+        const response = await fetch("/api/user/subscription", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!active) return;
+
+        const nextSubscription = normalizeSubscription(data?.subscription);
+        const nextPlanId = normalizeSubscriptionPlanId(data?.subscriptionPlanId);
+        setSubscription(nextSubscription);
+        setSubscriptionPlanId(nextPlanId);
+
+        const currentSubscription = normalizeSubscription(session?.user?.subscription);
+        const currentPlanId = normalizeSubscriptionPlanId(session?.user?.subscriptionPlanId);
+        if (nextSubscription !== currentSubscription || nextPlanId !== currentPlanId) {
+          await update({
+            subscription: nextSubscription,
+            subscriptionPlanId: nextPlanId,
+          });
+        }
+      } catch {
+        // Keep session values when background sync is unavailable.
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [pathname, session?.user?.id, update]);
+
+  const openPricing = () => {
+    const returnPath = pathname || "/dashboard";
+    router.push(`/pricing?returnUrl=${encodeURIComponent(returnPath)}`);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,13 +174,19 @@ export function UserNav() {
   };
 
   const handleUpdateProfile = async () => {
+    const normalizedName = normalizeName(newName);
+    if (!normalizedName || normalizedName.length < 2 || normalizedName.length > 80) {
+      toast.error("Please enter your full name (2-80 characters).");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch('/api/user/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-            name: newName,
+            name: normalizedName,
             image: selectedImage 
         }),
       });
@@ -79,7 +195,7 @@ export function UserNav() {
 
       if (!res.ok) throw new Error(data.error || "Failed to update profile");
 
-      await update({ name: newName, image: selectedImage || user?.image });
+      await update({ name: normalizedName, image: selectedImage || user?.image });
       toast.success("Profile updated successfully");
       setSelectedImage(null);
     } catch (error: any) {
@@ -90,6 +206,17 @@ export function UserNav() {
   };
 
   const handleUpdatePassword = async () => {
+    if (!currentPassword) {
+      toast.error("Current password is required.");
+      return;
+    }
+
+    const passwordError = getPasswordPolicyError(newPassword);
+    if (passwordError) {
+      toast.error(passwordError);
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -125,7 +252,16 @@ export function UserNav() {
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Button variant="ghost" className="relative h-10 rounded-full px-1.5">
+              <span
+                className={`mr-2 inline-flex min-w-[58px] items-center justify-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                  planMeta.isFree
+                    ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    : "bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
+                }`}
+              >
+                {planMeta.badge}
+              </span>
               <Avatar className="h-10 w-10 border border-gray-200 dark:border-gray-800">
                 <AvatarImage src={selectedImage || user?.image || ""} alt={user?.name || ""} />
                 <AvatarFallback className="bg-gradient-to-br from-purple-500 to-cyan-500 text-white font-medium">
@@ -146,9 +282,28 @@ export function UserNav() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DialogTrigger asChild>
-                <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSettingsTab("general");
+                    setIsSettingsOpen(true);
+                  }}
+                >
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogTrigger asChild>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSettingsTab("plan");
+                    setIsSettingsOpen(true);
+                  }}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  <span>Plan</span>
+                  <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {planMeta.badge}
+                  </span>
                 </DropdownMenuItem>
               </DialogTrigger>
               <DropdownMenuItem
@@ -185,9 +340,14 @@ export function UserNav() {
               Manage your account settings and preferences.
             </DialogDescription>
           </DialogHeader>
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className={`grid w-full ${user?.hasPassword ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <Tabs
+            value={settingsTab}
+            onValueChange={(value) => setSettingsTab(value as SettingsTab)}
+            className="w-full"
+          >
+            <TabsList className={`grid w-full ${user?.hasPassword ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="plan">Plan</TabsTrigger>
               {user?.hasPassword && <TabsTrigger value="security">Security</TabsTrigger>}
             </TabsList>
             
@@ -246,6 +406,50 @@ export function UserNav() {
               </Button>
             </TabsContent>
 
+            <TabsContent value="plan" className="space-y-4 py-4">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Current Plan</p>
+                <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{planMeta.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{planMeta.subtitle}</p>
+              </div>
+
+              {planMeta.isFree ? (
+                <Button
+                  onClick={() => {
+                    setIsSettingsOpen(false);
+                    openPricing();
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
+                >
+                  Upgrade to Pro
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      window.location.href = `/api/stripe/portal?returnUrl=${encodeURIComponent(
+                        pathname || "/dashboard"
+                      )}`;
+                    }}
+                    className="w-full"
+                  >
+                    Billing & Subscriptions
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      openPricing();
+                    }}
+                    className="w-full"
+                  >
+                    View Plans
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
             {user?.hasPassword && (
               <TabsContent value="security" className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -265,6 +469,9 @@ export function UserNav() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                   />
+                  <p className="text-[0.8rem] text-muted-foreground">
+                    Use 8-72 chars with uppercase, lowercase, number, and special character.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm Password</Label>

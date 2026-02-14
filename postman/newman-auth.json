@@ -1,0 +1,4094 @@
+{
+  "collection": {
+    "_": {
+      "postman_id": "a6ecf4be-bf23-4a22-b8f7-6c8ae5f7b7f6"
+    },
+    "item": [
+      {
+        "id": "4eee5dbd-befe-4e67-9b70-46aef68ae376",
+        "name": "Next API - ai",
+        "item": [
+          {
+            "id": "0c864de4-8eee-43ff-8982-8ef9138cd182",
+            "name": "POST /api/ai/ats-check",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "ats-check"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": ""
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "17dcd3c2-1ca1-41ae-9e1a-d676ab9e0e62",
+            "name": "POST /api/ai/job-url",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "job-url"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"url\": \"https://pk.indeed.com/viewjob?jk=8dbf0202b8289a70&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "87680b6f-e996-4c1b-ad1f-68b0bc79bed5",
+            "name": "POST /api/ai/parse-cover-letter",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "parse-cover-letter"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f176531c-b099-448b-b3c3-c09f6f1b4fd6",
+            "name": "POST /api/ai/parse",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "parse"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "19c36b2c-3143-4c9b-968c-25d44fe08545",
+            "name": "POST /api/ai/rewrite",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "rewrite"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "1f38e8bb-bf54-41dd-a570-2e3444ae1376",
+            "name": "POST /api/ai/suggestions/responsibilities",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "suggestions",
+                  "responsibilities"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "3604d7c5-9cac-4a40-a5aa-47c3b94f3ebd",
+            "name": "POST /api/ai/suggestions/skills",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "suggestions",
+                  "skills"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "b5db572e-b313-4f36-a413-56387dd7b7ec",
+            "name": "POST /api/ai/summary",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "summary"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8f32e1e4-a905-4465-bdd5-2be099f2a7f3",
+            "name": "POST /api/ai/tailor",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "tailor"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "035536e6-d324-4e65-896c-cac47cc635f6",
+            "name": "POST /api/ai/job-url (LinkedIn long URL)",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "ai",
+                  "job-url"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"url\": \"https://www.linkedin.com/jobs/view/senior-full-stack-engineer-next-js-node-js-saas-full-time-onsite-lahore-at-az-technologies-4364112535/?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic&originalSubdomain=pk\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "83ca3a94-90aa-4e8b-9a6d-0c13a1edefe5",
+        "name": "Next API - app-download-links",
+        "item": [
+          {
+            "id": "90576456-74c4-433a-803d-0cff788931ae",
+            "name": "POST /api/app-download-links",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "app-download-links"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "e4271155-67a6-48ab-98cc-f096f08fbd4d",
+        "name": "Next API - auth",
+        "item": [
+          {
+            "id": "58053cd5-dcc6-41f5-a8e0-3f6d61f4bbce",
+            "name": "GET /api/auth/csrf",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "csrf"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "5448330f-8abc-4f10-b26b-1b6fe43b729d",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var data = {}; try{data=pm.response.json();}catch(e){}",
+                    "if(data.csrfToken) pm.environment.set('csrfToken', data.csrfToken);"
+                  ],
+                  "_lastExecutionId": "a188f78e-13d5-4128-8bbc-efb781956ec1"
+                }
+              }
+            ]
+          },
+          {
+            "id": "34175ddd-8da8-4b13-97f0-eeaf8667db7a",
+            "name": "POST /api/auth/callback/credentials?json=true",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "callback",
+                  "credentials"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "json",
+                    "value": "true"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/x-www-form-urlencoded"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "urlencoded",
+                "urlencoded": [
+                  {
+                    "key": "csrfToken",
+                    "value": "{{csrfToken}}"
+                  },
+                  {
+                    "key": "email",
+                    "value": "{{userEmail}}"
+                  },
+                  {
+                    "key": "password",
+                    "value": "{{userPassword}}"
+                  },
+                  {
+                    "key": "callbackUrl",
+                    "value": "{{nextBaseUrl}}/"
+                  },
+                  {
+                    "key": "json",
+                    "value": "true"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "75b678da-26c0-4348-a1bb-4f8ac5b72676",
+            "name": "GET /api/auth/session",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "session"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "b0e929af-9856-4cc3-a769-4fb54fda4f88",
+            "name": "POST /api/auth/register",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"Postman User\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"11111111\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "73ea17ba-b006-4f83-8b1f-af83ab243bf5",
+                  "type": "text/javascript",
+                  "exec": [
+                    "const stamp = Date.now();",
+                    "pm.environment.set('newUserEmail', `postman_${stamp}@example.com`);"
+                  ],
+                  "_lastExecutionId": "71c4a514-692c-4392-8343-1a6693ba0c14"
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "8bacde63-2a71-44b6-a0ef-4784cfd006b3",
+        "name": "Next API - bank-transfer",
+        "item": [
+          {
+            "id": "d52808fa-3d6d-4d4b-996e-f2b4a3c9f2ec",
+            "name": "POST /api/bank-transfer/receipt",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "bank-transfer",
+                  "receipt"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "packageId",
+                    "value": "{{packageId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": ""
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "da64c32b-6224-4d6d-ac74-266b5d6c690f",
+            "name": "GET /api/bank-transfer/receipts",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "bank-transfer",
+                  "receipts"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ae67e56e-449c-49f0-afea-0007682294c8",
+            "name": "GET /api/bank-transfer/settings",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "bank-transfer",
+                  "settings"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "e103e4c7-e569-44a3-a584-eccecff0d1dd",
+        "name": "Next API - contact-us",
+        "item": [
+          {
+            "id": "dd6cd8a4-1616-4eef-ae90-f9ad37f5af24",
+            "name": "POST /api/contact-us",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "contact-us"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "7f2e8469-12a9-4e98-ba87-93533240bf3a",
+        "name": "Next API - cvs",
+        "item": [
+          {
+            "id": "869caae2-6384-46ca-96d7-7e705d17dc98",
+            "name": "GET /api/cvs/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "777ef4ed-16b6-423c-b13e-49579d51ed2b",
+            "name": "PUT /api/cvs/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "3e70235e-d3ba-4d8d-97df-9b32b020b024",
+            "name": "DELETE /api/cvs/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8e801b81-7e94-4f24-9bb1-6c659c7bf3ff",
+            "name": "GET /api/cvs",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "cvs"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "11e5e262-a290-4400-8fbb-74999e494c38",
+            "name": "POST /api/cvs",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "cvs"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "0e3de5c6-a7cf-450d-834d-f6054a5c66c1",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var data = {}; try{data=pm.response.json();}catch(e){}",
+                    "if(data.cv && data.cv.id) pm.environment.set('cvId', data.cv.id);"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "cdf4832d-d834-4fa4-a14d-067f98fa6101",
+        "name": "Next API - extract-pdf-text",
+        "item": [
+          {
+            "id": "b92ba1d3-a7a9-453e-aa48-a8a0c6917a71",
+            "name": "POST /api/extract-pdf-text",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "extract-pdf-text"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": ""
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "c94248df-fec6-488a-b551-28fb6cb63805",
+        "name": "Next API - generate-pdf",
+        "item": [
+          {
+            "id": "e54fafd5-a2ff-4adc-9a7a-fa12f77c61b2",
+            "name": "POST /api/generate-pdf",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "generate-pdf"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "x-internal-export-key",
+                  "value": "{{internalExportKey}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"templateId\": \"modern\",\n  \"type\": \"resume\",\n  \"data\": {\n    \"basics\": {\n      \"name\": \"Test User\",\n      \"title\": \"Software Engineer\",\n      \"image\": \"\",\n      \"location\": \"City\",\n      \"email\": \"test@example.com\",\n      \"phone\": \"\",\n      \"linkedin\": \"\",\n      \"github\": \"\",\n      \"portfolio\": \"\",\n      \"summary\": \"Test summary\"\n    },\n    \"experiences\": [],\n    \"education\": [],\n    \"skills\": [],\n    \"projects\": [],\n    \"certifications\": [],\n    \"languages\": []\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "47fed986-b66d-4eee-ac68-d6d9ca8859e5",
+        "name": "Next API - market-value",
+        "item": [
+          {
+            "id": "06e5bec5-d126-4eb9-8e17-f5d7e2d2cf1a",
+            "name": "GET /api/market-value/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "market-value",
+                  "{{marketReportId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "3b70a8c6-46d5-4a54-8e1f-5be28d3f9020",
+            "name": "GET /api/market-value",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "market-value"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "509c2fec-0403-408d-95d9-23570b43cbf7",
+            "name": "POST /api/market-value",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "market-value"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "1ef282ce-ec23-420e-b2b4-bf935c3bbc30",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var data = {}; try{data=pm.response.json();}catch(e){}",
+                    "if(data.report && data.report.id) pm.environment.set('marketReportId', data.report.id);"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "3002bc5c-7a85-4daa-adf7-8416e6fc6ecc",
+        "name": "Next API - payment",
+        "item": [
+          {
+            "id": "25ce7580-248a-487d-ac16-a2f071cc415e",
+            "name": "GET /api/payment/activation-status",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "payment",
+                  "activation-status"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f263eddd-2790-48de-9a53-62f893399cff",
+            "name": "GET /api/payment/settings",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "payment",
+                  "settings"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "2ee89bac-57a5-435c-a904-096f9eef43ea",
+        "name": "Next API - paypal",
+        "item": [
+          {
+            "id": "6c028122-6fa9-48d2-b806-c0718c68288a",
+            "name": "POST /api/paypal/checkout",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "paypal",
+                  "checkout"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "151bcffc-8aca-4395-a080-ba943464bc24",
+            "name": "POST /api/paypal/confirm",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "paypal",
+                  "confirm"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "ba53ccb9-1f25-4bd1-8472-782ed23568ec",
+        "name": "Next API - resumes",
+        "item": [
+          {
+            "id": "79776707-8bd7-4dad-b206-b575443566cd",
+            "name": "GET /api/resumes/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ed0efff2-9c9a-44d3-a219-83bfacf5ca4b",
+            "name": "PUT /api/resumes/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c9937fd0-1b29-4baa-8ce2-2945d5842bfd",
+            "name": "DELETE /api/resumes/{{id}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "7448c2ce-abd7-446e-a2ec-87e40fd5ddd2",
+            "name": "GET /api/resumes",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "resumes"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "602eae92-4952-482e-ad96-f418e6a03faf",
+            "name": "POST /api/resumes",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "resumes"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "722c6694-e891-4ff4-a1c8-e52ae7d81b4d",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var data = {}; try{data=pm.response.json();}catch(e){}",
+                    "if(data.resume && data.resume.id) pm.environment.set('resumeId', data.resume.id);"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "ffd31f00-20e5-4d5d-92a7-10d3052bf9c6",
+        "name": "Next API - site",
+        "item": [
+          {
+            "id": "5256e728-3555-4cd7-bc08-4a4c1760e55e",
+            "name": "GET /api/site/settings",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "site",
+                  "settings"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "601e8946-fc40-40ba-a439-dd7fce1ab947",
+        "name": "Next API - stripe",
+        "item": [
+          {
+            "id": "ef581461-ec1c-41ce-bd15-fd0d7f98fb5d",
+            "name": "POST /api/stripe/checkout",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "stripe",
+                  "checkout"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f225e8f3-8ca4-4199-9818-7c4233c7016d",
+            "name": "POST /api/stripe/confirm",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "stripe",
+                  "confirm"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ad5faa13-427f-4a12-a7c4-c8f9c95099e5",
+            "name": "GET /api/stripe/portal",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "stripe",
+                  "portal"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "625eb77b-2be0-49c4-9b8f-6b119a0895e3",
+            "name": "POST /api/stripe/webhook",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "stripe",
+                  "webhook"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "8a7fcdf0-129c-48c7-a906-53f05fac6d01",
+        "name": "Next API - subscription-packages",
+        "item": [
+          {
+            "id": "282098f0-7ef8-4a15-bd3f-a756727f2f13",
+            "name": "GET /api/subscription-packages",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "subscription-packages"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "cc3b135f-a4e6-4402-941b-c1c76d4d5bd5",
+        "name": "Next API - templates",
+        "item": [
+          {
+            "id": "923dc2f8-8953-4d09-aa63-f19583d38d78",
+            "name": "GET /api/templates/{{templateId}}",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "templates",
+                  "{{templateId}}"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "249c1f98-5621-4af6-ab60-82bf5557472c",
+            "name": "GET /api/templates/categories",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "templates",
+                  "categories"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f0706584-c474-4ade-9bc6-18d152e0440e",
+            "name": "GET /api/templates/list",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "templates",
+                  "list"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "860ca1d6-f50c-48c2-aa0b-9b794cbd0377",
+        "name": "Next API - test-templates",
+        "item": [
+          {
+            "id": "a70dd7c4-f442-4dbf-8daa-2665bb62d00f",
+            "name": "GET /api/test-templates",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "test-templates"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "4bb91cfa-13b1-4e84-a752-ec7e25470986",
+        "name": "Next API - user",
+        "item": [
+          {
+            "id": "3baf7bfe-5a49-4a13-ab4c-a6bbddde6eaa",
+            "name": "GET /api/user/subscription",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "user",
+                  "subscription"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "940c27ed-2217-4719-a3c7-b8ee90e11963",
+            "name": "PUT /api/user/update",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "user",
+                  "update"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "9096eb33-a1bf-4f02-817f-39b63ba21b9a",
+            "name": "POST /api/user/upgrade",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "user",
+                  "upgrade"
+                ],
+                "host": [
+                  "{{nextBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "38fd4b44-28d0-4b24-b0e7-416f60ea0d1f",
+        "name": "Panel Internal APIs",
+        "item": [
+          {
+            "id": "61c7ecf6-37c5-4ec8-8efd-1bec916629e0",
+            "name": "POST /api/internal/app-download-links ............................... Internal\\InternalDeepLinkController@create",
+            "request": {
+              "url": {
+                "path": [
+                  "app-download-links"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "497620d4-fec0-403d-9e2e-ea59aef4509e",
+            "name": "POST /api/internal/auth/credentials ................................ Internal\\InternalAuthController@credentials",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "credentials"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "7efa91c7-5723-48bf-a723-f2375940803f",
+            "name": "POST /api/internal/auth/oauth/google ............................... Internal\\InternalAuthController@oauthGoogle",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "oauth",
+                  "google"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "e5b1dc80-4fdf-4326-922a-028aa1d55abc",
+            "name": "POST /api/internal/auth/register ...................................... Internal\\InternalAuthController@register",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "6d59eaea-6d66-43f3-a987-ed40359e1f24",
+            "name": "POST /api/internal/bank-transfer/receipt ................ Internal\\InternalPaymentController@bankTransferReceipt",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipt"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "fff81d19-6cde-4c72-a0c0-3e6d779ae0ba",
+            "name": "GET /api/internal/bank-transfer/receipts .............. Internal\\InternalPaymentController@bankTransferReceipts",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipts"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "91669f09-3dd8-4d78-ace4-74cbf1680620",
+            "name": "GET /api/internal/cvs ............................................ Internal\\InternalDocumentsController@listCvs",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "28c9acb5-f06d-4ad5-a066-bf655311fd23",
+            "name": "POST /api/internal/cvs ........................................... Internal\\InternalDocumentsController@createCv",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "3bfe3a51-2686-4eca-935b-238bd896ec5d",
+            "name": "GET /api/internal/cvs/{{id}} ......................................... Internal\\InternalDocumentsController@getCv",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "75e2f061-ae97-4230-9844-86ca7f6e8a4c",
+            "name": "PUT /api/internal/cvs/{{id}} ...................................... Internal\\InternalDocumentsController@updateCv",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c19f81cf-608c-4d9e-89c5-5b7c8e888383",
+            "name": "DELETE /api/internal/cvs/{{id}} ...................................... Internal\\InternalDocumentsController@deleteCv",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a281cb46-4926-4af6-8a8b-bfdb2cc3ade5",
+            "name": "GET /api/internal/market-value ................................... Internal\\InternalMarketValueController@index",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f27401d1-70c8-400f-8308-4a9cf6a83f23",
+            "name": "POST /api/internal/market-value ................................... Internal\\InternalMarketValueController@store",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "900d68c7-4671-45f8-9925-5e750245e5f2",
+            "name": "GET /api/internal/market-value/{{id}} ............................... Internal\\InternalMarketValueController@show",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value",
+                  "{{marketReportId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c0aea0db-c262-4afb-9c84-f1410ea8e6a4",
+            "name": "GET /api/internal/packages/{{id}} .................................... Internal\\InternalPaymentController@package",
+            "request": {
+              "url": {
+                "path": [
+                  "packages",
+                  "{{packageId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8658835b-94bf-4253-a42f-6b7d812c5e22",
+            "name": "GET /api/internal/payment/activation-status .................. Internal\\InternalUserController@activationStatus",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "activation-status"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "1a43244c-d955-4985-bffb-e844675f0210",
+            "name": "GET /api/internal/payment/gateways ................................ Internal\\InternalPaymentController@gateways",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "gateways"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "fc6334b5-05bb-41d5-900f-2e056a26bea5",
+            "name": "POST /api/internal/payment/transactions ................... Internal\\InternalPaymentController@createTransaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "e5912597-dd13-4acc-93f9-384b97bf701f",
+            "name": "GET /api/internal/payment/transactions/{{id}} ................. Internal\\InternalPaymentController@getTransaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{paymentTransactionId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "e82fa54d-3725-4b08-9f34-5e79c9090e49",
+            "name": "PATCH /api/internal/payment/transactions/{{id}} .............. Internal\\InternalPaymentController@updateTransaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{paymentTransactionId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "bd9f4951-85d5-4fd8-a76e-f28a2a019ede",
+            "name": "POST /api/internal/payment/transactions/{{id}}/activate ... Internal\\InternalPaymentController@activateTransaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{paymentTransactionId}}",
+                  "activate"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "91a0a5dc-fe10-497a-9793-573f2eadd893",
+            "name": "GET /api/internal/resumes .................................... Internal\\InternalDocumentsController@listResumes",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "214cdecc-3c2b-4a40-8c87-25a77ec00032",
+            "name": "POST /api/internal/resumes ................................... Internal\\InternalDocumentsController@createResume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "6cc6cf9e-a75c-4b89-829d-37ef0382d100",
+            "name": "GET /api/internal/resumes/{{id}} ................................. Internal\\InternalDocumentsController@getResume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "55321c66-d5f3-4d9c-83eb-df836b49784c",
+            "name": "PUT /api/internal/resumes/{{id}} .............................. Internal\\InternalDocumentsController@updateResume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c05be12d-444b-49e3-acb3-2e0fa82002a7",
+            "name": "DELETE /api/internal/resumes/{{id}} .............................. Internal\\InternalDocumentsController@deleteResume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "d7b7a26f-699a-4de2-8687-fdb1d3eb9d2b",
+            "name": "POST /api/internal/settings/batch .................................... Internal\\InternalSettingsController@batch",
+            "request": {
+              "url": {
+                "path": [
+                  "settings",
+                  "batch"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f94c220a-b4fe-4759-ac73-c1e45ae0a297",
+            "name": "GET /api/internal/shared/{{id}} .................................. Internal\\InternalDocumentsController@sharedDoc",
+            "request": {
+              "url": {
+                "path": [
+                  "shared",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "26a42d0f-e357-4d01-a950-ebf1078fc9f7",
+            "name": "GET /api/internal/user/payment-profile ......................... Internal\\InternalUserController@paymentProfile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "payment-profile"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "9be71d41-6fe8-46f0-8a49-95901827a35f",
+            "name": "PATCH /api/internal/user/payment-profile ................... Internal\\InternalUserController@updatePaymentProfile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "payment-profile"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "292f07c3-fbb2-43be-8dad-241e48f40d8f",
+            "name": "PATCH /api/internal/user/profile .................................. Internal\\InternalUserController@updateProfile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "profile"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a1e806f3-5479-49b6-b273-0567649308ac",
+            "name": "GET /api/internal/user/subscription .............................. Internal\\InternalUserController@subscription",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "subscription"
+                ],
+                "host": [
+                  "{{panelBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      }
+    ],
+    "event": [],
+    "variable": [
+      {
+        "type": "any",
+        "value": "http://localhost:3000",
+        "key": "nextBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "http://localhost/Panel/public/api/internal",
+        "key": "panelBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "user@example.com",
+        "key": "userEmail"
+      },
+      {
+        "type": "any",
+        "value": "password123",
+        "key": "userPassword"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "csrfToken"
+      },
+      {
+        "type": "any",
+        "value": "REPLACE_INTERNAL_EXPORT_KEY",
+        "key": "internalExportKey"
+      },
+      {
+        "type": "any",
+        "value": "REPLACE_RESUPRO_INTERNAL_API_KEY",
+        "key": "internalApiKey"
+      },
+      {
+        "type": "any",
+        "value": "1",
+        "key": "internalUserId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "resumeId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "cvId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "marketReportId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "paymentTransactionId"
+      },
+      {
+        "type": "any",
+        "value": "modern",
+        "key": "templateId"
+      },
+      {
+        "type": "any",
+        "value": "1",
+        "key": "packageId"
+      },
+      {
+        "type": "any",
+        "value": "session",
+        "key": "nextauthPath"
+      }
+    ],
+    "info": {
+      "_postman_id": "a6ecf4be-bf23-4a22-b8f7-6c8ae5f7b7f6",
+      "name": "ResuPro Phase2 - All APIs",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "description": {
+        "content": "Auto-generated full collection for Next APIs + Panel internal APIs.",
+        "type": "text/plain"
+      }
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment",
+      "postman_exported_at": "2026-02-13T00:00:00.000Z",
+      "postman_exported_using": "Codex GPT-5"
+    },
+    "id": "7427cfe7-4e58-4aef-a535-c26adf2f58f7",
+    "name": "ResuPro Phase2 Local",
+    "values": [
+      {
+        "type": "any",
+        "value": "http://localhost:3000",
+        "key": "nextBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "http://localhost/Panel/public/api/internal",
+        "key": "panelBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "sa@gmail.com",
+        "key": "userEmail"
+      },
+      {
+        "type": "any",
+        "value": "11111111",
+        "key": "userPassword"
+      },
+      {
+        "type": "any",
+        "value": "ad08daa285270336aeddad5941a2a88314e393fcb8663ade1260ea9664ecf08e",
+        "key": "csrfToken"
+      },
+      {
+        "type": "any",
+        "value": "eaf28bceaa55b24ae1ac93933f4ece6cec27c0e1ae6ca13bae2a544e7d7229fc",
+        "key": "internalExportKey"
+      },
+      {
+        "type": "any",
+        "value": "cc15883cf31ff93e8313c59772e16b55f54b5415284945dbceaf779e5c88ac2e838bdeb31b2522d7d6e039d4070e016d",
+        "key": "internalApiKey"
+      },
+      {
+        "type": "any",
+        "value": "27",
+        "key": "internalUserId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "resumeId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "cvId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "marketReportId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "paymentTransactionId"
+      },
+      {
+        "type": "any",
+        "value": "modern",
+        "key": "templateId"
+      },
+      {
+        "type": "any",
+        "value": "1",
+        "key": "packageId"
+      },
+      {
+        "type": "any",
+        "value": "session",
+        "key": "nextauthPath"
+      },
+      {
+        "type": "any",
+        "value": "postman_1771063545198@example.com",
+        "key": "newUserEmail"
+      }
+    ]
+  },
+  "globals": {
+    "id": "20bd4bf3-dc44-428b-9cc9-203ce54a6145",
+    "values": []
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 677.25,
+      "responseMin": 53,
+      "responseMax": 1059,
+      "responseSd": 380.9490615554788,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1771063543325,
+      "completed": 1771063546304
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 4,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "83e3f5bc-84c9-4b2c-843d-b4055fad96dd",
+          "httpRequestId": "bc84cf5b-3790-474d-9f1b-a74d94d53d8b"
+        },
+        "item": {
+          "id": "58053cd5-dcc6-41f5-a8e0-3f6d61f4bbce",
+          "name": "GET /api/auth/csrf",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "csrf"
+              ],
+              "host": [
+                "{{nextBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5448330f-8abc-4f10-b26b-1b6fe43b729d",
+                "type": "text/javascript",
+                "exec": [
+                  "var data = {}; try{data=pm.response.json();}catch(e){}",
+                  "if(data.csrfToken) pm.environment.set('csrfToken', data.csrfToken);"
+                ],
+                "_lastExecutionId": "a188f78e-13d5-4128-8bbc-efb781956ec1"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "port": "3000",
+            "path": [
+              "api",
+              "auth",
+              "csrf"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "40dc0173-195b-4de9-8777-4c2c042beeb8",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost:3000",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "edaf38b3-1c44-4916-86b7-9653a914313e",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "vary",
+              "value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+            },
+            {
+              "key": "cache-control",
+              "value": "private, no-cache, no-store"
+            },
+            {
+              "key": "content-type",
+              "value": "application/json"
+            },
+            {
+              "key": "expires",
+              "value": "0"
+            },
+            {
+              "key": "pragma",
+              "value": "no-cache"
+            },
+            {
+              "key": "set-cookie",
+              "value": "next-auth.csrf-token=ad08daa285270336aeddad5941a2a88314e393fcb8663ade1260ea9664ecf08e%7C9a1463a98126186cb27993a41685d237a5779a7bf63bee1fd5b9c96bec2d737d; Path=/; HttpOnly; SameSite=Lax"
+            },
+            {
+              "key": "set-cookie",
+              "value": "next-auth.callback-url=http%3A%2F%2Flocalhost%3A3000; Path=/; HttpOnly; SameSite=Lax"
+            },
+            {
+              "key": "Date",
+              "value": "Sat, 14 Feb 2026 10:05:44 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              99,
+              115,
+              114,
+              102,
+              84,
+              111,
+              107,
+              101,
+              110,
+              34,
+              58,
+              34,
+              97,
+              100,
+              48,
+              56,
+              100,
+              97,
+              97,
+              50,
+              56,
+              53,
+              50,
+              55,
+              48,
+              51,
+              51,
+              54,
+              97,
+              101,
+              100,
+              100,
+              97,
+              100,
+              53,
+              57,
+              52,
+              49,
+              97,
+              50,
+              97,
+              56,
+              56,
+              51,
+              49,
+              52,
+              101,
+              51,
+              57,
+              51,
+              102,
+              99,
+              98,
+              56,
+              54,
+              54,
+              51,
+              97,
+              100,
+              101,
+              49,
+              50,
+              54,
+              48,
+              101,
+              97,
+              57,
+              54,
+              54,
+              52,
+              101,
+              99,
+              102,
+              48,
+              56,
+              101,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 887,
+          "responseSize": 80
+        },
+        "id": "58053cd5-dcc6-41f5-a8e0-3f6d61f4bbce"
+      },
+      {
+        "cursor": {
+          "ref": "1e2863ae-9d6e-415f-a7b1-668aa946d82a",
+          "length": 4,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "8fadfe81-1f54-4622-a677-8d184ad5ecb3"
+        },
+        "item": {
+          "id": "34175ddd-8da8-4b13-97f0-eeaf8667db7a",
+          "name": "POST /api/auth/callback/credentials?json=true",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "credentials"
+              ],
+              "host": [
+                "{{nextBaseUrl}}"
+              ],
+              "query": [
+                {
+                  "key": "json",
+                  "value": "true"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "{{csrfToken}}"
+                },
+                {
+                  "key": "email",
+                  "value": "{{userEmail}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{userPassword}}"
+                },
+                {
+                  "key": "callbackUrl",
+                  "value": "{{nextBaseUrl}}/"
+                },
+                {
+                  "key": "json",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "port": "3000",
+            "path": [
+              "api",
+              "auth",
+              "callback",
+              "credentials"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [
+              {
+                "key": "json",
+                "value": "true"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "bd2f2151-d44a-4398-907d-4011b9965766",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost:3000",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "168",
+              "system": true
+            },
+            {
+              "key": "Cookie",
+              "value": "next-auth.csrf-token=ad08daa285270336aeddad5941a2a88314e393fcb8663ade1260ea9664ecf08e%7C9a1463a98126186cb27993a41685d237a5779a7bf63bee1fd5b9c96bec2d737d; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3000",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "urlencoded",
+            "urlencoded": [
+              {
+                "key": "csrfToken",
+                "value": "ad08daa285270336aeddad5941a2a88314e393fcb8663ade1260ea9664ecf08e"
+              },
+              {
+                "key": "email",
+                "value": "sa@gmail.com"
+              },
+              {
+                "key": "password",
+                "value": "11111111"
+              },
+              {
+                "key": "callbackUrl",
+                "value": "http://localhost:3000/"
+              },
+              {
+                "key": "json",
+                "value": "true"
+              }
+            ]
+          }
+        },
+        "response": {
+          "id": "59487eb3-b1e8-495b-b77c-680646cb34a0",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "vary",
+              "value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+            },
+            {
+              "key": "content-type",
+              "value": "application/json"
+            },
+            {
+              "key": "set-cookie",
+              "value": "next-auth.callback-url=http%3A%2F%2Flocalhost%3A3000%2F; Path=/; HttpOnly; SameSite=Lax"
+            },
+            {
+              "key": "set-cookie",
+              "value": "next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..XFqtb_dH95reuFGr.lxk7xoFaNTXyTjhad6d-l9VkRyqB98DqxGrUIvHlt0kq9hdyn3-NZXNOIYOIeWyGjGxp5mUDEb2oQSa2mlVYzFAMsX-lCSHfVRTxfPi3vOvOb886lR2kRKCs3DtAQ0l3xjJyo0QHJ0_ullKdAXAcUEk1jZDgyoWyq-zugxJjZfXhgwGFcUlcrIJht-z-eugofbyOSbO6i0Hdf8qE1SbYUHBGMm7K0s-jotvcjhaDzyhzmEC4yJ0RX8AW3cjtwayamimyIijUSUOSNvOLCgMHGlRSHlpcKC2eVks.bWpI8gkzEU26wOC0kOVSZg; Path=/; Expires=Mon, 16 Mar 2026 10:05:45 GMT; HttpOnly; SameSite=Lax"
+            },
+            {
+              "key": "Date",
+              "value": "Sat, 14 Feb 2026 10:05:45 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              117,
+              114,
+              108,
+              34,
+              58,
+              34,
+              104,
+              116,
+              116,
+              112,
+              58,
+              47,
+              47,
+              108,
+              111,
+              99,
+              97,
+              108,
+              104,
+              111,
+              115,
+              116,
+              58,
+              51,
+              48,
+              48,
+              48,
+              47,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 710,
+          "responseSize": 32
+        },
+        "id": "34175ddd-8da8-4b13-97f0-eeaf8667db7a"
+      },
+      {
+        "cursor": {
+          "ref": "41c5ab85-2b7c-4f56-b216-4f0206acbad3",
+          "length": 4,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "304f6d09-f380-4fbd-a6f8-f64a92d95792"
+        },
+        "item": {
+          "id": "75b678da-26c0-4348-a1bb-4f8ac5b72676",
+          "name": "GET /api/auth/session",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "session"
+              ],
+              "host": [
+                "{{nextBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "port": "3000",
+            "path": [
+              "api",
+              "auth",
+              "session"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "c29939df-fb54-4025-a73c-82295db558fe",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost:3000",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Cookie",
+              "value": "next-auth.csrf-token=ad08daa285270336aeddad5941a2a88314e393fcb8663ade1260ea9664ecf08e%7C9a1463a98126186cb27993a41685d237a5779a7bf63bee1fd5b9c96bec2d737d; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3000%2F; next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..XFqtb_dH95reuFGr.lxk7xoFaNTXyTjhad6d-l9VkRyqB98DqxGrUIvHlt0kq9hdyn3-NZXNOIYOIeWyGjGxp5mUDEb2oQSa2mlVYzFAMsX-lCSHfVRTxfPi3vOvOb886lR2kRKCs3DtAQ0l3xjJyo0QHJ0_ullKdAXAcUEk1jZDgyoWyq-zugxJjZfXhgwGFcUlcrIJht-z-eugofbyOSbO6i0Hdf8qE1SbYUHBGMm7K0s-jotvcjhaDzyhzmEC4yJ0RX8AW3cjtwayamimyIijUSUOSNvOLCgMHGlRSHlpcKC2eVks.bWpI8gkzEU26wOC0kOVSZg",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "ffac732e-c7fa-4fa5-8f03-6f124cba978f",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "vary",
+              "value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+            },
+            {
+              "key": "cache-control",
+              "value": "private, no-cache, no-store"
+            },
+            {
+              "key": "content-type",
+              "value": "application/json"
+            },
+            {
+              "key": "expires",
+              "value": "0"
+            },
+            {
+              "key": "pragma",
+              "value": "no-cache"
+            },
+            {
+              "key": "set-cookie",
+              "value": "next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..38VJRIM-I94PNfPh.2X7Ya94cs10HVTpXc7-ReyYJnU24TXsIlVr_I7aaQ7KUmjUTW9jj3RaD3mXlqJr3ccnMhNheGPProqD_YY2mi4mW8hmjDsKX1dLAMybEvEZ2WJr47BoUp6osuNvWkiyAOEFFd2lMCjARkxEO2GWKhaLbTykozpDye8Jd6oWA5Y1HQ1nU_R4I7xNekc98Nd386sz8s_hZNz1PWUjcZn2sMUW70KWXGfphq39vXOTBp7ej8E_Z1mAdoLGz5pktNaLPIPvbENnlf-wCLZsTnVDVtiR9oXrGKuBQYtw.YKA98QBQru2uignUXw0EpA; Path=/; Expires=Mon, 16 Mar 2026 10:05:45 GMT; HttpOnly; SameSite=Lax"
+            },
+            {
+              "key": "Date",
+              "value": "Sat, 14 Feb 2026 10:05:45 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              117,
+              115,
+              101,
+              114,
+              34,
+              58,
+              123,
+              34,
+              110,
+              97,
+              109,
+              101,
+              34,
+              58,
+              34,
+              115,
+              97,
+              34,
+              44,
+              34,
+              101,
+              109,
+              97,
+              105,
+              108,
+              34,
+              58,
+              34,
+              115,
+              97,
+              64,
+              103,
+              109,
+              97,
+              105,
+              108,
+              46,
+              99,
+              111,
+              109,
+              34,
+              44,
+              34,
+              105,
+              109,
+              97,
+              103,
+              101,
+              34,
+              58,
+              110,
+              117,
+              108,
+              108,
+              44,
+              34,
+              105,
+              100,
+              34,
+              58,
+              34,
+              50,
+              55,
+              34,
+              44,
+              34,
+              115,
+              117,
+              98,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              102,
+              114,
+              101,
+              101,
+              34,
+              44,
+              34,
+              115,
+              117,
+              98,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              80,
+              108,
+              97,
+              110,
+              73,
+              100,
+              34,
+              58,
+              110,
+              117,
+              108,
+              108,
+              44,
+              34,
+              104,
+              97,
+              115,
+              80,
+              97,
+              115,
+              115,
+              119,
+              111,
+              114,
+              100,
+              34,
+              58,
+              116,
+              114,
+              117,
+              101,
+              125,
+              44,
+              34,
+              101,
+              120,
+              112,
+              105,
+              114,
+              101,
+              115,
+              34,
+              58,
+              34,
+              50,
+              48,
+              50,
+              54,
+              45,
+              48,
+              51,
+              45,
+              49,
+              54,
+              84,
+              49,
+              48,
+              58,
+              48,
+              53,
+              58,
+              52,
+              53,
+              46,
+              49,
+              52,
+              49,
+              90,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 53,
+          "responseSize": 172
+        },
+        "id": "75b678da-26c0-4348-a1bb-4f8ac5b72676"
+      },
+      {
+        "cursor": {
+          "ref": "47a841ab-173b-4499-973a-11a803c7877d",
+          "length": 4,
+          "cycles": 1,
+          "position": 3,
+          "iteration": 0,
+          "httpRequestId": "4149f5b0-b538-4f6c-aceb-a91a21da7229"
+        },
+        "item": {
+          "id": "b0e929af-9856-4cc3-a769-4fb54fda4f88",
+          "name": "POST /api/auth/register",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "host": [
+                "{{nextBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman User\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"11111111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "73ea17ba-b006-4f83-8b1f-af83ab243bf5",
+                "type": "text/javascript",
+                "exec": [
+                  "const stamp = Date.now();",
+                  "pm.environment.set('newUserEmail', `postman_${stamp}@example.com`);"
+                ],
+                "_lastExecutionId": "71c4a514-692c-4392-8343-1a6693ba0c14"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "port": "3000",
+            "path": [
+              "api",
+              "auth",
+              "register"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "645948ab-9c33-43de-9f68-154fed717d89",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost:3000",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "102",
+              "system": true
+            },
+            {
+              "key": "Cookie",
+              "value": "next-auth.csrf-token=ad08daa285270336aeddad5941a2a88314e393fcb8663ade1260ea9664ecf08e%7C9a1463a98126186cb27993a41685d237a5779a7bf63bee1fd5b9c96bec2d737d; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3000%2F; next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..38VJRIM-I94PNfPh.2X7Ya94cs10HVTpXc7-ReyYJnU24TXsIlVr_I7aaQ7KUmjUTW9jj3RaD3mXlqJr3ccnMhNheGPProqD_YY2mi4mW8hmjDsKX1dLAMybEvEZ2WJr47BoUp6osuNvWkiyAOEFFd2lMCjARkxEO2GWKhaLbTykozpDye8Jd6oWA5Y1HQ1nU_R4I7xNekc98Nd386sz8s_hZNz1PWUjcZn2sMUW70KWXGfphq39vXOTBp7ej8E_Z1mAdoLGz5pktNaLPIPvbENnlf-wCLZsTnVDVtiR9oXrGKuBQYtw.YKA98QBQru2uignUXw0EpA",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\": \"Postman User\",\n  \"email\": \"postman_1771063545198@example.com\",\n  \"password\": \"11111111\"\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": {
+          "id": "dd709f56-68e4-46ed-899b-cc9244ea0577",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "vary",
+              "value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+            },
+            {
+              "key": "content-type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Date",
+              "value": "Sat, 14 Feb 2026 10:05:46 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              105,
+              100,
+              34,
+              58,
+              34,
+              50,
+              56,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 1059,
+          "responseSize": 11
+        },
+        "id": "b0e929af-9856-4cc3-a769-4fb54fda4f88"
+      }
+    ],
+    "transfers": {
+      "responseTotal": 295
+    },
+    "failures": [],
+    "error": null
+  }
+}

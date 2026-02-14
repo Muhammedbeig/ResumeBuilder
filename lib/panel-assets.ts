@@ -1,5 +1,3 @@
-const DEFAULT_PANEL_BASE_URL = "http://localhost/Panel/public";
-
 function panelBaseUrl() {
   // Prefer explicit base.
   const explicit = process.env.NEXT_PUBLIC_API_URL;
@@ -9,7 +7,7 @@ function panelBaseUrl() {
   const apiBase = process.env.PANEL_API_BASE_URL;
   if (apiBase) return apiBase.replace(/\/+$/, "").replace(/\/api$/, "");
 
-  return DEFAULT_PANEL_BASE_URL.replace(/\/+$/, "");
+  return "";
 }
 
 export function resolvePanelAssetUrl(value: unknown): string | null {
@@ -35,4 +33,3 @@ export function resolvePanelAssetUrl(value: unknown): string | null {
 
   return `${base}/storage/${raw}`;
 }
-

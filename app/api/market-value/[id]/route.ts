@@ -1,8 +1,9 @@
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { json } from "@/lib/json";
-import { parseUserIdBigInt } from "@/lib/user-id";
+import { panelInternalGet, PanelInternalApiError } from "@/lib/panel-internal-api";
+import { getSessionUserId } from "@/lib/session-user";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,19 +11,20 @@ interface RouteContext {
 
 export async function GET(_request: Request, context: RouteContext) {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await context.params;
-  const report = await prisma.marketValueReport.findFirst({
-    where: { id, userId },
-  });
 
-  if (!report) {
-    return json({ error: "Report not found" }, { status: 404 });
+  try {
+    const data = await panelInternalGet<{ report: any }>(`market-value/${id}`, { userId });
+    return json({ report: data.report });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to load report" }, { status: 500 });
   }
-
-  return json({ report });
 }

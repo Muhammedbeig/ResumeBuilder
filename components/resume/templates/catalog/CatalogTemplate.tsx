@@ -438,11 +438,28 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
     }
   };
 
-  const renderSectionGroup = (types: Array<SectionConfig["type"]>) =>
-    activeStructure
-      .filter((section) => types.includes(section.type) && section.isVisible !== false)
-      .map((section) => renderSection(section))
-      .filter(Boolean);
+  const orderedSections = activeStructure
+    .filter((section) => section.type !== "basics" && section.isVisible !== false)
+    .map((section) => ({
+      id: section.id,
+      content: renderSection(section),
+    }))
+    .filter((section) => Boolean(section.content));
+
+  const splitByOrder = <T,>(items: T[]) => {
+    const first: T[] = [];
+    const second: T[] = [];
+    items.forEach((item, index) => {
+      if (index % 2 === 0) {
+        first.push(item);
+      } else {
+        second.push(item);
+      }
+    });
+    return [first, second] as const;
+  };
+
+  const [primaryOrderedSections, secondaryOrderedSections] = splitByOrder(orderedSections);
 
   const containerClass =
     config.layout === "cards" ? "grid gap-6 md:grid-cols-2" : "space-y-4";
@@ -505,37 +522,68 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
                 : "grid-cols-[1fr_240px]"
             }`}
           >
-            <div
-              className="rounded-3xl border p-5 backdrop-blur-sm"
-              style={{
-                backgroundColor: config.palette.surface,
-                borderColor: config.palette.border,
-              }}
-            >
-              {renderBasicsHeader()}
-              {renderSkills("skills")}
-              {renderCertifications("certifications")}
-            </div>
-            <div>
-              {renderSummary("summary")}
-              {renderExperience("experience")}
-              {renderEducation("education")}
-              {renderProjects("projects")}
-            </div>
+            {config.layout === "sidebar-left" ? (
+              <>
+                <div
+                  className="rounded-3xl border p-5 backdrop-blur-sm"
+                  style={{
+                    backgroundColor: config.palette.surface,
+                    borderColor: config.palette.border,
+                  }}
+                >
+                  {renderBasicsHeader()}
+                  {secondaryOrderedSections.map((section) => (
+                    <div key={section.id}>{section.content}</div>
+                  ))}
+                </div>
+                <div>
+                  {primaryOrderedSections.map((section) => (
+                    <div key={section.id}>{section.content}</div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  {primaryOrderedSections.map((section) => (
+                    <div key={section.id}>{section.content}</div>
+                  ))}
+                </div>
+                <div
+                  className="rounded-3xl border p-5 backdrop-blur-sm"
+                  style={{
+                    backgroundColor: config.palette.surface,
+                    borderColor: config.palette.border,
+                  }}
+                >
+                  {renderBasicsHeader()}
+                  {secondaryOrderedSections.map((section) => (
+                    <div key={section.id}>{section.content}</div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <>
             {renderBasicsHeader()}
             {config.layout === "split" ? (
               <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
-                <div>{renderSectionGroup(["summary", "experience", "projects"])}</div>
-                <div>{renderSectionGroup(["skills", "education", "certifications"])}</div>
+                <div>
+                  {primaryOrderedSections.map((section) => (
+                    <div key={section.id}>{section.content}</div>
+                  ))}
+                </div>
+                <div>
+                  {secondaryOrderedSections.map((section) => (
+                    <div key={section.id}>{section.content}</div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className={containerClass}>
-                {activeStructure.map((section) => {
-                  if (section.type === "basics") return null;
-                  const content = renderSection(section);
+                {orderedSections.map((section) => {
+                  const content = section.content;
                   if (!content) return null;
                   return (
                     <div

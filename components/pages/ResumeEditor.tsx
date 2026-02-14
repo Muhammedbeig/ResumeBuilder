@@ -113,7 +113,7 @@ export function ResumeEditorPage() {
     [planChoice, hasSubscription]
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isUnmountingRef = useRef(false);
+  const isMountedRef = useRef(true);
   const {
     resumeData,
     currentResume,
@@ -257,6 +257,34 @@ export function ResumeEditorPage() {
     }
     return null;
   }, [updateSession]);
+
+  const pollActivationStatus = useCallback(async (paymentTransactionId?: string | null) => {
+    const deadline = Date.now() + 30_000;
+    while (isMountedRef.current && Date.now() < deadline) {
+      const query = paymentTransactionId
+        ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
+        : "";
+      const response = await fetchWithTimeout(
+        `/api/payment/activation-status${query}`,
+        { cache: "no-store" },
+        8000
+      ).catch(() => null);
+
+      if (response?.ok) {
+        const data: any = await response.json().catch(() => null);
+        if (data?.status === "active") {
+          return "active" as const;
+        }
+        if (data?.status === "failed") {
+          return "failed" as const;
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+
+    return "pending" as const;
+  }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -269,24 +297,21 @@ export function ResumeEditorPage() {
     const checkoutSessionId = params.get("session_id");
     const paypalOrderId = params.get("order_id") ?? params.get("token");
 
-    let cancelled = false;
-
     if (stripeStatus === "success" || paypalStatus === "success") {
       setIsDownloadModalOpen(true);
-      toast.success("Payment successful.");
 
       void (async () => {
         setIsSubscriptionActivating(true);
         try {
-          if (stripeStatus === "success" && paymentTransactionId && checkoutSessionId) {
+          if (stripeStatus === "success" && (paymentTransactionId || checkoutSessionId)) {
             await fetchWithTimeout("/api/stripe/confirm", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                paymentTransactionId,
-                sessionId: checkoutSessionId,
+                paymentTransactionId: paymentTransactionId ?? undefined,
+                sessionId: checkoutSessionId ?? undefined,
               }),
-            }, 15000).catch(() => null);
+            }, 45000).catch(() => null);
           }
           if (paypalStatus === "success" && paymentTransactionId && paypalOrderId) {
             await fetchWithTimeout("/api/paypal/confirm", {
@@ -296,35 +321,28 @@ export function ResumeEditorPage() {
                 paymentTransactionId,
                 orderId: paypalOrderId,
               }),
-            }, 15000).catch(() => null);
+            }, 45000).catch(() => null);
           }
 
-          const deadline = Date.now() + 30_000;
-          while (!cancelled && Date.now() < deadline) {
-            const latest = await syncSubscription();
-            const ok =
-              latest?.subscription === "pro" || latest?.subscription === "business";
-            if (ok) { setSubscriptionOverride(true); return; }
-            await new Promise((resolve) => setTimeout(resolve, 1200));
+          const status = await pollActivationStatus(paymentTransactionId);
+          if (status === "active") {
+            setSubscriptionOverride(true);
+            await syncSubscription();
+            return;
           }
         } finally {
-          if (!isUnmountingRef.current) setIsSubscriptionActivating(false);
+          if (isMountedRef.current) setIsSubscriptionActivating(false);
         }
       })();
-    } else if (stripeStatus === "cancel" || paypalStatus === "cancel") {
-      toast.info("Payment canceled.");
     }
 
     window.history.replaceState({}, "", window.location.pathname);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [syncSubscription]);
+  }, [pollActivationStatus, syncSubscription]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
-      isUnmountingRef.current = true;
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -604,6 +622,9 @@ export function ResumeEditorPage() {
         isActivating={isSubscriptionActivating}
         resourceType="resume"
         resourceId={currentResume?.id ?? null}
+        resourceTemplateId={activeTemplateId}
+        resourcePayload={resumeData as unknown as Record<string, unknown>}
+        resourceTitle={currentResume?.title ?? "Resume"}
       />
       <div
         className="relative overflow-hidden box-border"

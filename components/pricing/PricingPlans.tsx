@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 type PricingPlansProps = {
   flow?: string;
@@ -46,6 +47,7 @@ type PaymentSettingsResponse = {
 export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const router = useRouter();
   const { setPlanChoice } = usePlanChoice();
+  const isMountedRef = useRef(true);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -67,6 +69,12 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
   const [stripeEnabled, setStripeEnabled] = useState(true);
   const [paypalEnabled, setPaypalEnabled] = useState(true);
+  const pricingCallbackUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (flow) params.set("flow", flow);
+    params.set("returnUrl", safeReturnUrl);
+    return `/pricing?${params.toString()}`;
+  }, [flow, safeReturnUrl]);
   const stripeVisible = !paymentSettingsLoaded || stripeEnabled;
   const paypalVisible = !paymentSettingsLoaded || paypalEnabled;
   const bankTransferAvailable = bankTransferLoaded && bankTransferDetails.enabled;
@@ -87,6 +95,39 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     paypalVisible ? "paypal" : null,
     bankTransferAvailable ? "bank" : null,
   ].filter(Boolean) as PaymentMethod[];
+
+  const pollActivationStatus = useCallback(async (paymentTransactionId?: string | null) => {
+    const deadline = Date.now() + 30_000;
+    while (isMountedRef.current && Date.now() < deadline) {
+      const query = paymentTransactionId
+        ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
+        : "";
+      const res = await fetchWithTimeout(`/api/payment/activation-status${query}`, { cache: "no-store" }, 8000).catch(
+        () => null
+      );
+
+      if (res && res.ok) {
+        const data: any = await res.json().catch(() => null);
+        if (data?.status === "active") {
+          return { status: "active" as const };
+        }
+        if (data?.status === "failed") {
+          return { status: "failed" as const };
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+
+    return { status: "pending" as const };
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -111,7 +152,6 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     window.history.replaceState({}, "", current.pathname + current.search);
 
     if (stripeStatus === "cancel" || paypalStatus === "cancel") {
-      toast.info("Payment canceled.");
       return;
     }
 
@@ -144,20 +184,19 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       return;
     }
 
-    let cancelled = false;
-
     void (async () => {
+      if (!isMountedRef.current) return;
       setIsPaymentConfirming(true);
       try {
-        if (stripeStatus === "success" && paymentTransactionId && checkoutSessionId) {
+        if (stripeStatus === "success" && (paymentTransactionId || checkoutSessionId)) {
           await fetchWithTimeout("/api/stripe/confirm", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              paymentTransactionId,
-              sessionId: checkoutSessionId,
+              paymentTransactionId: paymentTransactionId ?? undefined,
+              sessionId: checkoutSessionId ?? undefined,
             }),
-          }, 15000).catch(() => null);
+          }, 45000).catch(() => null);
         }
         if (paypalStatus === "success" && paymentTransactionId && paypalOrderId) {
           await fetchWithTimeout("/api/paypal/confirm", {
@@ -167,34 +206,25 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
               paymentTransactionId,
               orderId: paypalOrderId,
             }),
-          }, 15000).catch(() => null);
+          }, 45000).catch(() => null);
         }
 
-        const deadline = Date.now() + 30_000;
-        while (!cancelled && Date.now() < deadline) {
-          const res = await fetchWithTimeout("/api/user/subscription", { cache: "no-store" }, 8000).catch(
-            () => null
-          );
-          if (res && res.ok) {
-            const data: any = await res.json().catch(() => null);
-            if (data?.subscription === "pro" || data?.subscription === "business") {
-              break;
-            }
-          }
-          await new Promise((r) => setTimeout(r, 1200));
+        const activation = await pollActivationStatus(paymentTransactionId);
+        if (!isMountedRef.current) return;
+
+        if (activation.status === "active") {
+          router.replace(target.pathname + target.search);
+          return;
         }
 
-        toast.success("Subscription activated.");
-        if (!cancelled) router.replace(target.pathname + target.search);
+        if (activation.status === "failed") {
+          return;
+        }
       } finally {
-        if (!cancelled) setIsPaymentConfirming(false);
+        if (isMountedRef.current) setIsPaymentConfirming(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [flow, router, safeReturnUrl]);
+  }, [flow, pollActivationStatus, router, safeReturnUrl]);
 
   useEffect(() => {
     let active = true;
@@ -288,13 +318,10 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: safeReturnUrl }),
+        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: pricingCallbackUrl }),
       });
       if (response.status === 401) {
-        const callbackUrl = `/pricing?flow=${encodeURIComponent(flow ?? "download")}&returnUrl=${encodeURIComponent(
-          safeReturnUrl
-        )}`;
-        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        router.push(`/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`);
         return;
       }
       if (!response.ok) {
@@ -332,13 +359,10 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       const response = await fetch("/api/paypal/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: safeReturnUrl }),
+        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: pricingCallbackUrl }),
       });
       if (response.status === 401) {
-        const callbackUrl = `/pricing?flow=${encodeURIComponent(flow ?? "download")}&returnUrl=${encodeURIComponent(
-          safeReturnUrl
-        )}`;
-        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        router.push(`/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`);
         return;
       }
       if (!response.ok) {
@@ -377,10 +401,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       });
 
       if (response.status === 401) {
-        const callbackUrl = `/pricing?flow=${encodeURIComponent(flow ?? "download")}&returnUrl=${encodeURIComponent(
-          safeReturnUrl
-        )}`;
-        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        router.push(`/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`);
         return;
       }
 
@@ -405,22 +426,35 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {isPaymentConfirming && (
-        <div className="mx-auto max-w-4xl px-4 pt-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
-            <span className="inline-flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border border-slate-400 border-t-transparent" />
-              Confirming your payment and activating your plan...
-            </span>
-          </div>
-        </div>
-      )}
       <PricingSection
         mode="checkout"
         cards={cards}
         onSelectPackage={handleSelectPackage}
         selectedPackageId={selectedPackageId}
       />
+
+      <Dialog open={isPaymentConfirming} onOpenChange={() => undefined}>
+        <DialogContent
+          className="max-w-md rounded-2xl border border-gray-200 bg-white/95 p-5 text-gray-900 shadow-2xl backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/95 dark:text-gray-100 [&>button]:hidden"
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-base text-gray-900 dark:text-gray-100">Activating Your Plan</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="inline-flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50/70 px-3 py-2 dark:border-purple-900/40 dark:bg-purple-900/20">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-300/50 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 dark:border-purple-500/40">
+                  <Spinner className="h-4 w-4 text-purple-600 dark:text-cyan-300" />
+                </span>
+                <span className="text-left">
+                  Confirming your payment and activating your plan... This may take up to 10-15s.
+                </span>
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isPaymentOpen && !!selectedPackageId} onOpenChange={setIsPaymentOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] overflow-y-auto rounded-3xl border border-slate-800 bg-slate-950 text-white shadow-2xl">

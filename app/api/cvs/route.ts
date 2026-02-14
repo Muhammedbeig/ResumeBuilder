@@ -1,30 +1,32 @@
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { json } from "@/lib/json";
+import { panelInternalGet, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
 import { normalizeResumeData } from "@/lib/resume-data";
-import { generateShortId } from "@/lib/utils";
-import { parseUserIdBigInt } from "@/lib/user-id";
-import type { Prisma } from "@prisma/client";
+import { getSessionUserId } from "@/lib/session-user";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const cvs = await prisma.cv.findMany({
-    where: { userId },
-    orderBy: { updatedAt: "desc" },
-  });
-
-  return json({ cvs });
+  try {
+    const data = await panelInternalGet<{ cvs: any[] }>("cvs", { userId });
+    return json({ cvs: data.cvs ?? [] });
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to load CVs" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const userId = parseUserIdBigInt(session?.user?.id);
+  const userId = getSessionUserId(session);
   if (!userId) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -32,38 +34,27 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const title = typeof body?.title === "string" ? body.title : "Untitled CV";
   const template = typeof body?.template === "string" ? body.template : "academic-cv";
-  // We reuse normalizeResumeData as the data structure is the same
-  const cvData = normalizeResumeData(body?.data);
+  const data = normalizeResumeData(body?.data);
   const source = typeof body?.source === "string" ? body.source : "manual";
 
-  const result = await prisma.$transaction(async (tx) => {
-    const cv = await tx.cv.create({
-      data: {
-        userId,
+  try {
+    const result = await panelInternalPost<{ cv: any; data: Record<string, unknown> }>("cvs", {
+      userId,
+      body: {
         title,
         template,
-        shortId: generateShortId(),
-      },
-    });
-
-    const version = await tx.cvVersion.create({
-      data: {
-        cvId: cv.id,
-        jsonData: cvData as unknown as Prisma.InputJsonValue,
+        data,
         source,
       },
     });
-
-    const updated = await tx.cv.update({
-      where: { id: cv.id },
-      data: { activeVersionId: version.id },
+    return json({
+      cv: result.cv,
+      data: normalizeResumeData(result.data),
     });
-
-    return { cv: updated, data: cvData };
-  }, {
-    maxWait: 10000, // default: 2000
-    timeout: 20000, // default: 5000
-  });
-
-  return json(result);
+  } catch (error) {
+    if (error instanceof PanelInternalApiError) {
+      return json({ error: error.message }, { status: error.status });
+    }
+    return json({ error: "Failed to create CV" }, { status: 500 });
+  }
 }

@@ -6,11 +6,14 @@ import { Navigation } from "@/components/layout/Navigation";
 import { SeoManager } from "@/components/layout/SeoManager";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
+import { usePathname } from "next/navigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const { settings, loaded } = useSiteSettings();
   const maintenanceMode = loaded && settings.maintenanceMode;
   const brandName = settings.companyName || DEFAULT_SITE_SETTINGS.companyName;
+  const isEmbedRoute = pathname?.startsWith("/embed/") ?? false;
   const supportEmail = settings.companyEmail;
   const appLinks = [
     settings.appStoreLink ? { label: "App Store", href: settings.appStoreLink } : null,
@@ -20,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <SeoManager />
-      {maintenanceMode ? (
+      {maintenanceMode && !isEmbedRoute ? (
         <main className="min-h-screen flex items-center justify-center px-6 py-16">
           <div className="max-w-2xl w-full text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-purple-600">
@@ -60,20 +63,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       ) : (
         <>
-          <Navigation />
+          {!isEmbedRoute ? <Navigation /> : null}
           {children}
-          <Toaster
-            position="top-right"
-            richColors
-            theme="light"
-            toastOptions={{
-              style: {
-                background: "rgba(255, 255, 255, 0.9)",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(0, 0, 0, 0.1)",
-              },
-            }}
-          />
+          {!isEmbedRoute ? (
+            <Toaster
+              position="top-right"
+              richColors
+              theme="light"
+              toastOptions={{
+                style: {
+                  background: "rgba(255, 255, 255, 0.9)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(0, 0, 0, 0.1)",
+                },
+              }}
+            />
+          ) : null}
         </>
       )}
     </div>

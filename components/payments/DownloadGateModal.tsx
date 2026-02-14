@@ -14,6 +14,7 @@ import { createQrDataUrl } from "@/lib/qr";
 import type { PlanChoice } from "@/contexts/PlanChoiceContext";
 import { Crown, QrCode } from "lucide-react";
 import { useSiteSettings } from "@/hooks/use-site-settings";
+import { Spinner } from "@/components/ui/spinner";
 
 interface DownloadGateModalProps {
   open: boolean;
@@ -68,6 +69,11 @@ export function DownloadGateModal({
 
   useEffect(() => {
     let isMounted = true;
+    const normalizedResourceId =
+      typeof resourceId === "string" && resourceId.trim() && !resourceId.startsWith("local-")
+        ? resourceId.trim()
+        : null;
+    const hasInlinePayload = Boolean(resourcePayload);
 
     // Reset state on open so we don't show stale QR/token.
     if (open) {
@@ -78,7 +84,7 @@ export function DownloadGateModal({
 
     if (!open || !hasAccess) return;
 
-    if (!resourceType || !resourceId) {
+    if (!resourceType || (!normalizedResourceId && !hasInlinePayload)) {
       setIsQrLoading(true);
       createQrDataUrl(appFallbackUrl, 220)
         .then((dataUrl) => {
@@ -96,20 +102,18 @@ export function DownloadGateModal({
     setIsQrLoading(true);
 
     (async () => {
-      try {
+      const createLink = async (body: Record<string, unknown>) => {
         const response = await fetch("/api/app-download-links", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            resourceType,
-            resourceId,
-            templateId: resourceTemplateId ?? undefined,
-            data: resourcePayload ?? undefined,
-            title: resourceTitle ?? undefined,
-          }),
+          body: JSON.stringify(body),
         });
+
+        const payload = (await response.json().catch(() => null)) as
+          | (LinkResponse & { error?: string; message?: string })
+          | null;
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -118,14 +122,46 @@ export function DownloadGateModal({
           if (response.status === 404) {
             throw new Error("Document not found.");
           }
-          throw new Error("Unable to create a download link.");
+          const apiMessage =
+            typeof payload?.error === "string"
+              ? payload.error
+              : typeof payload?.message === "string"
+              ? payload.message
+              : null;
+          throw new Error(apiMessage || "Unable to create a download link.");
         }
 
-        const payload = (await response.json()) as LinkResponse;
         const nextUrl = typeof payload?.resolverUrl === "string" ? payload.resolverUrl : null;
         if (!nextUrl) {
           throw new Error("Invalid download link response.");
         }
+
+        return nextUrl;
+      };
+
+      try {
+        const primaryBody: Record<string, unknown> = {
+          resourceType,
+          templateId: resourceTemplateId ?? undefined,
+          data: resourcePayload ?? undefined,
+          title: resourceTitle ?? undefined,
+        };
+        if (normalizedResourceId) {
+          primaryBody.resourceId = normalizedResourceId;
+        }
+
+        let nextUrl = await createLink(primaryBody).catch(async (error) => {
+          const canRetryWithoutId = Boolean(normalizedResourceId && hasInlinePayload);
+          if (!canRetryWithoutId) {
+            throw error;
+          }
+          return createLink({
+            resourceType,
+            templateId: resourceTemplateId ?? undefined,
+            data: resourcePayload ?? undefined,
+            title: resourceTitle ?? undefined,
+          });
+        });
 
         const qr = await createQrDataUrl(nextUrl, 220);
 
@@ -136,7 +172,7 @@ export function DownloadGateModal({
         const message = error instanceof Error ? error.message : "Unable to create a download link.";
 
         if (!isMounted) return;
-        setLinkError(message);
+        setLinkError(message === "Unable to create a download link." ? null : message);
 
         // Fallback: still show a QR to install the app.
         try {
@@ -153,7 +189,7 @@ export function DownloadGateModal({
     return () => {
       isMounted = false;
     };
-  }, [open, hasAccess, resourceType, resourceId]);
+  }, [open, hasAccess, resourceType, resourceId, resourceTemplateId, resourcePayload, resourceTitle]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -172,8 +208,8 @@ export function DownloadGateModal({
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-slate-300">
               {isActivating ? (
                 <span className="inline-flex items-center justify-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border border-slate-400 border-t-transparent" />
-                  Confirming your payment and activating your plan...
+                  <Spinner className="h-4 w-4 text-slate-300" />
+                  Confirming your payment and activating your plan... This may take up to 10-15s.
                 </span>
               ) : (
                 "Choose a paid plan to unlock mobile app downloads."

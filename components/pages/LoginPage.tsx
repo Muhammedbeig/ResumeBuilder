@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getProviders, signIn, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Sparkles, Chrome } from "lucide-react";
+import { Mail, Lock, ArrowRight, Sparkles, Chrome, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { isValidEmail, normalizeEmail } from "@/lib/auth-validation";
 import { toast } from "sonner";
 
 export function LoginPage() {
@@ -25,6 +26,7 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const [credentialsAvailable, setCredentialsAvailable] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -65,10 +67,21 @@ export function LoginPage() {
       toast.error("Email sign-in is currently disabled.");
       return;
     }
+
+    const email = normalizeEmail(formData.email);
+    if (!isValidEmail(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    if (!formData.password) {
+      toast.error("Password is required.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const result = await signIn("credentials", {
-        email: formData.email,
+        email,
         password: formData.password,
         redirect: false,
       });
@@ -161,6 +174,7 @@ export function LoginPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="pl-10"
+                    autoComplete="email"
                     required
                     disabled={isLoading}
                   />
@@ -169,14 +183,24 @@ export function LoginPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    autoComplete="current-password"
                     required
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    disabled={isLoading}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
 
                 <Button 

@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resumeTemplateMap } from "@/lib/resume-templates";
-import { cvTemplateMap } from "@/lib/cv-templates";
+
 import { coverLetterTemplates } from "@/lib/cover-letter-templates";
+import { cvTemplateMap } from "@/lib/cv-templates";
+import { runPdfRenderTask } from "@/lib/pdf-engine/queue";
+import { renderPdfBuffer } from "@/lib/pdf-engine/render";
 import { panelGet } from "@/lib/panel-api";
-import type { PanelTemplate } from "@/lib/panel-templates";
 import {
-  resolveCoverLetterTemplateComponent,
-  resolveCvTemplateComponent,
-  resolveResumeTemplateComponent,
-} from "@/lib/template-resolvers";
-import { mapCvConfigToResumeConfig, normalizeResumeConfig } from "@/lib/panel-templates";
-import { ResumeDataSchema } from "@/lib/resume-schema";
-import React from "react";
-import { withPuppeteerPage } from "@/lib/puppeteer";
+  mapCvConfigToResumeConfig,
+  normalizeCoverLetterConfig,
+  normalizeResumeConfig,
+  type PanelTemplate,
+} from "@/lib/panel-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import { getResourceSettings } from "@/lib/resource-settings";
+import { resumeTemplateMap } from "@/lib/resume-templates";
+import { ResumeDataSchema } from "@/lib/resume-schema";
 import type { CoverLetterData } from "@/types";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type DocType = "resume" | "cv" | "cover_letter";
 
@@ -58,6 +58,12 @@ function normalizeCoverLetterData(input: unknown): CoverLetterData | null {
   };
 }
 
+function normalizeType(rawType: unknown): DocType {
+  const value = typeof rawType === "string" ? rawType.trim() : "";
+  if (value === "cv" || value === "cover_letter") return value;
+  return "resume";
+}
+
 export async function POST(req: NextRequest) {
   const expectedKey = process.env.INTERNAL_EXPORT_KEY;
   const providedKey = req.headers.get("x-internal-export-key");
@@ -72,227 +78,146 @@ export async function POST(req: NextRequest) {
 
   const rateLimitResponse = rateLimit(req, {
     prefix: "generate-pdf",
-    limit: resourceSettings.rateLimits.puppeteer,
+    limit: resourceSettings.rateLimits.pdfExport,
     windowMs: resourceSettings.rateLimits.windowMs,
   });
   if (rateLimitResponse) return rateLimitResponse;
 
-  if (!resourceSettings.puppeteer.enabled) {
-    return NextResponse.json({ error: "PDF export is temporarily unavailable" }, { status: 503 });
-  }
-
   try {
-    const { renderToStaticMarkup } = await import("react-dom/server");
     const contentType = req.headers.get("content-type") ?? "";
     let body: Record<string, unknown> = {};
-    let formHtml = "";
     let formTemplateId = "";
     let formType = "";
+    let formDataValue: unknown = undefined;
 
     if (contentType.includes("multipart/form-data")) {
-      const formData = await req.formData();
-      const htmlValue = formData.get("html");
-      const templateValue = formData.get("templateId");
-      const typeValue = formData.get("type");
-      formHtml = typeof htmlValue === "string" ? htmlValue.trim() : "";
+      const form = await req.formData();
+      const templateValue = form.get("templateId");
+      const typeValue = form.get("type");
+      const dataValue = form.get("data");
+
       formTemplateId = typeof templateValue === "string" ? templateValue.trim() : "";
       formType = typeof typeValue === "string" ? typeValue.trim() : "";
+
+      if (typeof dataValue === "string" && dataValue.trim()) {
+        try {
+          formDataValue = JSON.parse(dataValue);
+        } catch {
+          formDataValue = dataValue;
+        }
+      } else {
+        formDataValue = dataValue;
+      }
     } else {
       body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     }
 
-    const { data, html, templateId, type, docType } = body ?? {};
-    const clientHtml =
-      formHtml || (typeof html === "string" ? html.trim() : "");
     const templateIdValue =
-      formTemplateId || (typeof templateId === "string" ? templateId.trim() : "");
-    const rawType =
-      formType ||
-      (typeof type === "string" ? type.trim() : "") ||
-      (typeof docType === "string" ? docType.trim() : "");
-    const normalizedType: DocType =
-      rawType === "cv" || rawType === "cover_letter" ? rawType : "resume";
-    const normalizedTemplateId =
-      templateIdValue ||
-      (normalizedType === "cv"
-        ? "academic-cv"
-        : normalizedType === "cover_letter"
-          ? "modern"
-          : "resume");
-
+      formTemplateId || (typeof body.templateId === "string" ? body.templateId.trim() : "");
     if (!templateIdValue) {
       return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
     }
 
-    let componentHtml = clientHtml;
+    const normalizedType = normalizeType(formType || body.type || body.docType);
+    const payloadData = formDataValue ?? body.data;
 
-    if (!componentHtml) {
-      if (normalizedType === "cover_letter") {
-        const coverLetterData = normalizeCoverLetterData(data);
-        if (!coverLetterData) {
-          return NextResponse.json({ error: "Invalid cover letter data" }, { status: 400 });
-        }
-
-        const isStatic = coverLetterTemplates.some((tpl) => tpl.id === templateIdValue);
-        let panelConfig: unknown = undefined;
-        if (!isStatic) {
-          try {
-            const res = await panelGet<PanelTemplate>(`templates/${templateIdValue}`, {
-              type: "cover_letter",
-            });
-            panelConfig = res.data?.config;
-          } catch {
-            panelConfig = undefined;
-          }
-        }
-
-        if (!isStatic && !panelConfig) {
-          return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
-        }
-
-        const TemplateComponent = resolveCoverLetterTemplateComponent(
-          templateIdValue || "modern",
-          panelConfig as any
-        );
-
-        componentHtml = renderToStaticMarkup(
-          React.createElement(TemplateComponent, { data: coverLetterData })
-        );
-      } else {
-        // Resume/CV share the same data structure.
-        const parsedData = ResumeDataSchema.safeParse(data);
-        if (!parsedData.success) {
-          return NextResponse.json(
-            { error: "Invalid resume data", details: parsedData.error },
-            { status: 400 }
-          );
-        }
-
-        const isCv = normalizedType === "cv";
-        const isStatic = isCv
-          ? !!cvTemplateMap[templateIdValue as keyof typeof cvTemplateMap]
-          : !!resumeTemplateMap[templateIdValue as keyof typeof resumeTemplateMap];
-
-        let panelConfig: unknown = undefined;
-        if (!isStatic) {
-          try {
-            const res = await panelGet<PanelTemplate>(`templates/${templateIdValue}`, {
-              type: isCv ? "cv" : "resume",
-            });
-            panelConfig = res.data?.config;
-          } catch {
-            panelConfig = undefined;
-          }
-        }
-
-        if (!isStatic && !panelConfig) {
-          return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
-        }
-
-        const TemplateComponent = isCv
-          ? resolveCvTemplateComponent(templateIdValue, panelConfig as any)
-          : resolveResumeTemplateComponent(templateIdValue, panelConfig as any);
-
-        componentHtml = renderToStaticMarkup(
-          React.createElement(TemplateComponent, { data: parsedData.data })
-        );
+    if (normalizedType === "cover_letter") {
+      const coverData = normalizeCoverLetterData(payloadData);
+      if (!coverData) {
+        return NextResponse.json({ error: "Invalid cover letter data" }, { status: 400 });
       }
-    } else {
-      componentHtml = `<div class="resume-template">${componentHtml}</div>`;
-    }
 
-    const fullHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style>
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          body {
-            -webkit-print-color-adjust: exact;
-          }
-          /* Ensure the template takes full width/height if needed */
-          .resume-template {
-            min-height: 100vh;
-            width: 100%;
-          }
-        </style>
-      </head>
-      <body>
-        ${componentHtml}
-      </body>
-      </html>
-    `;
-    const pdfBuffer = await withPuppeteerPage(
-      async (page) => {
-      // Set content and wait for basic network tasks
-      await page.setContent(fullHtml, { waitUntil: ["networkidle0", "load", "domcontentloaded"] });
+      const isStatic = coverLetterTemplates.some((tpl) => tpl.id === templateIdValue);
+      let panelConfig: unknown = null;
+      if (!isStatic) {
+        try {
+          const res = await panelGet<PanelTemplate>(`templates/${templateIdValue}`, {
+            type: "cover_letter",
+          });
+          panelConfig = res.data?.config;
+        } catch {
+          panelConfig = null;
+        }
+      }
 
-      // Ensure all images are fully loaded and decoded
-      await page.evaluate(async () => {
-        const images = Array.from(document.querySelectorAll("img"));
-        await Promise.all(
-          images.map((img) => {
-            if (img.complete) return Promise.resolve();
-            return new Promise((resolve, reject) => {
-              img.onload = resolve;
-              img.onerror = reject;
-            });
-          })
-        );
-        // Wait for a short moment after images load for any reflow
-        await new Promise((r) => setTimeout(r, 500));
-      });
+      if (!isStatic && !panelConfig) {
+        return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
+      }
 
-      // Wait for fonts
-      await page.evaluateHandle("document.fonts.ready");
+      const pdfBuffer = await runPdfRenderTask(
+        () =>
+          renderPdfBuffer({
+            type: "cover_letter",
+            templateId: templateIdValue,
+            data: coverData,
+            config: normalizeCoverLetterConfig((panelConfig ?? undefined) as any),
+          }),
+        {
+          concurrency: resourceSettings.pdfRender.concurrency,
+          timeoutMs: resourceSettings.pdfRender.timeoutMs,
+        }
+      );
 
-      // Extra sleep for good measure
-      await new Promise((r) => setTimeout(r, 500));
-
-      // Generate PDF
-      return page.pdf({
-        format: "A4",
-        printBackground: true,
-        margin: {
-          top: "0px",
-          right: "0px",
-          bottom: "0px",
-          left: "0px",
+      return new NextResponse(pdfBuffer as any, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="cover-letter-${templateIdValue}.pdf"`,
         },
       });
-      },
+    }
+
+    const parsedData = ResumeDataSchema.safeParse(payloadData);
+    if (!parsedData.success) {
+      return NextResponse.json({ error: "Invalid resume data", details: parsedData.error }, { status: 400 });
+    }
+
+    const isCv = normalizedType === "cv";
+    const isStatic = isCv
+      ? Boolean(cvTemplateMap[templateIdValue as keyof typeof cvTemplateMap])
+      : Boolean(resumeTemplateMap[templateIdValue as keyof typeof resumeTemplateMap]);
+
+    let panelConfig: unknown = null;
+    if (!isStatic) {
+      try {
+        const res = await panelGet<PanelTemplate>(`templates/${templateIdValue}`, {
+          type: isCv ? "cv" : "resume",
+        });
+        panelConfig = res.data?.config;
+      } catch {
+        panelConfig = null;
+      }
+    }
+
+    if (!isStatic && !panelConfig) {
+      return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
+    }
+
+    const resolvedConfig = isCv
+      ? mapCvConfigToResumeConfig((panelConfig ?? undefined) as any, templateIdValue)
+      : normalizeResumeConfig((panelConfig ?? undefined) as any, templateIdValue);
+
+    const pdfBuffer = await runPdfRenderTask(
+      () =>
+        renderPdfBuffer({
+          type: isCv ? "cv" : "resume",
+          templateId: templateIdValue,
+          data: parsedData.data,
+          config: resolvedConfig ?? undefined,
+        }),
       {
-        concurrency: resourceSettings.puppeteer.concurrency,
-        enabled: resourceSettings.puppeteer.enabled,
+        concurrency: resourceSettings.pdfRender.concurrency,
+        timeoutMs: resourceSettings.pdfRender.timeoutMs,
       }
     );
 
-    // Return PDF
     return new NextResponse(pdfBuffer as any, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="resume-${normalizedTemplateId}.pdf"`,
+        "Content-Disposition": `attachment; filename="${isCv ? "cv" : "resume"}-${templateIdValue}.pdf"`,
       },
     });
-
   } catch (error) {
     console.error("PDF Generation Error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate PDF" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
   }
 }
-
-
-
-
-
-
-
