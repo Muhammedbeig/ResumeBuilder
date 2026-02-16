@@ -229,10 +229,17 @@ export function CoverLetterEditor() {
   if (!currentCoverLetter) return null;
 
   const panelTemplate = usePanelTemplate("cover_letter", currentCoverLetter.template, true);
-  const templateConfig = panelTemplate?.config as CoverLetterTemplateConfig | null;
-  const TemplateComponent = resolveCoverLetterTemplateComponent(
-    currentCoverLetter.template,
-    templateConfig
+  const templateConfig = useMemo(
+    () => (panelTemplate?.config as CoverLetterTemplateConfig | null) ?? null,
+    [panelTemplate?.config]
+  );
+  const TemplateComponent = useMemo(
+    () =>
+      resolveCoverLetterTemplateComponent(
+        currentCoverLetter.template,
+        templateConfig
+      ),
+    [currentCoverLetter.template, templateConfig]
   );
   const exportElementId = "cl-preview-export";
 

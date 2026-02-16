@@ -22,6 +22,11 @@ type InternalGatewayResponse = {
   paypal: PayPalGatewayConfig | null;
 };
 
+function normalizeText(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim();
+}
+
 async function readGatewayConfig(): Promise<InternalGatewayResponse> {
   return panelInternalGet<InternalGatewayResponse>("payment/gateways");
 }
@@ -59,11 +64,60 @@ function normalizePayPalGatewayConfig(paypal: PayPalGatewayConfig | null | undef
   };
 }
 
+function readStripeGatewayConfigFromEnv(): StripeGatewayConfig | null {
+  const secretKey = normalizeText(process.env.STRIPE_SECRET_KEY);
+  if (!secretKey) return null;
+
+  return {
+    currencyCode: normalizeText(process.env.STRIPE_CURRENCY || process.env.STRIPE_CURRENCY_CODE || "usd").toLowerCase(),
+    publishableKey: normalizeText(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY),
+    secretKey,
+    webhookSecretKey: normalizeText(process.env.STRIPE_WEBHOOK_SECRET),
+  };
+}
+
+function readPayPalGatewayConfigFromEnv(): PayPalGatewayConfig | null {
+  const clientId = normalizeText(process.env.PAYPAL_CLIENT_ID);
+  const secretKey = normalizeText(process.env.PAYPAL_SECRET_KEY || process.env.PAYPAL_SECRET);
+  if (!clientId || !secretKey) return null;
+
+  const modeRaw = normalizeText(process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "sandbox").toLowerCase();
+  const mode: "live" | "sandbox" = modeRaw === "live" ? "live" : "sandbox";
+
+  return {
+    currencyCode: normalizeText(process.env.PAYPAL_CURRENCY || process.env.PAYPAL_CURRENCY_CODE || "USD").toUpperCase(),
+    clientId,
+    secretKey,
+    webhookId: normalizeText(process.env.PAYPAL_WEBHOOK_ID) || null,
+    mode,
+  };
+}
+
+export function getGatewayConfigsFromEnv(): {
+  stripe: StripeGatewayConfig | null;
+  paypal: PayPalGatewayConfig | null;
+} {
+  return {
+    stripe: readStripeGatewayConfigFromEnv(),
+    paypal: readPayPalGatewayConfigFromEnv(),
+  };
+}
+
 export async function getGatewayConfigs(): Promise<{
   stripe: StripeGatewayConfig | null;
   paypal: PayPalGatewayConfig | null;
 }> {
-  const data = await readGatewayConfig();
+  let data: InternalGatewayResponse | null = null;
+  try {
+    data = await readGatewayConfig();
+  } catch {
+    data = null;
+  }
+
+  if (!data) {
+    return getGatewayConfigsFromEnv();
+  }
+
   return {
     stripe: normalizeStripeGatewayConfig(data?.stripe),
     paypal: normalizePayPalGatewayConfig(data?.paypal),

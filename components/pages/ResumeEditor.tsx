@@ -403,8 +403,14 @@ export function ResumeEditorPage() {
   const activeTemplateId = currentResume?.template || "modern";
   const shouldFetchTemplate = !resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap];
   const panelTemplate = usePanelTemplate("resume", activeTemplateId, shouldFetchTemplate);
-  const templateConfig = normalizeResumeConfig(panelTemplate?.config as any, activeTemplateId);
-  const ActiveTemplate = resolveResumeTemplateComponent(activeTemplateId, templateConfig);
+  const templateConfig = useMemo(
+    () => normalizeResumeConfig(panelTemplate?.config as any, activeTemplateId),
+    [panelTemplate?.config, activeTemplateId]
+  );
+  const ActiveTemplate = useMemo(
+    () => resolveResumeTemplateComponent(activeTemplateId, templateConfig),
+    [activeTemplateId, templateConfig]
+  );
   const exportElementId = "resume-preview-export";
 
   const PreviewDocument = ({

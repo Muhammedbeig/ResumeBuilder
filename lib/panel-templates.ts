@@ -120,6 +120,12 @@ const DEFAULT_COVER_LETTER_CONFIG: Required<CoverLetterTemplateConfig> = {
   sectionSeparator: "none",
 };
 
+function normalizeFontValue(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  return trimmed || fallback;
+}
+
 export function normalizeResumeConfig(
   config?: Partial<ResumeTemplateConfig> | null,
   fallbackId?: string
@@ -148,12 +154,14 @@ export function normalizeResumeConfig(
   merged.category = merged.category || fallback?.category || "custom";
   merged.description = merged.description || fallback?.description || "";
   merged.hasPhoto = Boolean(merged.hasPhoto);
+  merged.bodyFont = normalizeFontValue(merged.bodyFont, DEFAULT_RESUME_CONFIG.bodyFont);
+  merged.headingFont = normalizeFontValue(merged.headingFont, DEFAULT_RESUME_CONFIG.headingFont);
 
   return merged;
 }
 
 export function normalizeCvConfig(config?: Partial<CvTemplateConfig> | null): Required<CvTemplateConfig> {
-  return {
+  const merged = {
     ...DEFAULT_CV_CONFIG,
     ...(config ?? {}),
     palette: {
@@ -166,15 +174,21 @@ export function normalizeCvConfig(config?: Partial<CvTemplateConfig> | null): Re
     },
     hasPhoto: Boolean(config?.hasPhoto ?? DEFAULT_CV_CONFIG.hasPhoto),
   };
+  merged.bodyFont = normalizeFontValue(merged.bodyFont, DEFAULT_CV_CONFIG.bodyFont);
+  merged.headingFont = normalizeFontValue(merged.headingFont, DEFAULT_CV_CONFIG.headingFont);
+  return merged;
 }
 
 export function normalizeCoverLetterConfig(
   config?: Partial<CoverLetterTemplateConfig> | null
 ): Required<CoverLetterTemplateConfig> {
-  return {
+  const merged = {
     ...DEFAULT_COVER_LETTER_CONFIG,
     ...(config ?? {}),
   };
+  merged.bodyFont = normalizeFontValue(merged.bodyFont, DEFAULT_COVER_LETTER_CONFIG.bodyFont);
+  merged.headingFont = normalizeFontValue(merged.headingFont, DEFAULT_COVER_LETTER_CONFIG.headingFont);
+  return merged;
 }
 
 export function mapCvConfigToResumeConfig(

@@ -13,6 +13,18 @@ type PanelApiError = {
   details?: string;
 } & Record<string, unknown>;
 
+export class PanelApiRequestError extends Error {
+  status: number;
+  payload: unknown;
+
+  constructor(message: string, status: number, payload: unknown) {
+    super(message);
+    this.name = "PanelApiRequestError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
 function panelApiBaseUrl() {
   const explicit = process.env.PANEL_API_BASE_URL;
   if (explicit) return explicit.replace(/\/+$/, "");
@@ -26,6 +38,24 @@ function panelApiBaseUrl() {
 
 function withLeadingSlash(path: string) {
   return path.startsWith("/") ? path : `/${path}`;
+}
+
+function parseStatusFromPayload(payload: unknown, fallback: number): number {
+  if (!payload || typeof payload !== "object") return fallback;
+  const code = (payload as { code?: unknown }).code;
+  const asNumber = typeof code === "string" ? Number.parseInt(code, 10) : code;
+  if (typeof asNumber === "number" && Number.isFinite(asNumber) && asNumber >= 100 && asNumber <= 599) {
+    return asNumber;
+  }
+  return fallback;
+}
+
+function isRetryableStatus(status: number): boolean {
+  return status >= 500 || status === 429;
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function panelFetch<T>(
@@ -67,29 +97,70 @@ async function panelFetch<T>(
     }
   }
 
-  const res = await fetch(url, {
-    ...init,
-    method,
-    headers,
-    body,
-    // The Panel is the CMS. Always fetch latest to reflect admin changes immediately.
-    cache: "no-store",
-  });
+  const timeoutMs = 30_000;
+  const maxAttempts = 3;
 
-  const payload = (await res.json().catch(() => null)) as unknown;
-  if (!res.ok) {
-    throw new Error(`Panel API error (${res.status}) for ${url.toString()}`);
-  }
-  if (!payload || typeof payload !== "object") {
-    throw new Error(`Invalid JSON response from Panel API for ${url.toString()}`);
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, {
+        ...init,
+        method,
+        headers,
+        body,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      const payload = (await res.json().catch(() => null)) as unknown;
+      const fallbackStatus = res.ok ? 500 : res.status;
+
+      if (!payload || typeof payload !== "object") {
+        throw new PanelApiRequestError(
+          `Invalid JSON response from Panel API for ${url.toString()}`,
+          fallbackStatus,
+          payload
+        );
+      }
+
+      const json = payload as PanelApiSuccess<T> | PanelApiError;
+
+      if (!res.ok || ("error" in json && json.error)) {
+        const status = parseStatusFromPayload(json, fallbackStatus);
+        const message =
+          typeof json.message === "string" && json.message.trim()
+            ? json.message
+            : `Panel API error (${status}) for ${url.toString()}`;
+        throw new PanelApiRequestError(message, status, json);
+      }
+
+      return json as PanelApiSuccess<T>;
+    } catch (error) {
+      const normalizedError =
+        error instanceof PanelApiRequestError
+          ? error
+          : error instanceof Error && error.name === "AbortError"
+          ? new PanelApiRequestError(`Panel API timeout for ${url.toString()}`, 504, null)
+          : new PanelApiRequestError(
+              `Panel API request failed for ${url.toString()}`,
+              502,
+              error instanceof Error ? error.message : error
+            );
+
+      const canRetry = attempt < maxAttempts && isRetryableStatus(normalizedError.status);
+      if (!canRetry) {
+        throw normalizedError;
+      }
+
+      await delay(200 * attempt);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
-  const json = payload as PanelApiSuccess<T> | PanelApiError;
-  if ("error" in json && json.error) {
-    throw new Error(typeof json.message === "string" ? json.message : "Panel API error");
-  }
-
-  return json as PanelApiSuccess<T>;
+  throw new PanelApiRequestError(`Panel API request failed for ${url.toString()}`, 502, null);
 }
 
 export async function panelGet<T>(
