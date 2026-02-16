@@ -53,9 +53,12 @@ function clearCookieValue(name: string) {
 
 export function PlanChoiceProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const [planChoice, setPlanChoiceState] = useState<PlanChoice | null>(null);
+  const [planChoiceState, setPlanChoiceState] = useState<PlanChoice | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const userId = status === "authenticated" ? session?.user?.id ?? null : null;
+  const hasSubscription =
+    session?.user?.subscription === "pro" || session?.user?.subscription === "business";
+  const resolvedPlanChoice: PlanChoice | null = hasSubscription ? "paid" : planChoiceState;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -101,12 +104,12 @@ export function PlanChoiceProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      planChoice,
+      planChoice: resolvedPlanChoice,
       isLoaded,
       setPlanChoice,
       clearPlanChoice,
     }),
-    [planChoice, isLoaded, setPlanChoice, clearPlanChoice]
+    [resolvedPlanChoice, isLoaded, setPlanChoice, clearPlanChoice]
   );
 
   return <PlanChoiceContext.Provider value={value}>{children}</PlanChoiceContext.Provider>;

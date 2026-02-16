@@ -18,6 +18,8 @@ type PanelBlog = {
   translated_description?: string;
   image?: string | null;
   tags?: string[];
+  category?: string | null;
+  category_slug?: string | null;
   created_at?: string;
 };
 
@@ -40,6 +42,23 @@ function formatDate(iso: string | undefined) {
     month: "short",
     day: "numeric",
   });
+}
+
+function slugifyCategory(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getCategoryMeta(post: PanelBlog): { label: string; slug: string } | null {
+  const label = (post.category ?? "").trim();
+  if (!label) return null;
+  const rawSlug = (post.category_slug ?? "").trim();
+  const slug = rawSlug || slugifyCategory(label);
+  if (!slug) return null;
+  return { label, slug };
 }
 
 const resourceLinks = [
@@ -67,6 +86,16 @@ export default async function CareerBlogPage() {
   }
 
   const featured = blogs.slice(0, 3);
+  const categoryList: Array<{ label: string; slug: string }> = [];
+  const seenCategorySlugs = new Set<string>();
+
+  for (const post of blogs) {
+    const category = getCategoryMeta(post);
+    if (!category) continue;
+    if (seenCategorySlugs.has(category.slug)) continue;
+    seenCategorySlugs.add(category.slug);
+    categoryList.push(category);
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
@@ -96,6 +125,19 @@ export default async function CareerBlogPage() {
               Create a Cover Letter
             </Link>
           </div>
+          {categoryList.length > 0 ? (
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {categoryList.slice(0, 10).map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/career-blog/category/${encodeURIComponent(category.slug)}`}
+                  className="rounded-full border border-purple-200 px-3 py-1 text-xs font-semibold text-purple-700 transition hover:border-purple-400 dark:text-purple-300"
+                >
+                  {category.label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-16">
@@ -131,7 +173,15 @@ export default async function CareerBlogPage() {
                       </div>
                     ) : null;
                   })()}
-                  <div className="flex items-center justify-end text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+                    {(() => {
+                      const category = getCategoryMeta(post);
+                      return category ? (
+                        <span className="rounded-full bg-purple-100 px-2 py-1 font-semibold text-purple-700 dark:bg-purple-500/20 dark:text-purple-200">
+                          {category.label}
+                        </span>
+                      ) : <span />;
+                    })()}
                     <span>{formatDate(post.created_at)}</span>
                   </div>
                   <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
@@ -182,6 +232,17 @@ export default async function CareerBlogPage() {
                       {excerptFromHtml(post.translated_description ?? post.description ?? "")}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                      {(() => {
+                        const category = getCategoryMeta(post);
+                        return category ? (
+                          <Link
+                            href={`/career-blog/category/${encodeURIComponent(category.slug)}`}
+                            className="rounded-full bg-purple-100 px-2 py-1 font-semibold text-purple-700 transition hover:bg-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:hover:bg-purple-500/30"
+                          >
+                            {category.label}
+                          </Link>
+                        ) : null;
+                      })()}
                       <span>{formatDate(post.created_at)}</span>
                     </div>
                   </div>

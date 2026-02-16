@@ -187,6 +187,7 @@ function buildProviders(settings: AuthSettings) {
               subscription: user.subscription ?? "free",
               subscriptionPlanId: user.subscriptionPlanId ?? null,
               hasPassword: true,
+              authProvider: "credentials",
             };
           } catch {
             return null;
@@ -232,6 +233,7 @@ function buildBaseAuthOptions(): Omit<NextAuthOptions, "providers"> {
           user.subscription = synced.subscription ?? "free";
           user.subscriptionPlanId = synced.subscriptionPlanId ?? null;
           user.hasPassword = true;
+          user.authProvider = "google";
           return true;
         } catch {
           return false;
@@ -250,6 +252,7 @@ function buildBaseAuthOptions(): Omit<NextAuthOptions, "providers"> {
           token.subscription = user.subscription ?? token.subscription ?? "free";
           token.subscriptionPlanId = user.subscriptionPlanId ?? token.subscriptionPlanId ?? null;
           token.hasPassword = user.hasPassword ?? token.hasPassword ?? true;
+          token.authProvider = user.authProvider ?? token.authProvider ?? "credentials";
         }
 
         if (trigger === "update" && session) {
@@ -271,6 +274,7 @@ function buildBaseAuthOptions(): Omit<NextAuthOptions, "providers"> {
           session.user.subscription = token.subscription ?? "free";
           session.user.subscriptionPlanId = token.subscriptionPlanId ?? null;
           session.user.hasPassword = token.hasPassword ?? true;
+          session.user.authProvider = token.authProvider ?? "credentials";
         }
         return session;
       },

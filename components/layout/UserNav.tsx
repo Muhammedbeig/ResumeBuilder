@@ -99,6 +99,8 @@ export function UserNav() {
   );
 
   const user = session?.user;
+  const isGoogleSession = user?.authProvider === "google";
+  const canChangePassword = Boolean(user?.hasPassword || isGoogleSession);
   const planMeta = useMemo(
     () => getPlanMeta(subscription, subscriptionPlanId),
     [subscription, subscriptionPlanId]
@@ -206,11 +208,6 @@ export function UserNav() {
   };
 
   const handleUpdatePassword = async () => {
-    if (!currentPassword) {
-      toast.error("Current password is required.");
-      return;
-    }
-
     const passwordError = getPasswordPolicyError(newPassword);
     if (passwordError) {
       toast.error(passwordError);
@@ -223,13 +220,17 @@ export function UserNav() {
     }
     setIsLoading(true);
     try {
+        const payload: { currentPassword?: string; newPassword: string } = {
+          newPassword,
+        };
+        if (!isGoogleSession && currentPassword.trim() !== "") {
+          payload.currentPassword = currentPassword;
+        }
+
         const res = await fetch('/api/user/update', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                currentPassword,
-                newPassword 
-            }),
+            body: JSON.stringify(payload),
         });
     
         const data = await res.json();
@@ -345,10 +346,10 @@ export function UserNav() {
             onValueChange={(value) => setSettingsTab(value as SettingsTab)}
             className="w-full"
           >
-            <TabsList className={`grid w-full ${user?.hasPassword ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsList className={`grid w-full ${canChangePassword ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="plan">Plan</TabsTrigger>
-              {user?.hasPassword && <TabsTrigger value="security">Security</TabsTrigger>}
+              {canChangePassword && <TabsTrigger value="security">Security</TabsTrigger>}
             </TabsList>
             
             <TabsContent value="general" className="space-y-4 py-4">
@@ -396,9 +397,9 @@ export function UserNav() {
                 <Input id="email" value={user?.email || ""} disabled className="bg-gray-100 dark:bg-gray-800" />
                 <p className="text-[0.8rem] text-muted-foreground">Email cannot be changed.</p>
               </div>
-              {!user?.hasPassword && (
+              {isGoogleSession && (
                 <p className="text-[0.8rem] text-amber-600 dark:text-amber-400 font-medium">
-                  This account is managed via Google. You can add a password by registering with your email.
+                  You signed in with Google. You can set a password here without entering an old password.
                 </p>
               )}
               <Button onClick={handleUpdateProfile} disabled={isLoading}>
@@ -450,17 +451,19 @@ export function UserNav() {
               )}
             </TabsContent>
 
-            {user?.hasPassword && (
+            {canChangePassword && (
               <TabsContent value="security" className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input 
-                      id="current-password" 
-                      type="password" 
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                  />
-                </div>
+                {!isGoogleSession && (
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <Input 
+                        id="current-password" 
+                        type="password" 
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
                   <Input 

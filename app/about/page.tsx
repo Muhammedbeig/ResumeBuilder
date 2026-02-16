@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Footer } from "@/sections/Footer";
 import { fetchSiteSettings } from "@/lib/site-settings";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
+import { normalizeRichContent } from "@/lib/rich-content";
 
 const values = [
   {
@@ -31,7 +32,7 @@ const resources = [
 export default async function AboutPage() {
   const settings = await fetchSiteSettings();
   const brandName = settings.companyName || DEFAULT_SITE_SETTINGS.companyName;
-  const aboutContent = settings.aboutUs;
+  const aboutContent = normalizeRichContent(settings.aboutUs);
   const hasPanelContent = Boolean(aboutContent);
 
   return (
@@ -67,7 +68,7 @@ export default async function AboutPage() {
         {hasPanelContent ? (
           <div className="mt-14 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div
-              className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 space-y-4"
+              className="rich-content"
               dangerouslySetInnerHTML={{ __html: aboutContent }}
             />
           </div>

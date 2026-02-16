@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { usePlanChoice, type PlanChoice } from "@/contexts/PlanChoiceContext";
 import { Check, ChevronLeft, ChevronRight, Crown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface PlanChoiceModalProps {
   open: boolean;
@@ -21,7 +22,10 @@ export function PlanChoiceModal({
   title = "Choose the plan that fits your job search",
   description = "No payment required to start. Pick a plan to personalize your experience.",
 }: PlanChoiceModalProps) {
+  const { data: session } = useSession();
   const { setPlanChoice } = usePlanChoice();
+  const hasSubscription =
+    session?.user?.subscription === "pro" || session?.user?.subscription === "business";
   const plans = useMemo(
     () => [
       {
@@ -93,6 +97,12 @@ export function PlanChoiceModal({
   useEffect(() => {
     if (open) setActiveIndex(0);
   }, [open]);
+
+  useEffect(() => {
+    if (open && hasSubscription) {
+      onOpenChange?.(false);
+    }
+  }, [open, hasSubscription, onOpenChange]);
 
   const handleSelect = (choice: PlanChoice) => {
     setPlanChoice(choice);

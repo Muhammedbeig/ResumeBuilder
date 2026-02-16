@@ -21,6 +21,8 @@ type PanelBlog = {
   translated_description?: string;
   image?: string | null;
   tags?: string[];
+  category?: string | null;
+  category_slug?: string | null;
   created_at?: string;
 };
 
@@ -43,6 +45,23 @@ function formatDate(iso: string | undefined) {
     month: "short",
     day: "numeric",
   });
+}
+
+function slugifyCategory(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getCategoryMeta(post: PanelBlog): { label: string; slug: string } | null {
+  const label = (post.category ?? "").trim();
+  if (!label) return null;
+  const rawSlug = (post.category_slug ?? "").trim();
+  const slug = rawSlug || slugifyCategory(label);
+  if (!slug) return null;
+  return { label, slug };
 }
 
 export default async function CareerBlogTagPage({
@@ -123,6 +142,17 @@ export default async function CareerBlogTagPage({
                         {excerptFromHtml(post.translated_description ?? post.description ?? "")}
                       </p>
                       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        {(() => {
+                          const category = getCategoryMeta(post);
+                          return category ? (
+                            <Link
+                              href={`/career-blog/category/${encodeURIComponent(category.slug)}`}
+                              className="rounded-full bg-purple-100 px-2 py-1 font-semibold text-purple-700 transition hover:bg-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:hover:bg-purple-500/30"
+                            >
+                              {category.label}
+                            </Link>
+                          ) : null;
+                        })()}
                         <span>{formatDate(post.created_at)}</span>
                       </div>
                     </div>

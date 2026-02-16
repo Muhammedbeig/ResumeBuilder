@@ -18,14 +18,6 @@ const updateSchema = z.object({
   newPassword: z.string().optional(),
 }).superRefine((payload, ctx) => {
   if (!payload.newPassword) return;
-  if (!payload.currentPassword) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["currentPassword"],
-      message: "Current password is required to set a new password.",
-    });
-  }
-
   const passwordError = getPasswordPolicyError(payload.newPassword);
   if (passwordError) {
     ctx.addIssue({

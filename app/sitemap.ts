@@ -9,6 +9,10 @@ type PanelBlog = {
   updated_at?: string | null;
 };
 
+type BlogCategory = {
+  value?: string | null;
+};
+
 type PanelPagination<T> = {
   data?: T[];
   current_page?: number;
@@ -84,6 +88,15 @@ async function fetchAllBlogs(): Promise<PanelBlog[]> {
   return posts;
 }
 
+async function fetchBlogCategories(): Promise<BlogCategory[]> {
+  try {
+    const res = await panelGet<BlogCategory[]>("blog-categories");
+    return Array.isArray(res.data) ? res.data : [];
+  } catch {
+    return [];
+  }
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -118,7 +131,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: index === 0 ? 1 : 0.7,
   }));
 
-  const [customLinks, blogs] = await Promise.all([fetchCustomLinks(), fetchAllBlogs()]);
+  const [customLinks, blogs, categories] = await Promise.all([
+    fetchCustomLinks(),
+    fetchAllBlogs(),
+    fetchBlogCategories(),
+  ]);
 
   for (const link of customLinks) {
     entries.push({
@@ -137,6 +154,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified,
       changeFrequency: "weekly",
       priority: 0.6,
+    });
+  }
+
+  for (const category of categories) {
+    if (!category?.value) continue;
+    entries.push({
+      url: buildUrl(`/career-blog/category/${encodeURIComponent(category.value)}`),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.5,
     });
   }
 

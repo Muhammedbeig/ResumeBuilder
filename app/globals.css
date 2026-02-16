@@ -259,6 +259,215 @@ textarea::selection,
   color: #f8fafc;
 }
 
+/* Unified rich HTML rendering for Panel-authored content */
+.rich-content {
+  color: rgb(55 65 81);
+  font-size: 1rem;
+  line-height: 1.82;
+  text-wrap: pretty;
+}
+
+.dark .rich-content {
+  color: rgb(209 213 219);
+}
+
+.rich-content h1,
+.rich-content h2,
+.rich-content h3,
+.rich-content h4,
+.rich-content h5,
+.rich-content h6 {
+  color: rgb(17 24 39);
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 1.6rem;
+  margin-bottom: 0.8rem;
+  letter-spacing: -0.01em;
+}
+
+.dark .rich-content h1,
+.dark .rich-content h2,
+.dark .rich-content h3,
+.dark .rich-content h4,
+.dark .rich-content h5,
+.dark .rich-content h6 {
+  color: rgb(243 244 246);
+}
+
+.rich-content h1 {
+  font-size: 2.15rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgb(229 231 235);
+}
+
+.rich-content h2 {
+  font-size: 1.72rem;
+  padding-left: 0.65rem;
+  border-left: 3px solid rgba(124, 58, 237, 0.45);
+}
+
+.rich-content h3 {
+  font-size: 1.38rem;
+  color: rgb(31 41 55);
+}
+
+.dark .rich-content h2 {
+  border-left-color: rgba(167, 139, 250, 0.5);
+}
+
+.dark .rich-content h3 {
+  color: rgb(229 231 235);
+}
+
+.rich-content > :first-child {
+  margin-top: 0 !important;
+}
+
+.rich-content > :last-child {
+  margin-bottom: 0 !important;
+}
+
+.rich-content p {
+  color: inherit;
+}
+
+.rich-content p,
+.rich-content ul,
+.rich-content ol,
+.rich-content table,
+.rich-content blockquote,
+.rich-content pre {
+  margin: 0 0 1rem;
+}
+
+.rich-content ul,
+.rich-content ol {
+  padding-left: 1.3rem;
+}
+
+.rich-content ul {
+  list-style: disc outside;
+}
+
+.rich-content ol {
+  list-style: decimal outside;
+}
+
+.rich-content li {
+  margin: 0.35rem 0;
+}
+
+.rich-content li::marker {
+  color: rgb(124 58 237);
+}
+
+.dark .rich-content li::marker {
+  color: rgb(167 139 250);
+}
+
+.rich-content strong,
+.rich-content b {
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .rich-content strong,
+.dark .rich-content b {
+  color: rgb(243 244 246);
+}
+
+.rich-content a {
+  color: rgb(124 58 237);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dark .rich-content a {
+  color: rgb(167 139 250);
+}
+
+.rich-content blockquote {
+  border-left: 4px solid rgb(124 58 237);
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.dark .rich-content blockquote {
+  background: rgba(124, 58, 237, 0.18);
+}
+
+.rich-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: rgb(241 245 249);
+  color: rgb(17 24 39);
+  padding: 0.12rem 0.34rem;
+  border-radius: 0.35rem;
+  font-size: 0.88em;
+}
+
+.dark .rich-content code {
+  background: rgb(30 41 59);
+  color: rgb(226 232 240);
+}
+
+.rich-content pre {
+  background: rgb(241 245 249);
+  border: 1px solid rgb(226 232 240);
+  border-radius: 0.7rem;
+  padding: 0.9rem 1rem;
+  overflow: auto;
+}
+
+.dark .rich-content pre {
+  background: rgb(15 23 42);
+  border-color: rgb(51 65 85);
+}
+
+.dark .rich-content h1 {
+  border-bottom-color: rgb(51 65 85);
+}
+
+.rich-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.8rem;
+  margin: 1rem auto;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+}
+
+.dark .rich-content img {
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.45);
+}
+
+.rich-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rich-content th,
+.rich-content td {
+  border: 1px solid rgb(229 231 235);
+  padding: 0.5rem 0.7rem;
+  vertical-align: top;
+}
+
+.dark .rich-content th,
+.dark .rich-content td {
+  border-color: rgb(51 65 85);
+}
+
+.rich-content hr {
+  border: 0;
+  border-top: 1px solid rgb(229 231 235);
+  margin: 1.25rem 0;
+}
+
+.dark .rich-content hr {
+  border-top-color: rgb(51 65 85);
+}
+
 /* Hide Next.js dev overlay badge (dev only) */
 nextjs-portal {
   display: none !important;

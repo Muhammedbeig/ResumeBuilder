@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { normalizeRichContent } from "@/lib/rich-content";
 
 type ContactPageProps = {
   introHtml?: string;
@@ -41,6 +42,7 @@ export function ContactPage({
 }: ContactPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormState>(initialState);
+  const normalizedIntroHtml = normalizeRichContent(introHtml);
   const contactDetails = [
     companyEmail ? { label: "Email", value: companyEmail, href: `mailto:${companyEmail}` } : null,
     companyTel1 ? { label: "Phone", value: companyTel1, href: `tel:${companyTel1}` } : null,
@@ -80,10 +82,10 @@ export function ContactPage({
           <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
             Send a message to the team
           </h1>
-          {introHtml ? (
+          {normalizedIntroHtml ? (
             <div
-              className="mt-4 text-gray-600 dark:text-gray-300 space-y-4"
-              dangerouslySetInnerHTML={{ __html: introHtml }}
+              className="mt-4 rich-content"
+              dangerouslySetInnerHTML={{ __html: normalizedIntroHtml }}
             />
           ) : (
             <p className="mt-4 text-gray-600 dark:text-gray-300">

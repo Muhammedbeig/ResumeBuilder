@@ -1,37 +1,42 @@
 import { fetchSiteSettings } from "@/lib/site-settings";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
+import { normalizeRichContent } from "@/lib/rich-content";
+import { Footer } from "@/sections/Footer";
 
 export default async function TermsOfServicePage() {
   const settings = await fetchSiteSettings();
-  const content = settings.termsConditions;
+  const content = normalizeRichContent(settings.termsConditions);
   const brandName = settings.companyName || DEFAULT_SITE_SETTINGS.companyName;
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
-      <section className="max-w-4xl mx-auto px-6">
-        <div className="text-center">
-          <p className="text-sm font-semibold text-purple-600 uppercase tracking-widest">Terms</p>
-          <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
-            Terms of Service
-          </h1>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">
-            The rules and conditions for using {brandName}.
-          </p>
-        </div>
-
-        <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          {content ? (
-            <div
-              className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 space-y-4"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          ) : (
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              The terms of service are not available yet. Please check back later.
+    <>
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+        <section className="max-w-4xl mx-auto px-6">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-purple-600 uppercase tracking-widest">Terms</p>
+            <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
+              Terms of Service
+            </h1>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">
+              The rules and conditions for using {brandName}.
             </p>
-          )}
-        </div>
-      </section>
-    </main>
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            {content ? (
+              <div
+                className="rich-content"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            ) : (
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                The terms of service are not available yet. Please check back later.
+              </p>
+            )}
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
   );
 }

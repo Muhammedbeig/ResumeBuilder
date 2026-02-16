@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/sections/Footer";
 import { panelGet } from "@/lib/panel-api";
 import { resolvePanelAssetUrl } from "@/lib/panel-assets";
+import { normalizeRichContent } from "@/lib/rich-content";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,8 @@ type PanelBlog = {
   translated_description?: string;
   tags?: string[];
   translated_tags?: string[];
+  category?: string | null;
+  category_slug?: string | null;
   image?: string | null;
   created_at?: string;
 };
@@ -44,6 +47,23 @@ function formatDate(iso: string | undefined) {
   });
 }
 
+function slugifyCategory(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getCategoryMeta(post: PanelBlog): { label: string; slug: string } | null {
+  const label = (post.category ?? "").trim();
+  if (!label) return null;
+  const rawSlug = (post.category_slug ?? "").trim();
+  const slug = rawSlug || slugifyCategory(label);
+  if (!slug) return null;
+  return { label, slug };
+}
+
 export default async function CareerBlogPostPage({
   params,
 }: {
@@ -62,8 +82,9 @@ export default async function CareerBlogPostPage({
     []) as PanelBlog[];
 
   const title = blog.translated_title ?? blog.title ?? "Untitled";
-  const html = blog.translated_description ?? blog.description ?? "";
+  const html = normalizeRichContent(blog.translated_description ?? blog.description ?? "");
   const imageUrl = resolvePanelAssetUrl(blog.image);
+  const category = getCategoryMeta(blog);
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
@@ -79,6 +100,14 @@ export default async function CareerBlogPostPage({
         </h1>
         <p className="mt-4 text-gray-600 dark:text-gray-300">{excerptFromHtml(html)}</p>
         <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+          {category ? (
+            <Link
+              href={`/career-blog/category/${encodeURIComponent(category.slug)}`}
+              className="rounded-full bg-purple-100 px-2 py-1 font-semibold text-purple-700 transition hover:bg-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:hover:bg-purple-500/30"
+            >
+              {category.label}
+            </Link>
+          ) : null}
           <span>{formatDate(blog.created_at)}</span>
         </div>
 
@@ -89,9 +118,7 @@ export default async function CareerBlogPostPage({
         ) : null}
 
         <article className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="prose prose-gray max-w-none dark:prose-invert">
-            <div dangerouslySetInnerHTML={{ __html: html }} />
-          </div>
+          <div className="rich-content" dangerouslySetInnerHTML={{ __html: html }} />
         </article>
 
         <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -134,7 +161,15 @@ export default async function CareerBlogPostPage({
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                   {excerptFromHtml(item.translated_description ?? item.description ?? "")}
                 </p>
-                <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  {(() => {
+                    const relatedCategory = getCategoryMeta(item);
+                    return relatedCategory ? (
+                      <span className="rounded-full bg-purple-100 px-2 py-1 font-semibold text-purple-700 dark:bg-purple-500/20 dark:text-purple-200">
+                        {relatedCategory.label}
+                      </span>
+                    ) : null;
+                  })()}
                   {formatDate(item.created_at)}
                 </div>
               </Link>

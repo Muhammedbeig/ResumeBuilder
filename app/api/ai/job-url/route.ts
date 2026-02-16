@@ -41,6 +41,12 @@ const KEYWORDS = [
 
 const DESKTOP_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+const MOBILE_USER_AGENT =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
+const FETCH_TIMEOUT_MS = 20_000;
+const MAX_URL_INPUT_LENGTH = 200_000;
+const MAX_REDIRECT_UNWRAP_DEPTH = 4;
+const REDIRECT_PARAM_KEYS = ["url", "u", "q", "target", "redirect", "redirect_url", "redirect_uri", "r"];
 
 const normalizeWhitespace = (value: string) =>
   value
@@ -62,15 +68,59 @@ const stripTrailingPunctuation = (value: string) => {
 };
 
 const extractFirstUrl = (input: string) => {
-  const normalized = normalizeWhitespace(input);
+  const normalized = normalizeWhitespace(input.slice(0, MAX_URL_INPUT_LENGTH));
   const directCandidate = stripTrailingPunctuation(normalized);
   if (/^https?:\/\//i.test(directCandidate)) {
     return directCandidate;
   }
 
   const matched = normalized.match(/https?:\/\/[^\s<>"']+/i);
-  if (!matched) return "";
-  return stripTrailingPunctuation(matched[0]);
+  if (matched) return stripTrailingPunctuation(matched[0]);
+
+  // Accept bare domains like linkedin.com/jobs/view/... or www.example.com/...
+  const bareDomainMatch = normalized.match(
+    /(?:^|\s)((?:www\.)?[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:\/[^\s<>"']*)?)/i
+  );
+  if (bareDomainMatch?.[1]) {
+    return stripTrailingPunctuation(bareDomainMatch[1]);
+  }
+
+  return "";
+};
+
+const tryParseUrl = (value: string): URL | null => {
+  try {
+    const candidate = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    const parsed = new URL(candidate);
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const maybeDecodeURIComponent = (value: string) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+const unwrapRedirectUrl = (initialUrl: URL, depth = 0): URL => {
+  if (depth >= MAX_REDIRECT_UNWRAP_DEPTH) return initialUrl;
+
+  for (const key of REDIRECT_PARAM_KEYS) {
+    const raw = initialUrl.searchParams.get(key);
+    if (!raw) continue;
+    const decoded = stripTrailingPunctuation(maybeDecodeURIComponent(raw));
+    const nested = tryParseUrl(decoded);
+    if (!nested) continue;
+    if (nested.toString() === initialUrl.toString()) continue;
+    return unwrapRedirectUrl(nested, depth + 1);
+  }
+
+  return initialUrl;
 };
 
 const normalizeUrl = (urlInput: string) => {
@@ -79,11 +129,14 @@ const normalizeUrl = (urlInput: string) => {
     throw new Error("Invalid URL");
   }
 
-  const parsed = new URL(candidate);
-  if (!["http:", "https:"].includes(parsed.protocol)) {
+  const parsed = tryParseUrl(candidate);
+  if (!parsed) {
     throw new Error("Only http/https URLs are supported.");
   }
-  return parsed.toString();
+
+  const unwrapped = unwrapRedirectUrl(parsed);
+  unwrapped.hash = "";
+  return unwrapped.toString();
 };
 
 const cleanText = (text: string) =>
@@ -100,6 +153,19 @@ const scoreCandidate = (text: string) => {
 };
 
 const trimToMax = (text: string, max = 12000) => (text.length > max ? text.slice(0, max) : text);
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function extractFromJsonLd(html: string): string {
   const $ = loadHtml(html);
@@ -175,6 +241,98 @@ function extractFromMeta(html: string): string {
   return candidates[0] ?? "";
 }
 
+function extractFromDocument(raw: string): string {
+  const source = cleanText(raw);
+  if (!source) return "";
+
+  const looksLikeHtml = /<html|<body|<main|<article|<section|<script/i.test(raw);
+  if (!looksLikeHtml) {
+    return source;
+  }
+
+  const jsonLdText = extractFromJsonLd(raw);
+  const htmlText = extractFromHtml(raw);
+  const metaText = extractFromMeta(raw);
+
+  const candidates = [jsonLdText, htmlText, metaText, source].filter(Boolean);
+  candidates.sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
+  return candidates[0] ?? "";
+}
+
+function buildJinaFallbackUrls(targetUrl: string) {
+  const withoutProtocol = targetUrl.replace(/^https?:\/\//i, "");
+  return [
+    `https://r.jina.ai/https://${withoutProtocol}`,
+    `https://r.jina.ai/http://${withoutProtocol}`,
+    `https://r.jina.ai/${targetUrl}`,
+  ];
+}
+
+async function extractJobTextFromUrl(url: string): Promise<string> {
+  const primaryAttempts: Array<{ url: string; headers: HeadersInit }> = [
+    {
+      url,
+      headers: {
+        "User-Agent": DESKTOP_USER_AGENT,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    },
+    {
+      url,
+      headers: {
+        "User-Agent": MOBILE_USER_AGENT,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    },
+  ];
+
+  for (const attempt of primaryAttempts) {
+    try {
+      const response = await fetchWithTimeout(attempt.url, {
+        headers: attempt.headers,
+        redirect: "follow",
+        cache: "no-store",
+      });
+      if (!response.ok) continue;
+
+      const body = await response.text();
+      const extracted = extractFromDocument(body);
+      if (extracted.length >= 120) return extracted;
+    } catch {
+      // continue to next attempt
+    }
+  }
+
+  const fallbackUrls = buildJinaFallbackUrls(url);
+  for (const fallbackUrl of fallbackUrls) {
+    try {
+      const response = await fetchWithTimeout(
+        fallbackUrl,
+        {
+          headers: {
+            "User-Agent": DESKTOP_USER_AGENT,
+            Accept: "text/plain,text/html,*/*",
+          },
+          redirect: "follow",
+          cache: "no-store",
+        },
+        25_000
+      );
+      if (!response.ok) continue;
+
+      const body = await response.text();
+      const extracted = extractFromDocument(body);
+      if (extracted.length >= 120) return extracted;
+    } catch {
+      // continue to next fallback
+    }
+  }
+
+  return "";
+}
+
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -216,34 +374,8 @@ export async function POST(request: Request) {
   }
 
   let text = "";
-
   try {
-    const response = await fetch(normalized, {
-      headers: {
-        "User-Agent": DESKTOP_USER_AGENT,
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-      redirect: "follow",
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Unable to extract job description from this URL. Please paste it manually." },
-        { status: 422 }
-      );
-    }
-
-    const html = await response.text();
-    const jsonLdText = extractFromJsonLd(html);
-    const htmlText = extractFromHtml(html);
-    const metaText = extractFromMeta(html);
-
-    const candidates = [jsonLdText, htmlText, metaText].filter(Boolean);
-    candidates.sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
-    text = candidates[0] ?? "";
-    text = cleanText(text);
+    text = cleanText(await extractJobTextFromUrl(normalized));
   } catch (error) {
     console.error("Job URL extraction failed", error);
   }

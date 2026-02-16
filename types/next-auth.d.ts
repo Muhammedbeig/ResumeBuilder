@@ -7,11 +7,14 @@ declare module "next-auth" {
       subscription?: "free" | "pro" | "business";
       subscriptionPlanId?: string | null;
       hasPassword?: boolean;
+      authProvider?: "credentials" | "google";
     };
   }
 
   interface User {
     subscription?: "free" | "pro" | "business";
     subscriptionPlanId?: string | null;
+    hasPassword?: boolean;
+    authProvider?: "credentials" | "google";
   }
 }
