@@ -1,5 +1,4 @@
 import type { ResumeData, SectionConfig } from "@/types";
-import { useMemo } from "react";
 import { getFontScale } from "@/lib/typography";
 import { RichText } from "@/components/editor/RichText";
 import type { ResumeTemplateCatalogEntry } from "@/lib/resume-template-catalog";
@@ -56,12 +55,10 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
   const accentSoftStrong = hexToRgba(themeColor, 0.22);
   const isSidebarLayout = config.layout === "sidebar-left" || config.layout === "sidebar-right";
 
-  const activeStructure = useMemo(() => {
-    if (structure && structure.length > 0) {
-      return [...structure].sort((a, b) => a.order - b.order);
-    }
-    return DEFAULT_STRUCTURE;
-  }, [structure]);
+  const activeStructure =
+    structure && structure.length > 0
+      ? [...structure].sort((a, b) => a.order - b.order)
+      : DEFAULT_STRUCTURE;
 
   const contactItems = [
     basics.location,

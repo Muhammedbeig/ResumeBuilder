@@ -1,6 +1,5 @@
 import type { ResumeData, SectionConfig } from '@/types';
 import { User, MapPin, Mail, Phone, Globe, Github, Linkedin } from 'lucide-react';
-import { useMemo } from 'react';
 import { getFontScale } from '@/lib/typography';
 import { RichText } from '@/components/editor/RichText';
 
@@ -25,12 +24,10 @@ export function TechModernTemplate({ data, className = '' }: TechModernTemplateP
   const fontSize = data.metadata?.fontSize;
   const scale = getFontScale(fontSize);
 
-  const activeStructure = useMemo(() => {
-    if (data.structure && data.structure.length > 0) {
-      return [...data.structure].sort((a, b) => a.order - b.order);
-    }
-    return DEFAULT_STRUCTURE;
-  }, [data.structure]);
+  const activeStructure =
+    data.structure && data.structure.length > 0
+      ? [...data.structure].sort((a, b) => a.order - b.order)
+      : DEFAULT_STRUCTURE;
 
   const renderSection = (section: SectionConfig) => {
     switch (section.type) {

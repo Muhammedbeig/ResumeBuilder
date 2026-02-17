@@ -1,5 +1,4 @@
 import type { ResumeData, SectionConfig } from '@/types';
-import { useMemo } from 'react';
 import { getFontScale } from '@/lib/typography';
 import { RichText } from '@/components/editor/RichText';
 
@@ -27,12 +26,10 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
   const scale = getFontScale(fontSize);
 
   // 1. Resolve the active structure
-  const activeStructure = useMemo(() => {
-    if (data.structure && data.structure.length > 0) {
-      return [...data.structure].sort((a, b) => a.order - b.order);
-    }
-    return DEFAULT_STRUCTURE;
-  }, [data.structure]);
+  const activeStructure =
+    data.structure && data.structure.length > 0
+      ? [...data.structure].sort((a, b) => a.order - b.order)
+      : DEFAULT_STRUCTURE;
 
   // 2. Helper to render sections
   const renderSection = (type: string, id: string) => {
