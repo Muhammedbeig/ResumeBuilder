@@ -7,3 +7,4 @@ export function extractJson<T = unknown>(text: string): T {
   const jsonString = fencedMatch ? fencedMatch[1].trim() : trimmed;
   return JSON.parse(jsonString) as T;
 }
+/** new method to extract json from text */
