@@ -1,9 +1,15 @@
 import type { MetadataRoute } from "next";
 
-const DEFAULT_SITE_URL = "https://resumibuilder.com";
-
 const baseUrl = () => {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
+  const raw =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL;
+  if (!raw) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SITE_URL (or NEXT_PUBLIC_APP_URL/NEXTAUTH_URL)",
+    );
+  }
   return raw.replace(/\/+$/, "");
 };
 

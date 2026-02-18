@@ -1,8 +1,6 @@
 import type { MetadataRoute } from "next";
 import { panelGet } from "@/lib/panel-api";
 
-const DEFAULT_SITE_URL = "https://resumibuilder.com";
-
 type PanelBlog = {
   slug?: string | null;
   created_at?: string | null;
@@ -24,7 +22,15 @@ type PanelResponse<T> = {
 };
 
 const toBaseUrl = () => {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
+  const raw =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL;
+  if (!raw) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SITE_URL (or NEXT_PUBLIC_APP_URL/NEXTAUTH_URL)",
+    );
+  }
   return raw.replace(/\/+$/, "");
 };
 
