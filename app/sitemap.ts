@@ -22,36 +22,43 @@ type PanelResponse<T> = {
 };
 
 const toBaseUrl = () => {
-  const raw =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXTAUTH_URL;
-  if (!raw) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SITE_URL (or NEXT_PUBLIC_APP_URL/NEXTAUTH_URL)",
-    );
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXTAUTH_URL,
+  ];
+
+  for (const candidate of candidates) {
+    const raw = candidate?.trim();
+    if (!raw) continue;
+    try {
+      const parsed = new URL(raw);
+      return `${parsed.protocol}//${parsed.host}`;
+    } catch {
+      continue;
+    }
   }
-  return raw.replace(/\/+$/, "");
+
+  return null;
 };
 
-const buildUrl = (path: string) => {
-  const base = toBaseUrl();
+const buildUrl = (base: string, path: string) => {
   if (!path.startsWith("/")) return `${base}/${path}`;
   return `${base}${path}`;
 };
 
-const normalizeCustomUrl = (value: string): string | null => {
+const normalizeCustomUrl = (base: string, value: string): string | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     return trimmed;
   }
   if (trimmed.startsWith("#")) return null;
-  if (trimmed.startsWith("/")) return buildUrl(trimmed);
-  return buildUrl(`/${trimmed}`);
+  if (trimmed.startsWith("/")) return buildUrl(base, trimmed);
+  return buildUrl(base, `/${trimmed}`);
 };
 
-async function fetchCustomLinks(): Promise<string[]> {
+async function fetchCustomLinks(base: string): Promise<string[]> {
   try {
     const res = await panelGet<Record<string, unknown>>("get-system-settings");
     const raw =
@@ -62,7 +69,9 @@ async function fetchCustomLinks(): Promise<string[]> {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    const urls = lines.map(normalizeCustomUrl).filter(Boolean) as string[];
+    const urls = lines
+      .map((line) => normalizeCustomUrl(base, line))
+      .filter(Boolean) as string[];
     return Array.from(new Set(urls));
   } catch {
     return [];
@@ -113,6 +122,9 @@ async function fetchBlogCategories(): Promise<BlogCategory[]> {
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const base = toBaseUrl();
+  if (!base) return [];
+
   const now = new Date();
   const staticPaths = [
     "/",
@@ -138,14 +150,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const entries: MetadataRoute.Sitemap = staticPaths.map((path, index) => ({
-    url: buildUrl(path),
+    url: buildUrl(base, path),
     lastModified: now,
     changeFrequency: index === 0 ? "daily" : "weekly",
     priority: index === 0 ? 1 : 0.7,
   }));
 
   const [customLinks, blogs, categories] = await Promise.all([
-    fetchCustomLinks(),
+    fetchCustomLinks(base),
     fetchAllBlogs(),
     fetchBlogCategories(),
   ]);
@@ -163,7 +175,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!blog?.slug) continue;
     const lastModified = blog.updated_at || blog.created_at || now;
     entries.push({
-      url: buildUrl(`/career-blog/${blog.slug}`),
+      url: buildUrl(base, `/career-blog/${blog.slug}`),
       lastModified,
       changeFrequency: "weekly",
       priority: 0.6,
@@ -174,6 +186,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!category?.value) continue;
     entries.push({
       url: buildUrl(
+        base,
         `/career-blog/category/${encodeURIComponent(category.value)}`,
       ),
       lastModified: now,

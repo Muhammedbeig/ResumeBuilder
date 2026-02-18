@@ -1,19 +1,28 @@
 import type { MetadataRoute } from "next";
 
 const baseUrl = () => {
-  const raw =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXTAUTH_URL;
-  if (!raw) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SITE_URL (or NEXT_PUBLIC_APP_URL/NEXTAUTH_URL)",
-    );
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXTAUTH_URL,
+  ];
+
+  for (const candidate of candidates) {
+    const raw = candidate?.trim();
+    if (!raw) continue;
+    try {
+      const parsed = new URL(raw);
+      return `${parsed.protocol}//${parsed.host}`;
+    } catch {
+      continue;
+    }
   }
-  return raw.replace(/\/+$/, "");
+
+  return null;
 };
 
 export default function robots(): MetadataRoute.Robots {
+  const base = baseUrl();
   return {
     rules: [
       {
@@ -22,6 +31,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard", "/editor", "/api", "/billing", "/checkout"],
       },
     ],
-    sitemap: `${baseUrl()}/sitemap.xml`,
+    ...(base ? { sitemap: `${base}/sitemap.xml` } : {}),
   };
 }
