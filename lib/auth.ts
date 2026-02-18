@@ -37,7 +37,10 @@ function readHeaderValue(headers: unknown, headerName: string): string | null {
   }
   if (typeof headers !== "object") return null;
   const map = headers as Record<string, string | string[] | undefined>;
-  const direct = map[headerName] ?? map[headerName.toLowerCase()] ?? map[headerName.toUpperCase()];
+  const direct =
+    map[headerName] ??
+    map[headerName.toLowerCase()] ??
+    map[headerName.toUpperCase()];
   if (!direct) return null;
   if (Array.isArray(direct)) return direct[0] ?? null;
   return direct;
@@ -77,14 +80,24 @@ function parseToggle(value?: string | null): boolean | null {
   const normalized = value.trim().toLowerCase();
   if (!normalized) return null;
   if (["1", "true", "yes", "on", "enabled"].includes(normalized)) return true;
-  if (["0", "false", "no", "off", "disabled"].includes(normalized)) return false;
+  if (["0", "false", "no", "off", "disabled"].includes(normalized))
+    return false;
   return null;
 }
 
-async function getAuthSettingsFromPanel(): Promise<Record<string, string | null>> {
-  const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+async function getAuthSettingsFromPanel(): Promise<
+  Record<string, string | null>
+> {
+  const data = await panelInternalPost<{
+    settings: Record<string, string | null>;
+  }>("settings/batch", {
     body: {
-      keys: ["google_client_id", "google_client_secret", "google_authentication", "email_authentication"],
+      keys: [
+        "google_client_id",
+        "google_client_secret",
+        "google_authentication",
+        "email_authentication",
+      ],
     },
   });
   return data.settings ?? {};
@@ -106,13 +119,19 @@ async function getAuthSettings(): Promise<AuthSettings> {
   const envClientId = process.env.GOOGLE_CLIENT_ID?.trim() ?? "";
   const envClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() ?? "";
 
-  const googleClientId = (panelSettings?.google_client_id ?? "").trim() || envClientId;
-  const googleClientSecret = (panelSettings?.google_client_secret ?? "").trim() || envClientSecret;
+  const googleClientId =
+    (panelSettings?.google_client_id ?? "").trim() || envClientId;
+  const googleClientSecret =
+    (panelSettings?.google_client_secret ?? "").trim() || envClientSecret;
 
-  const googleEnabledFromSetting = parseToggle(panelSettings?.google_authentication ?? null);
+  const googleEnabledFromSetting = parseToggle(
+    panelSettings?.google_authentication ?? null,
+  );
   const googleEnabled = googleEnabledFromSetting ?? true;
 
-  const emailEnabledFromSetting = parseToggle(panelSettings?.email_authentication ?? null);
+  const emailEnabledFromSetting = parseToggle(
+    panelSettings?.email_authentication ?? null,
+  );
   const emailEnabled = emailEnabledFromSetting ?? true;
 
   cachedAuthSettings = {
@@ -128,13 +147,17 @@ async function getAuthSettings(): Promise<AuthSettings> {
 function buildProviders(settings: AuthSettings) {
   const providers: NextAuthOptions["providers"] = [];
 
-  if (settings.googleEnabled && settings.googleClientId && settings.googleClientSecret) {
+  if (
+    settings.googleEnabled &&
+    settings.googleClientId &&
+    settings.googleClientSecret
+  ) {
     providers.push(
       GoogleProvider({
         clientId: settings.googleClientId,
         clientSecret: settings.googleClientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
@@ -161,19 +184,24 @@ function buildProviders(settings: AuthSettings) {
             return null;
           }
 
-          const ip = getClientIpFromHeaders((req as { headers?: unknown } | undefined)?.headers);
+          const ip = getClientIpFromHeaders(
+            (req as { headers?: unknown } | undefined)?.headers,
+          );
           const rateKey = `${ip}:${email}`;
           if (isLoginRateLimited(rateKey)) {
             return null;
           }
 
           try {
-            const data = await panelInternalPost<{ user: InternalAuthUser }>("auth/credentials", {
-              body: {
-                email,
-                password,
+            const data = await panelInternalPost<{ user: InternalAuthUser }>(
+              "auth/credentials",
+              {
+                body: {
+                  email,
+                  password,
+                },
               },
-            });
+            );
 
             const user = data.user;
             if (!user?.id) return null;
@@ -193,7 +221,7 @@ function buildProviders(settings: AuthSettings) {
             return null;
           }
         },
-      })
+      }),
     );
   }
 
@@ -211,18 +239,23 @@ function buildBaseAuthOptions(): Omit<NextAuthOptions, "providers"> {
           return true;
         }
 
-        const email = normalizeEmail(typeof user?.email === "string" ? user.email : "");
+        const email = normalizeEmail(
+          typeof user?.email === "string" ? user.email : "",
+        );
         if (!isValidEmail(email)) return false;
 
         try {
-          const data = await panelInternalPost<{ user: InternalAuthUser }>("auth/oauth/google", {
-            body: {
-              email,
-              name: typeof user?.name === "string" ? user.name : null,
-              image: typeof user?.image === "string" ? user.image : null,
-              providerAccountId: String(account.providerAccountId ?? ""),
+          const data = await panelInternalPost<{ user: InternalAuthUser }>(
+            "auth/oauth/google",
+            {
+              body: {
+                email,
+                name: typeof user?.name === "string" ? user.name : null,
+                image: typeof user?.image === "string" ? user.image : null,
+                providerAccountId: String(account.providerAccountId ?? ""),
+              },
             },
-          });
+          );
           const synced = data.user;
           if (!synced?.id) return false;
 
@@ -249,18 +282,24 @@ function buildBaseAuthOptions(): Omit<NextAuthOptions, "providers"> {
           }
           token.name = user.name ?? token.name;
           token.picture = user.image ?? token.picture;
-          token.subscription = user.subscription ?? token.subscription ?? "free";
-          token.subscriptionPlanId = user.subscriptionPlanId ?? token.subscriptionPlanId ?? null;
+          token.subscription =
+            user.subscription ?? token.subscription ?? "free";
+          token.subscriptionPlanId =
+            user.subscriptionPlanId ?? token.subscriptionPlanId ?? null;
           token.hasPassword = user.hasPassword ?? token.hasPassword ?? true;
-          token.authProvider = user.authProvider ?? token.authProvider ?? "credentials";
+          token.authProvider =
+            user.authProvider ?? token.authProvider ?? "credentials";
         }
 
         if (trigger === "update" && session) {
           if (session?.name) token.name = session.name;
           if (session?.subscription) token.subscription = session.subscription;
-          if (session?.subscriptionPlanId) token.subscriptionPlanId = session.subscriptionPlanId;
-          if (session?.user?.subscription) token.subscription = session.user.subscription;
-          if (session?.user?.subscriptionPlanId) token.subscriptionPlanId = session.user.subscriptionPlanId;
+          if (session?.subscriptionPlanId)
+            token.subscriptionPlanId = session.subscriptionPlanId;
+          if (session?.user?.subscription)
+            token.subscription = session.user.subscription;
+          if (session?.user?.subscriptionPlanId)
+            token.subscriptionPlanId = session.user.subscriptionPlanId;
         }
 
         return token;

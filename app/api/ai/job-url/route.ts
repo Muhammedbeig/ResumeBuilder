@@ -46,7 +46,16 @@ const MOBILE_USER_AGENT =
 const FETCH_TIMEOUT_MS = 20_000;
 const MAX_URL_INPUT_LENGTH = 200_000;
 const MAX_REDIRECT_UNWRAP_DEPTH = 4;
-const REDIRECT_PARAM_KEYS = ["url", "u", "q", "target", "redirect", "redirect_url", "redirect_uri", "r"];
+const REDIRECT_PARAM_KEYS = [
+  "url",
+  "u",
+  "q",
+  "target",
+  "redirect",
+  "redirect_url",
+  "redirect_uri",
+  "r",
+];
 
 const normalizeWhitespace = (value: string) =>
   value
@@ -79,7 +88,7 @@ const extractFirstUrl = (input: string) => {
 
   // Accept bare domains like linkedin.com/jobs/view/... or www.example.com/...
   const bareDomainMatch = normalized.match(
-    /(?:^|\s)((?:www\.)?[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:\/[^\s<>"']*)?)/i
+    /(?:^|\s)((?:www\.)?[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:\/[^\s<>"']*)?)/i,
   );
   if (bareDomainMatch?.[1]) {
     return stripTrailingPunctuation(bareDomainMatch[1]);
@@ -148,13 +157,21 @@ const cleanText = (text: string) =>
 
 const scoreCandidate = (text: string) => {
   const lower = text.toLowerCase();
-  const keywordScore = KEYWORDS.reduce((acc, keyword) => acc + (lower.includes(keyword) ? 1 : 0), 0);
+  const keywordScore = KEYWORDS.reduce(
+    (acc, keyword) => acc + (lower.includes(keyword) ? 1 : 0),
+    0,
+  );
   return text.length + keywordScore * 500;
 };
 
-const trimToMax = (text: string, max = 12000) => (text.length > max ? text.slice(0, max) : text);
+const trimToMax = (text: string, max = 12000) =>
+  text.length > max ? text.slice(0, max) : text;
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = FETCH_TIMEOUT_MS) {
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = FETCH_TIMEOUT_MS,
+) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -189,7 +206,10 @@ function extractFromJsonLd(html: string): string {
         const typed = item as Record<string, unknown>;
         const typeValue = String(typed["@type"] ?? "").toLowerCase();
         const description = String(typed.description ?? "").trim();
-        if (description && (typeValue.includes("jobposting") || typeValue.includes("job"))) {
+        if (
+          description &&
+          (typeValue.includes("jobposting") || typeValue.includes("job"))
+        ) {
           if (description.length > best.length) best = description;
         }
         if (typed["@graph"] && Array.isArray(typed["@graph"])) {
@@ -245,7 +265,9 @@ function extractFromDocument(raw: string): string {
   const source = cleanText(raw);
   if (!source) return "";
 
-  const looksLikeHtml = /<html|<body|<main|<article|<section|<script/i.test(raw);
+  const looksLikeHtml = /<html|<body|<main|<article|<section|<script/i.test(
+    raw,
+  );
   if (!looksLikeHtml) {
     return source;
   }
@@ -274,7 +296,8 @@ async function extractJobTextFromUrl(url: string): Promise<string> {
       url,
       headers: {
         "User-Agent": DESKTOP_USER_AGENT,
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
       },
     },
@@ -282,7 +305,8 @@ async function extractJobTextFromUrl(url: string): Promise<string> {
       url,
       headers: {
         "User-Agent": MOBILE_USER_AGENT,
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
       },
     },
@@ -318,7 +342,7 @@ async function extractJobTextFromUrl(url: string): Promise<string> {
           redirect: "follow",
           cache: "no-store",
         },
-        25_000
+        25_000,
       );
       if (!response.ok) continue;
 
@@ -344,8 +368,11 @@ export async function POST(request: Request) {
   const hasAccess = isBusiness || planId === "monthly" || planId === "annual";
   if (!hasAccess) {
     return NextResponse.json(
-      { error: "Auto-Tailor from job URL is available in Monthly and Annual plans." },
-      { status: 402 }
+      {
+        error:
+          "Auto-Tailor from job URL is available in Monthly and Annual plans.",
+      },
+      { status: 402 },
     );
   }
 
@@ -369,7 +396,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Invalid URL" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -382,8 +409,11 @@ export async function POST(request: Request) {
 
   if (!text || text.length < 120) {
     return NextResponse.json(
-      { error: "Unable to extract job description from this URL. Please paste it manually." },
-      { status: 422 }
+      {
+        error:
+          "Unable to extract job description from this URL. Please paste it manually.",
+      },
+      { status: 422 },
     );
   }
 

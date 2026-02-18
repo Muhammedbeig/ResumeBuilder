@@ -22,15 +22,18 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const jobTitle = truncateText(
     String(body?.jobTitle || "").trim(),
-    resourceSettings.limits.aiText
+    resourceSettings.limits.aiText,
   );
   const description = truncateText(
     String(body?.description || "").trim(),
-    resourceSettings.limits.aiText
+    resourceSettings.limits.aiText,
   );
 
   if (!jobTitle && !description) {
-    return NextResponse.json({ error: "Job title or description is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Job title or description is required" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -53,7 +56,7 @@ Format:
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
+
     let suggestions: any = { hardSkills: [], softSkills: [] };
     try {
       suggestions = extractJson(text);
@@ -75,8 +78,8 @@ Format:
 
     return NextResponse.json({ hardSkills, softSkills });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "AI request failed";
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
-

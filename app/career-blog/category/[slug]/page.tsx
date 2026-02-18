@@ -26,7 +26,10 @@ type PanelBlog = {
 };
 
 function stripHtml(raw: string) {
-  return raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return raw
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function excerptFromHtml(raw: string, maxLen = 160) {
@@ -90,13 +93,17 @@ export default async function CareerBlogCategoryPage({
     notFound();
   }
 
-  const title = category?.label ?? posts[0]?.category ?? humanizeSlug(categorySlug);
+  const title =
+    category?.label ?? posts[0]?.category ?? humanizeSlug(categorySlug);
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
       <section className="max-w-6xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto">
-          <Link href="/career-blog" className="text-sm font-semibold text-purple-600">
+          <Link
+            href="/career-blog"
+            className="text-sm font-semibold text-purple-600"
+          >
             Back to Career Blog
           </Link>
           <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-purple-600">
@@ -114,7 +121,8 @@ export default async function CareerBlogCategoryPage({
           {posts.length > 0 ? (
             posts.map((post) => {
               const imageUrl = resolvePanelAssetUrl(post.image);
-              const postTitle = post.translated_title ?? post.title ?? "Untitled";
+              const postTitle =
+                post.translated_title ?? post.title ?? "Untitled";
               return (
                 <Link
                   key={post.slug}
@@ -137,20 +145,25 @@ export default async function CareerBlogCategoryPage({
                         {postTitle}
                       </h2>
                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                        {excerptFromHtml(post.translated_description ?? post.description ?? "")}
+                        {excerptFromHtml(
+                          post.translated_description ?? post.description ?? "",
+                        )}
                       </p>
                       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                         <span>{formatDate(post.created_at)}</span>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-purple-600">Read guide</span>
+                    <span className="text-sm font-semibold text-purple-600">
+                      Read guide
+                    </span>
                   </div>
                 </Link>
               );
             })
           ) : (
             <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-              No articles yet for this category. Add categories while creating blogs in the Panel.
+              No articles yet for this category. Add categories while creating
+              blogs in the Panel.
             </div>
           )}
         </div>

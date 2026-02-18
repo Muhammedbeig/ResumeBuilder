@@ -68,7 +68,10 @@ export async function POST(req: NextRequest) {
   const expectedKey = process.env.INTERNAL_EXPORT_KEY;
   const providedKey = req.headers.get("x-internal-export-key");
   if (!expectedKey) {
-    return NextResponse.json({ error: "Export key is not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Export key is not configured" },
+      { status: 500 },
+    );
   }
   if (providedKey !== expectedKey) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -96,7 +99,8 @@ export async function POST(req: NextRequest) {
       const typeValue = form.get("type");
       const dataValue = form.get("data");
 
-      formTemplateId = typeof templateValue === "string" ? templateValue.trim() : "";
+      formTemplateId =
+        typeof templateValue === "string" ? templateValue.trim() : "";
       formType = typeof typeValue === "string" ? typeValue.trim() : "";
 
       if (typeof dataValue === "string" && dataValue.trim()) {
@@ -113,9 +117,13 @@ export async function POST(req: NextRequest) {
     }
 
     const templateIdValue =
-      formTemplateId || (typeof body.templateId === "string" ? body.templateId.trim() : "");
+      formTemplateId ||
+      (typeof body.templateId === "string" ? body.templateId.trim() : "");
     if (!templateIdValue) {
-      return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Template ID is required" },
+        { status: 400 },
+      );
     }
 
     const normalizedType = normalizeType(formType || body.type || body.docType);
@@ -124,16 +132,24 @@ export async function POST(req: NextRequest) {
     if (normalizedType === "cover_letter") {
       const coverData = normalizeCoverLetterData(payloadData);
       if (!coverData) {
-        return NextResponse.json({ error: "Invalid cover letter data" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid cover letter data" },
+          { status: 400 },
+        );
       }
 
-      const isStatic = coverLetterTemplates.some((tpl) => tpl.id === templateIdValue);
+      const isStatic = coverLetterTemplates.some(
+        (tpl) => tpl.id === templateIdValue,
+      );
       let panelConfig: unknown = null;
       if (!isStatic) {
         try {
-          const res = await panelGet<PanelTemplate>(`templates/${templateIdValue}`, {
-            type: "cover_letter",
-          });
+          const res = await panelGet<PanelTemplate>(
+            `templates/${templateIdValue}`,
+            {
+              type: "cover_letter",
+            },
+          );
           panelConfig = res.data?.config;
         } catch {
           panelConfig = null;
@@ -141,7 +157,10 @@ export async function POST(req: NextRequest) {
       }
 
       if (!isStatic && !panelConfig) {
-        return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid template ID" },
+          { status: 400 },
+        );
       }
 
       const pdfBuffer = await runPdfRenderTask(
@@ -150,12 +169,14 @@ export async function POST(req: NextRequest) {
             type: "cover_letter",
             templateId: templateIdValue,
             data: coverData,
-            config: normalizeCoverLetterConfig((panelConfig ?? undefined) as any),
+            config: normalizeCoverLetterConfig(
+              (panelConfig ?? undefined) as any,
+            ),
           }),
         {
           concurrency: resourceSettings.pdfRender.concurrency,
           timeoutMs: resourceSettings.pdfRender.timeoutMs,
-        }
+        },
       );
 
       return new NextResponse(pdfBuffer as any, {
@@ -168,20 +189,28 @@ export async function POST(req: NextRequest) {
 
     const parsedData = ResumeDataSchema.safeParse(payloadData);
     if (!parsedData.success) {
-      return NextResponse.json({ error: "Invalid resume data", details: parsedData.error }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid resume data", details: parsedData.error },
+        { status: 400 },
+      );
     }
 
     const isCv = normalizedType === "cv";
     const isStatic = isCv
       ? Boolean(cvTemplateMap[templateIdValue as keyof typeof cvTemplateMap])
-      : Boolean(resumeTemplateMap[templateIdValue as keyof typeof resumeTemplateMap]);
+      : Boolean(
+          resumeTemplateMap[templateIdValue as keyof typeof resumeTemplateMap],
+        );
 
     let panelConfig: unknown = null;
     if (!isStatic) {
       try {
-        const res = await panelGet<PanelTemplate>(`templates/${templateIdValue}`, {
-          type: isCv ? "cv" : "resume",
-        });
+        const res = await panelGet<PanelTemplate>(
+          `templates/${templateIdValue}`,
+          {
+            type: isCv ? "cv" : "resume",
+          },
+        );
         panelConfig = res.data?.config;
       } catch {
         panelConfig = null;
@@ -189,12 +218,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isStatic && !panelConfig) {
-      return NextResponse.json({ error: "Invalid template ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid template ID" },
+        { status: 400 },
+      );
     }
 
     const resolvedConfig = isCv
-      ? mapCvConfigToResumeConfig((panelConfig ?? undefined) as any, templateIdValue)
-      : normalizeResumeConfig((panelConfig ?? undefined) as any, templateIdValue);
+      ? mapCvConfigToResumeConfig(
+          (panelConfig ?? undefined) as any,
+          templateIdValue,
+        )
+      : normalizeResumeConfig(
+          (panelConfig ?? undefined) as any,
+          templateIdValue,
+        );
 
     const pdfBuffer = await runPdfRenderTask(
       () =>
@@ -207,7 +245,7 @@ export async function POST(req: NextRequest) {
       {
         concurrency: resourceSettings.pdfRender.concurrency,
         timeoutMs: resourceSettings.pdfRender.timeoutMs,
-      }
+      },
     );
 
     return new NextResponse(pdfBuffer as any, {
@@ -218,6 +256,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("PDF Generation Error:", error);
-    return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate PDF" },
+      { status: 500 },
+    );
   }
 }

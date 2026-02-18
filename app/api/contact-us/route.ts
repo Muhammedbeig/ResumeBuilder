@@ -15,7 +15,8 @@ export async function POST(request: Request) {
   const message = String(body?.message ?? "").trim();
 
   if (!name) return json({ error: "Name is required" }, { status: 400 });
-  if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, { status: 400 });
+  if (!email || !isValidEmail(email))
+    return json({ error: "Valid email is required" }, { status: 400 });
   if (!subject) return json({ error: "Subject is required" }, { status: 400 });
   if (!message) return json({ error: "Message is required" }, { status: 400 });
 
@@ -23,8 +24,8 @@ export async function POST(request: Request) {
     await panelPost("contact-us", { name, email, subject, message });
     return json({ ok: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to send message";
+    const message =
+      err instanceof Error ? err.message : "Failed to send message";
     return json({ error: message }, { status: 502 });
   }
 }
-

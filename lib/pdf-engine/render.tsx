@@ -1,5 +1,12 @@
 import React from "react";
-import { Document, Link, Page, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import {
+  Document,
+  Link,
+  Page,
+  Text,
+  View,
+  renderToBuffer,
+} from "@react-pdf/renderer";
 
 import type {
   Certification,
@@ -12,8 +19,14 @@ import type {
   SkillGroup,
 } from "@/types";
 import { getFontScale } from "@/lib/typography";
-import type { CoverLetterTemplateConfig, ResumeTemplateConfig } from "@/lib/panel-templates";
-import { normalizeCoverLetterConfig, normalizeResumeConfig } from "@/lib/panel-templates";
+import type {
+  CoverLetterTemplateConfig,
+  ResumeTemplateConfig,
+} from "@/lib/panel-templates";
+import {
+  normalizeCoverLetterConfig,
+  normalizeResumeConfig,
+} from "@/lib/panel-templates";
 
 type ResumePdfInput = {
   type: "resume" | "cv";
@@ -31,33 +44,114 @@ type CoverLetterPdfInput = {
 
 export type PdfRenderInput = ResumePdfInput | CoverLetterPdfInput;
 
-type RichBlock = { type: "paragraph"; text: string } | { type: "list"; items: string[] };
+type RichBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "list"; items: string[] };
 
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: "basics", type: "basics", title: "Personal Info", isVisible: true, order: 0 },
-  { id: "summary", type: "summary", title: "Professional Summary", isVisible: true, order: 1 },
-  { id: "experience", type: "experience", title: "Experience", isVisible: true, order: 2 },
-  { id: "education", type: "education", title: "Education", isVisible: true, order: 3 },
+  {
+    id: "basics",
+    type: "basics",
+    title: "Personal Info",
+    isVisible: true,
+    order: 0,
+  },
+  {
+    id: "summary",
+    type: "summary",
+    title: "Professional Summary",
+    isVisible: true,
+    order: 1,
+  },
+  {
+    id: "experience",
+    type: "experience",
+    title: "Experience",
+    isVisible: true,
+    order: 2,
+  },
+  {
+    id: "education",
+    type: "education",
+    title: "Education",
+    isVisible: true,
+    order: 3,
+  },
   { id: "skills", type: "skills", title: "Skills", isVisible: true, order: 4 },
-  { id: "projects", type: "projects", title: "Projects", isVisible: true, order: 5 },
-  { id: "certifications", type: "certifications", title: "Certifications", isVisible: true, order: 6 },
+  {
+    id: "projects",
+    type: "projects",
+    title: "Projects",
+    isVisible: true,
+    order: 5,
+  },
+  {
+    id: "certifications",
+    type: "certifications",
+    title: "Certifications",
+    isVisible: true,
+    order: 6,
+  },
 ];
 
-const STATIC_TEMPLATE_STYLE_OVERRIDES: Record<string, Partial<ResumeTemplateConfig>> = {
-  modern: { bodyFont: "Inter", headingFont: "Inter", sectionStyle: "underline", layout: "stacked" },
-  ats: { bodyFont: "Inter", headingFont: "Inter", sectionStyle: "caps", layout: "stacked" },
-  classic: { bodyFont: "Lora", headingFont: "Playfair Display", sectionStyle: "caps", layout: "stacked" },
-  executive: { bodyFont: "Source Sans 3", headingFont: "Oswald", sectionStyle: "stripe", layout: "split" },
+const STATIC_TEMPLATE_STYLE_OVERRIDES: Record<
+  string,
+  Partial<ResumeTemplateConfig>
+> = {
+  modern: {
+    bodyFont: "Inter",
+    headingFont: "Inter",
+    sectionStyle: "underline",
+    layout: "stacked",
+  },
+  ats: {
+    bodyFont: "Inter",
+    headingFont: "Inter",
+    sectionStyle: "caps",
+    layout: "stacked",
+  },
+  classic: {
+    bodyFont: "Lora",
+    headingFont: "Playfair Display",
+    sectionStyle: "caps",
+    layout: "stacked",
+  },
+  executive: {
+    bodyFont: "Source Sans 3",
+    headingFont: "Oswald",
+    sectionStyle: "stripe",
+    layout: "split",
+  },
   professional: {
     bodyFont: "Merriweather",
     headingFont: "Playfair Display",
     sectionStyle: "underline",
     layout: "split",
   },
-  creative: { bodyFont: "Nunito", headingFont: "Sora", sectionStyle: "pill", layout: "split" },
-  impact: { bodyFont: "Inter", headingFont: "Bebas Neue", sectionStyle: "stripe", layout: "split" },
-  minimal: { bodyFont: "Inter", headingFont: "Inter", sectionStyle: "caps", layout: "stacked" },
-  "tech-modern": { bodyFont: "IBM Plex Sans", headingFont: "Space Grotesk", sectionStyle: "stripe", layout: "split" },
+  creative: {
+    bodyFont: "Nunito",
+    headingFont: "Sora",
+    sectionStyle: "pill",
+    layout: "split",
+  },
+  impact: {
+    bodyFont: "Inter",
+    headingFont: "Bebas Neue",
+    sectionStyle: "stripe",
+    layout: "split",
+  },
+  minimal: {
+    bodyFont: "Inter",
+    headingFont: "Inter",
+    sectionStyle: "caps",
+    layout: "stacked",
+  },
+  "tech-modern": {
+    bodyFont: "IBM Plex Sans",
+    headingFont: "Space Grotesk",
+    sectionStyle: "stripe",
+    layout: "split",
+  },
   "minimalist-photo": {
     bodyFont: "Inter",
     headingFont: "Inter",
@@ -78,7 +172,12 @@ const STATIC_TEMPLATE_STYLE_OVERRIDES: Record<string, Partial<ResumeTemplateConf
     sectionStyle: "caps",
     layout: "stacked",
   },
-  "executive-cv": { bodyFont: "Inter", headingFont: "Oswald", sectionStyle: "stripe", layout: "split" },
+  "executive-cv": {
+    bodyFont: "Inter",
+    headingFont: "Oswald",
+    sectionStyle: "stripe",
+    layout: "split",
+  },
   "minimalist-professional-cv": {
     bodyFont: "Inter",
     headingFont: "Inter",
@@ -88,9 +187,16 @@ const STATIC_TEMPLATE_STYLE_OVERRIDES: Record<string, Partial<ResumeTemplateConf
   },
 };
 
-const COVER_LETTER_TEMPLATE_OVERRIDES: Record<string, Partial<CoverLetterTemplateConfig>> = {
+const COVER_LETTER_TEMPLATE_OVERRIDES: Record<
+  string,
+  Partial<CoverLetterTemplateConfig>
+> = {
   modern: { layout: "modern", sectionSeparator: "line" },
-  professional: { layout: "classic", sectionSeparator: "bar", headerStyle: "left" },
+  professional: {
+    layout: "classic",
+    sectionSeparator: "bar",
+    headerStyle: "left",
+  },
   creative: { layout: "split", sectionSeparator: "line" },
 };
 
@@ -140,7 +246,10 @@ function pickPdfFont(fontName?: string | null): string {
   return FONT_FAMILIES.sans;
 }
 
-function normalizePdfColor(value: string | undefined | null, fallback: string): string {
+function normalizePdfColor(
+  value: string | undefined | null,
+  fallback: string,
+): string {
   const raw = String(value ?? "").trim();
   if (!raw) return fallback;
 
@@ -202,12 +311,18 @@ function safeArray<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [];
 }
 
-function activeStructure(structure: SectionConfig[] | undefined): SectionConfig[] {
-  if (!Array.isArray(structure) || structure.length === 0) return DEFAULT_STRUCTURE;
+function activeStructure(
+  structure: SectionConfig[] | undefined,
+): SectionConfig[] {
+  if (!Array.isArray(structure) || structure.length === 0)
+    return DEFAULT_STRUCTURE;
   return [...structure].sort((a, b) => a.order - b.order);
 }
 
-function textOrFallback(value: string | undefined | null, fallback = ""): string {
+function textOrFallback(
+  value: string | undefined | null,
+  fallback = "",
+): string {
   const next = String(value ?? "").trim();
   return next || fallback;
 }
@@ -382,10 +497,11 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
       id: input.config?.id ?? input.templateId,
       name: input.config?.name ?? input.templateId,
     },
-    input.templateId
+    input.templateId,
   );
 
-  const config = normalized ?? normalizeResumeConfig(override, input.templateId);
+  const config =
+    normalized ?? normalizeResumeConfig(override, input.templateId);
   if (!config) {
     throw new Error("Unable to resolve template config for PDF rendering.");
   }
@@ -427,7 +543,8 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
         <View
           key={exp.id || `exp-${index}`}
           style={{
-            borderBottomWidth: index === safeArray(experiences).length - 1 ? 0 : 0.6,
+            borderBottomWidth:
+              index === safeArray(experiences).length - 1 ? 0 : 0.6,
             borderBottomColor: borderColor,
             paddingBottom: scaleValue(8, scale),
           }}
@@ -458,7 +575,9 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
                   marginTop: scaleValue(2, scale),
                 }}
               >
-                {[textOrFallback(exp.company), textOrFallback(exp.location)].filter(Boolean).join(" - ")}
+                {[textOrFallback(exp.company), textOrFallback(exp.location)]
+                  .filter(Boolean)
+                  .join(" - ")}
               </Text>
             </View>
             <Text
@@ -468,10 +587,16 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
                 fontSize: smallFontSize,
               }}
             >
-              {textOrFallback(exp.startDate)} - {exp.current ? "Present" : textOrFallback(exp.endDate)}
+              {textOrFallback(exp.startDate)} -{" "}
+              {exp.current ? "Present" : textOrFallback(exp.endDate)}
             </Text>
           </View>
-          <View style={{ marginTop: scaleValue(5, scale), gap: scaleValue(3, scale) }}>
+          <View
+            style={{
+              marginTop: scaleValue(5, scale),
+              gap: scaleValue(3, scale),
+            }}
+          >
             {safeArray(exp.bullets).map((bullet, bulletIndex) => (
               <Text
                 key={`${exp.id || index}-b-${bulletIndex}`}
@@ -495,7 +620,13 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
     <View style={{ gap: scaleValue(8, scale) }}>
       {safeArray(education).map((edu, index) => (
         <View key={edu.id || `edu-${index}`}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
             <View style={{ flex: 1 }}>
               <Text
                 style={{
@@ -514,7 +645,9 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
                   marginTop: scaleValue(2, scale),
                 }}
               >
-                {[textOrFallback(edu.degree), textOrFallback(edu.field)].filter(Boolean).join(" in ")}
+                {[textOrFallback(edu.degree), textOrFallback(edu.field)]
+                  .filter(Boolean)
+                  .join(" in ")}
               </Text>
               {edu.gpa ? (
                 <Text
@@ -657,7 +790,9 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
               marginTop: scaleValue(2, scale),
             }}
           >
-            {[textOrFallback(cert.issuer), textOrFallback(cert.date)].filter(Boolean).join(" - ")}
+            {[textOrFallback(cert.issuer), textOrFallback(cert.date)]
+              .filter(Boolean)
+              .join(" - ")}
           </Text>
           {cert.link ? (
             <Link
@@ -680,7 +815,10 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
 
   const renderSection = (section: SectionConfig) => {
     if (section.isVisible === false) return null;
-    const title = textOrFallback(section.title, SECTION_TITLES[section.type] || "Section");
+    const title = textOrFallback(
+      section.title,
+      SECTION_TITLES[section.type] || "Section",
+    );
 
     if (section.type === "basics") {
       return (
@@ -828,7 +966,9 @@ function ResumePdfDocument({ input }: { input: ResumePdfInput }) {
     return null;
   };
 
-  const sections = structure.map((section) => renderSection(section)).filter(Boolean);
+  const sections = structure
+    .map((section) => renderSection(section))
+    .filter(Boolean);
 
   return (
     <Document author="ResuPro" producer="ResuPro PDF Engine">
@@ -860,7 +1000,10 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
 
   const data = input.data;
   const scale = getFontScale(data.metadata?.fontSize);
-  const accentColor = normalizePdfColor(data.metadata?.themeColor || config.accentColor, "#111827");
+  const accentColor = normalizePdfColor(
+    data.metadata?.themeColor || config.accentColor,
+    "#111827",
+  );
   const headingFont = pickPdfFont(config.headingFont);
   const bodyFont = pickPdfFont(data.metadata?.fontFamily || config.bodyFont);
   const textColor = "#111827";
@@ -877,7 +1020,10 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
       <View
         style={{
           marginVertical: scaleValue(10, scale),
-          height: config.sectionSeparator === "bar" ? scaleValue(3, scale) : scaleValue(1, scale),
+          height:
+            config.sectionSeparator === "bar"
+              ? scaleValue(3, scale)
+              : scaleValue(1, scale),
           width: "100%",
           backgroundColor: accentColor,
         }}
@@ -902,7 +1048,8 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
         <View
           style={{
             marginBottom: scaleValue(14, scale),
-            alignItems: config.headerStyle === "center" ? "center" : "flex-start",
+            alignItems:
+              config.headerStyle === "center" ? "center" : "flex-start",
           }}
         >
           <Text
@@ -941,14 +1088,37 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
 
         {separator}
 
-        <View style={{ marginBottom: scaleValue(12, scale), gap: scaleValue(2, scale) }}>
-          <Text style={{ color: textColor, fontFamily: headingFont, fontSize: scaleValue(11, scale) }}>
+        <View
+          style={{
+            marginBottom: scaleValue(12, scale),
+            gap: scaleValue(2, scale),
+          }}
+        >
+          <Text
+            style={{
+              color: textColor,
+              fontFamily: headingFont,
+              fontSize: scaleValue(11, scale),
+            }}
+          >
             {textOrFallback(data.recipientInfo.managerName)}
           </Text>
-          <Text style={{ color: textColor, fontFamily: bodyFont, fontSize: bodyFontSize }}>
+          <Text
+            style={{
+              color: textColor,
+              fontFamily: bodyFont,
+              fontSize: bodyFontSize,
+            }}
+          >
             {textOrFallback(data.recipientInfo.companyName)}
           </Text>
-          <Text style={{ color: mutedColor, fontFamily: bodyFont, fontSize: smallFontSize }}>
+          <Text
+            style={{
+              color: mutedColor,
+              fontFamily: bodyFont,
+              fontSize: smallFontSize,
+            }}
+          >
             {[
               textOrFallback(data.recipientInfo.address),
               textOrFallback(data.recipientInfo.city),
@@ -958,7 +1128,13 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
               .join(", ")}
           </Text>
           {data.recipientInfo.email ? (
-            <Text style={{ color: mutedColor, fontFamily: bodyFont, fontSize: smallFontSize }}>
+            <Text
+              style={{
+                color: mutedColor,
+                fontFamily: bodyFont,
+                fontSize: smallFontSize,
+              }}
+            >
               {textOrFallback(data.recipientInfo.email)}
             </Text>
           ) : null}
@@ -980,8 +1156,16 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
         ) : null}
 
         <View style={{ gap: scaleValue(8, scale) }}>
-          <Text style={{ color: textColor, fontFamily: bodyFont, fontSize: bodyFontSize }}>
-            {stripInlineFormatting(textOrFallback(data.content.greeting, "Dear Hiring Manager,"))}
+          <Text
+            style={{
+              color: textColor,
+              fontFamily: bodyFont,
+              fontSize: bodyFontSize,
+            }}
+          >
+            {stripInlineFormatting(
+              textOrFallback(data.content.greeting, "Dear Hiring Manager,"),
+            )}
           </Text>
           <RichBlocks
             value={textOrFallback(data.content.opening)}
@@ -1010,7 +1194,13 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
         </View>
 
         <View style={{ marginTop: scaleValue(16, scale) }}>
-          <Text style={{ color: textColor, fontFamily: bodyFont, fontSize: bodyFontSize }}>
+          <Text
+            style={{
+              color: textColor,
+              fontFamily: bodyFont,
+              fontSize: bodyFontSize,
+            }}
+          >
             {stripInlineFormatting(textOrFallback(data.content.signature))}
           </Text>
           <Text
@@ -1031,7 +1221,9 @@ function CoverLetterPdfDocument({ input }: { input: CoverLetterPdfInput }) {
 
 export async function renderPdfBuffer(input: PdfRenderInput): Promise<Buffer> {
   if (input.type === "cover_letter") {
-    return (await renderToBuffer(<CoverLetterPdfDocument input={input} />)) as Buffer;
+    return (await renderToBuffer(
+      <CoverLetterPdfDocument input={input} />,
+    )) as Buffer;
   }
 
   return (await renderToBuffer(<ResumePdfDocument input={input} />)) as Buffer;

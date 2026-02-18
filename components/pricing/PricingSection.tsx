@@ -49,7 +49,8 @@ export function PricingSection({
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Simple, Transparent
             <span className="bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
-              {" "}Pricing
+              {" "}
+              Pricing
             </span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
@@ -61,7 +62,9 @@ export function PricingSection({
           {cards.map((entry, index) => {
             const Icon = iconMap[entry.icon] ?? Sparkles;
             const isSelected =
-              selectedPackageId && entry.isPaid ? selectedPackageId === entry.packageId : false;
+              selectedPackageId && entry.isPaid
+                ? selectedPackageId === entry.packageId
+                : false;
             const ctaLabel =
               mode === "checkout"
                 ? entry.isPaid
@@ -94,7 +97,9 @@ export function PricingSection({
 
                 <div
                   className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${
-                    entry.isPopular ? "bg-white/20" : `bg-gradient-to-r ${entry.gradient}`
+                    entry.isPopular
+                      ? "bg-white/20"
+                      : `bg-gradient-to-r ${entry.gradient}`
                   }`}
                 >
                   <Icon className="w-7 h-7 text-white" />
@@ -102,14 +107,18 @@ export function PricingSection({
 
                 <h3
                   className={`text-2xl font-bold mb-1 ${
-                    entry.isPopular ? "text-white" : "text-gray-900 dark:text-white"
+                    entry.isPopular
+                      ? "text-white"
+                      : "text-gray-900 dark:text-white"
                   }`}
                 >
                   {entry.name}
                 </h3>
                 <p
                   className={`text-sm font-semibold mb-3 ${
-                    entry.isPopular ? "text-white/80" : "text-gray-600 dark:text-gray-400"
+                    entry.isPopular
+                      ? "text-white/80"
+                      : "text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   {entry.subtitle}
@@ -123,7 +132,9 @@ export function PricingSection({
                 <div className="mb-8">
                   <span
                     className={`text-4xl font-bold ${
-                      entry.isPopular ? "text-white" : "text-gray-900 dark:text-white"
+                      entry.isPopular
+                        ? "text-white"
+                        : "text-gray-900 dark:text-white"
                     }`}
                   >
                     {entry.priceLabel}
@@ -135,7 +146,9 @@ export function PricingSection({
                     <li key={feature} className="flex items-start gap-3">
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          entry.isPopular ? "bg-white/20" : "bg-green-100 dark:bg-green-900/30"
+                          entry.isPopular
+                            ? "bg-white/20"
+                            : "bg-green-100 dark:bg-green-900/30"
                         }`}
                       >
                         <Check
@@ -144,7 +157,9 @@ export function PricingSection({
                       </div>
                       <span
                         className={`text-sm ${
-                          entry.isPopular ? "text-white/90" : "text-gray-600 dark:text-gray-400"
+                          entry.isPopular
+                            ? "text-white/90"
+                            : "text-gray-600 dark:text-gray-400"
                         }`}
                       >
                         {feature}
@@ -166,7 +181,11 @@ export function PricingSection({
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => onSelectPackage?.(entry.isPaid ? entry.packageId : undefined)}
+                    onClick={() =>
+                      onSelectPackage?.(
+                        entry.isPaid ? entry.packageId : undefined,
+                      )
+                    }
                     className={`w-full py-6 rounded-xl font-semibold mt-auto ${
                       entry.isPopular
                         ? "bg-white text-purple-600 hover:bg-gray-100"

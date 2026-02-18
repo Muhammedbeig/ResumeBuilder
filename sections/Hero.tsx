@@ -20,22 +20,22 @@ export function Hero() {
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
   });
-  
+
   const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const blur = useTransform(scrollYProgress, [0, 0.5], [0, 10]);
 
   return (
-    <section 
+    <section
       ref={containerRef}
       className="relative min-h-screen flex items-center overflow-hidden pt-20"
     >
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
         {/* Gradient blobs */}
-        <motion.div 
+        <motion.div
           className="absolute top-20 left-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
           animate={{
             x: [0, 50, 0],
@@ -44,10 +44,10 @@ export function Hero() {
           transition={{
             duration: 20,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-20 right-10 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl"
           animate={{
             x: [0, -40, 0],
@@ -56,10 +56,10 @@ export function Hero() {
           transition={{
             duration: 15,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
-        <motion.div 
+        <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
@@ -67,10 +67,10 @@ export function Hero() {
           transition={{
             duration: 10,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
-        
+
         {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
       </div>
@@ -78,10 +78,7 @@ export function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
-          <motion.div 
-            style={{ opacity, filter: blur }}
-            className="space-y-8"
-          >
+          <motion.div style={{ opacity, filter: blur }} className="space-y-8">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -107,11 +104,15 @@ export function Hero() {
                 <span className="bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
                   ATS-Winning
                 </span>
-                <span className="text-gray-900 dark:text-white"> Resume with AI</span>
+                <span className="text-gray-900 dark:text-white">
+                  {" "}
+                  Resume with AI
+                </span>
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-400 max-w-xl leading-relaxed">
-                Get more interviews. Our AI-powered builder crafts job-winning resumes 
-                tailored to any description in minutes. No more writer's block.
+                Get more interviews. Our AI-powered builder crafts job-winning
+                resumes tailored to any description in minutes. No more writer's
+                block.
               </p>
             </motion.div>
 
@@ -122,8 +123,8 @@ export function Hero() {
               transition={{ delay: 0.4 }}
               className="flex flex-wrap gap-4"
             >
-      <Link href="/choose-builder">
-                <Button 
+              <Link href="/choose-builder">
+                <Button
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full px-8 py-6 text-lg font-semibold group shadow-lg shadow-purple-500/25"
                 >
@@ -132,7 +133,7 @@ export function Hero() {
                 </Button>
               </Link>
               <Link href="/resume/start">
-                <Button 
+                <Button
                   size="lg"
                   variant="outline"
                   className="rounded-full px-8 py-6 text-lg font-semibold border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -144,7 +145,10 @@ export function Hero() {
                 onMouseEnter={() => setIsTemplateMenuOpen(true)}
                 onMouseLeave={() => setIsTemplateMenuOpen(false)}
               >
-                <DropdownMenu open={isTemplateMenuOpen} onOpenChange={setIsTemplateMenuOpen}>
+                <DropdownMenu
+                  open={isTemplateMenuOpen}
+                  onOpenChange={setIsTemplateMenuOpen}
+                >
                   <DropdownMenuTrigger asChild>
                     <Button
                       size="lg"
@@ -160,7 +164,9 @@ export function Hero() {
                         <DropdownMenuItem
                           key={category.slug}
                           className="text-sm text-gray-700 dark:text-gray-200"
-                          onSelect={() => router.push(`/templates/${category.slug}`)}
+                          onSelect={() =>
+                            router.push(`/templates/${category.slug}`)
+                          }
                         >
                           {category.label}
                         </DropdownMenuItem>
@@ -180,7 +186,7 @@ export function Hero() {
             >
               <div className="flex -space-x-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div 
+                  <div
                     key={i}
                     className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-cyan-400 border-2 border-white dark:border-gray-900 flex items-center justify-center text-white text-xs font-bold"
                   >
@@ -191,7 +197,10 @@ export function Hero() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                    />
                   ))}
                 </div>
                 <div>
@@ -207,10 +216,7 @@ export function Hero() {
           </motion.div>
 
           {/* Right Content - Floating Dashboard Preview */}
-          <motion.div 
-            style={{ y }}
-            className="relative hidden lg:block"
-          >
+          <motion.div style={{ y }} className="relative hidden lg:block">
             {/* Main Dashboard Card */}
             <motion.div
               initial={{ opacity: 0, rotateX: 45, scale: 0.9 }}
@@ -218,13 +224,13 @@ export function Hero() {
               transition={{ delay: 0.5, duration: 1.2, type: "spring" }}
               className="relative"
               style={{
-                transformStyle: 'preserve-3d',
-                perspective: '1000px'
+                transformStyle: "preserve-3d",
+                perspective: "1000px",
               }}
             >
               {/* Glow effect */}
               <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
-              
+
               {/* Resume Preview Card */}
               <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 {/* Header */}
@@ -235,10 +241,12 @@ export function Hero() {
                       <div className="w-3 h-3 rounded-full bg-yellow-500" />
                       <div className="w-3 h-3 rounded-full bg-green-500" />
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Resume Preview</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Resume Preview
+                    </span>
                   </div>
                 </div>
-                
+
                 {/* Resume Content Preview */}
                 <div className="p-6 space-y-4">
                   {/* Name & Title */}
@@ -246,14 +254,14 @@ export function Hero() {
                     <div className="h-6 w-48 mx-auto bg-gradient-to-r from-purple-200 to-cyan-200 dark:from-purple-800 dark:to-cyan-800 rounded animate-pulse" />
                     <div className="h-4 w-32 mx-auto mt-2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                   </div>
-                  
+
                   {/* Contact Info */}
                   <div className="flex justify-center gap-2 flex-wrap">
                     <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                     <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                     <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                   </div>
-                  
+
                   {/* Section Headers */}
                   <div className="space-y-3 mt-4">
                     <div className="h-3 w-24 bg-purple-300 dark:bg-purple-700 rounded animate-pulse" />
@@ -263,7 +271,7 @@ export function Hero() {
                       <div className="h-3 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="h-3 w-32 bg-purple-300 dark:bg-purple-700 rounded animate-pulse" />
                     <div className="space-y-2">
@@ -271,7 +279,7 @@ export function Hero() {
                       <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="h-3 w-20 bg-purple-300 dark:bg-purple-700 rounded animate-pulse" />
                     <div className="flex flex-wrap gap-2">
@@ -295,7 +303,9 @@ export function Hero() {
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">AI Assistant</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    AI Assistant
+                  </span>
                 </div>
                 <div className="space-y-1.5">
                   <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
@@ -312,11 +322,15 @@ export function Hero() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-4 h-4 text-green-500" />
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">ATS Score</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    ATS Score
+                  </span>
                 </div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold text-green-500">92</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">/100</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    /100
+                  </span>
                 </div>
                 <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
                   <div className="h-full w-[92%] bg-gradient-to-r from-green-400 to-green-500 rounded-full" />

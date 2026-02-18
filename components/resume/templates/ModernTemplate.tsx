@@ -1,6 +1,6 @@
-import type { ResumeData, SectionConfig } from '@/types';
-import { getFontScale } from '@/lib/typography';
-import { RichText } from '@/components/editor/RichText';
+import type { ResumeData, SectionConfig } from "@/types";
+import { getFontScale } from "@/lib/typography";
+import { RichText } from "@/components/editor/RichText";
 
 interface ModernTemplateProps {
   data: ResumeData;
@@ -9,19 +9,63 @@ interface ModernTemplateProps {
 
 // Default order constant to ensure we always have a fallback
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: 'basics', type: 'basics', title: 'Personal Info', isVisible: true, order: 0 },
-  { id: 'summary', type: 'summary', title: 'Professional Summary', isVisible: true, order: 1 },
-  { id: 'experience', type: 'experience', title: 'Experience', isVisible: true, order: 2 },
-  { id: 'education', type: 'education', title: 'Education', isVisible: true, order: 3 },
-  { id: 'skills', type: 'skills', title: 'Skills', isVisible: true, order: 4 },
-  { id: 'projects', type: 'projects', title: 'Projects', isVisible: true, order: 5 },
-  { id: 'certifications', type: 'certifications', title: 'Certifications', isVisible: true, order: 6 },
+  {
+    id: "basics",
+    type: "basics",
+    title: "Personal Info",
+    isVisible: true,
+    order: 0,
+  },
+  {
+    id: "summary",
+    type: "summary",
+    title: "Professional Summary",
+    isVisible: true,
+    order: 1,
+  },
+  {
+    id: "experience",
+    type: "experience",
+    title: "Experience",
+    isVisible: true,
+    order: 2,
+  },
+  {
+    id: "education",
+    type: "education",
+    title: "Education",
+    isVisible: true,
+    order: 3,
+  },
+  { id: "skills", type: "skills", title: "Skills", isVisible: true, order: 4 },
+  {
+    id: "projects",
+    type: "projects",
+    title: "Projects",
+    isVisible: true,
+    order: 5,
+  },
+  {
+    id: "certifications",
+    type: "certifications",
+    title: "Certifications",
+    isVisible: true,
+    order: 6,
+  },
 ];
 
-export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
-  const { basics, experiences, education, skills, projects, certifications, structure } = data;
-  const themeColor = data.metadata?.themeColor || '#000000';
-  const fontName = data.metadata?.fontFamily || 'Inter';
+export function ModernTemplate({ data, className = "" }: ModernTemplateProps) {
+  const {
+    basics,
+    experiences,
+    education,
+    skills,
+    projects,
+    certifications,
+    structure,
+  } = data;
+  const themeColor = data.metadata?.themeColor || "#000000";
+  const fontName = data.metadata?.fontFamily || "Inter";
   const fontSize = data.metadata?.fontSize;
   const scale = getFontScale(fontSize);
 
@@ -34,11 +78,18 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
   // 2. Helper to render sections
   const renderSection = (type: string, id: string) => {
     switch (type) {
-      case 'basics':
+      case "basics":
         return (
           <div key={id} className="mb-6 pb-4 border-b border-gray-200">
-            <h1 className="text-3xl font-bold mb-2" style={{ color: themeColor }}>{basics.name || 'Your Name'}</h1>
-            <p className="text-xl text-gray-700 mb-3">{basics.title || 'Professional Title'}</p>
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{ color: themeColor }}
+            >
+              {basics.name || "Your Name"}
+            </h1>
+            <p className="text-xl text-gray-700 mb-3">
+              {basics.title || "Professional Title"}
+            </p>
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
               {basics.location && <span>{basics.location}</span>}
               {basics.email && <span>{basics.email}</span>}
@@ -48,34 +99,52 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
             </div>
           </div>
         );
-      case 'summary':
+      case "summary":
         if (!basics.summary) return null;
         return (
           <div key={id} className="mb-6">
-            <h2 className="text-lg font-bold mb-2 uppercase tracking-wide" style={{ color: themeColor }}>Professional Summary</h2>
-            <RichText text={basics.summary} className="text-gray-700 leading-relaxed" />
+            <h2
+              className="text-lg font-bold mb-2 uppercase tracking-wide"
+              style={{ color: themeColor }}
+            >
+              Professional Summary
+            </h2>
+            <RichText
+              text={basics.summary}
+              className="text-gray-700 leading-relaxed"
+            />
           </div>
         );
-      case 'experience':
+      case "experience":
         if (experiences.length === 0) return null;
         return (
           <div key={id} className="mb-6">
-            <h2 className="text-lg font-bold mb-3 uppercase tracking-wide" style={{ color: themeColor }}>Experience</h2>
+            <h2
+              className="text-lg font-bold mb-3 uppercase tracking-wide"
+              style={{ color: themeColor }}
+            >
+              Experience
+            </h2>
             {experiences.map((exp, idx) => (
               <div key={exp.id || idx} className="mb-4">
                 <div className="flex justify-between items-start mb-1">
                   <div>
                     <h3 className="font-bold text-gray-900">{exp.role}</h3>
-                    <p className="text-gray-700">{exp.company} • {exp.location}</p>
+                    <p className="text-gray-700">
+                      {exp.company} • {exp.location}
+                    </p>
                   </div>
                   <p className="text-sm text-gray-600">
-                    {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                    {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                   </p>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {exp.bullets.map((bullet, bIdx) => (
                     <li key={bIdx} className="text-gray-700 pl-4 relative">
-                      <span className="absolute left-0 top-2 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }}></span>
+                      <span
+                        className="absolute left-0 top-2 w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: themeColor }}
+                      ></span>
                       <RichText inline text={bullet} />
                     </li>
                   ))}
@@ -84,18 +153,29 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
             ))}
           </div>
         );
-      case 'education':
+      case "education":
         if (education.length === 0) return null;
         return (
           <div key={id} className="mb-6">
-            <h2 className="text-lg font-bold mb-3 uppercase tracking-wide" style={{ color: themeColor }}>Education</h2>
+            <h2
+              className="text-lg font-bold mb-3 uppercase tracking-wide"
+              style={{ color: themeColor }}
+            >
+              Education
+            </h2>
             {education.map((edu, idx) => (
               <div key={edu.id || idx} className="mb-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-gray-900">{edu.institution}</h3>
-                    <p className="text-gray-700">{edu.degree} in {edu.field}</p>
-                    {edu.gpa && <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>}
+                    <h3 className="font-bold text-gray-900">
+                      {edu.institution}
+                    </h3>
+                    <p className="text-gray-700">
+                      {edu.degree} in {edu.field}
+                    </p>
+                    {edu.gpa && (
+                      <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600">
                     {edu.startDate} - {edu.endDate}
@@ -105,51 +185,80 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
             ))}
           </div>
         );
-      case 'skills':
+      case "skills":
         if (skills.length === 0) return null;
         return (
           <div key={id} className="mb-6">
-            <h2 className="text-lg font-bold mb-3 uppercase tracking-wide" style={{ color: themeColor }}>Skills</h2>
+            <h2
+              className="text-lg font-bold mb-3 uppercase tracking-wide"
+              style={{ color: themeColor }}
+            >
+              Skills
+            </h2>
             {skills.map((group, idx) => (
               <div key={group.id || idx} className="mb-2">
-                <span className="font-semibold text-gray-900">{group.name}: </span>
-                <span className="text-gray-700">{group.skills.join(', ')}</span>
+                <span className="font-semibold text-gray-900">
+                  {group.name}:{" "}
+                </span>
+                <span className="text-gray-700">{group.skills.join(", ")}</span>
               </div>
             ))}
           </div>
         );
-      case 'projects':
+      case "projects":
         if (projects.length === 0) return null;
         return (
           <div key={id} className="mb-6">
-            <h2 className="text-lg font-bold mb-3 uppercase tracking-wide" style={{ color: themeColor }}>Projects</h2>
+            <h2
+              className="text-lg font-bold mb-3 uppercase tracking-wide"
+              style={{ color: themeColor }}
+            >
+              Projects
+            </h2>
             {projects.map((project, idx) => (
               <div key={project.id || idx} className="mb-3">
                 <div className="flex justify-between items-start">
                   <h3 className="font-bold text-gray-900">{project.name}</h3>
                   {project.link && (
-                    <a href={project.link} className="text-sm" style={{ color: themeColor }}>View Project</a>
+                    <a
+                      href={project.link}
+                      className="text-sm"
+                      style={{ color: themeColor }}
+                    >
+                      View Project
+                    </a>
                   )}
                 </div>
-                <RichText text={project.description} className="text-gray-700 text-sm mt-1" />
+                <RichText
+                  text={project.description}
+                  className="text-gray-700 text-sm mt-1"
+                />
                 {project.technologies.length > 0 && (
                   <p className="text-sm text-gray-600 mt-1">
-                    <span className="font-medium">Technologies:</span> {project.technologies.join(', ')}
+                    <span className="font-medium">Technologies:</span>{" "}
+                    {project.technologies.join(", ")}
                   </p>
                 )}
               </div>
             ))}
           </div>
         );
-      case 'certifications':
+      case "certifications":
         if (certifications.length === 0) return null;
         return (
           <div key={id} className="mb-6">
-            <h2 className="text-lg font-bold mb-3 uppercase tracking-wide" style={{ color: themeColor }}>Certifications</h2>
+            <h2
+              className="text-lg font-bold mb-3 uppercase tracking-wide"
+              style={{ color: themeColor }}
+            >
+              Certifications
+            </h2>
             {certifications.map((cert, idx) => (
               <div key={cert.id || idx} className="mb-2">
                 <p className="font-semibold text-gray-900">{cert.name}</p>
-                <p className="text-sm text-gray-600">{cert.issuer} • {cert.date}</p>
+                <p className="text-sm text-gray-600">
+                  {cert.issuer} • {cert.date}
+                </p>
               </div>
             ))}
           </div>
@@ -163,13 +272,13 @@ export function ModernTemplate({ data, className = '' }: ModernTemplateProps) {
     <div
       id="resume-modern"
       className={`resume-template bg-white text-gray-900 p-12 ${className}`}
-      style={{ 
+      style={{
         fontFamily: `"${fontName}", sans-serif`,
-        zoom: scale
+        zoom: scale,
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@300;400;500;700&display=swap');
       `}</style>
       {activeStructure.map((section) => {
         if (section.isVisible === false) return null;

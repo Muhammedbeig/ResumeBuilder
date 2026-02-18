@@ -80,11 +80,16 @@ export default function ReportDetailPage() {
         <div className="max-w-5xl mx-auto px-6 space-y-6">
           <Card className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
             <CardContent className="py-12 text-center space-y-4">
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Report not found</h1>
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                Report not found
+              </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 We couldn't load this report. It may have been removed.
               </p>
-              <Button onClick={() => router.push("/dashboard")} className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white">
+              <Button
+                onClick={() => router.push("/dashboard")}
+                className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
+              >
                 Back to Dashboard
               </Button>
             </CardContent>
@@ -106,7 +111,8 @@ export default function ReportDetailPage() {
               Quarterly Report
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Market Value Report {report.periodLabel ? `(${report.periodLabel})` : ""}
+              Market Value Report{" "}
+              {report.periodLabel ? `(${report.periodLabel})` : ""}
             </h1>
             <p className="text-sm text-gray-500">
               Created {new Date(report.createdAt).toLocaleDateString()}
@@ -145,7 +151,9 @@ export default function ReportDetailPage() {
             <CardContent className="space-y-2">
               <p className="text-gray-700 dark:text-gray-300">{salaryRange}</p>
               {reportJson.salaryBenchmark?.notes && (
-                <p className="text-sm text-gray-500">{reportJson.salaryBenchmark.notes}</p>
+                <p className="text-sm text-gray-500">
+                  {reportJson.salaryBenchmark.notes}
+                </p>
               )}
             </CardContent>
           </Card>
@@ -154,7 +162,8 @@ export default function ReportDetailPage() {
               <CardTitle>Market Trend Signals</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {reportJson.trendIdentification?.signals && reportJson.trendIdentification.signals.length > 0 ? (
+              {reportJson.trendIdentification?.signals &&
+              reportJson.trendIdentification.signals.length > 0 ? (
                 <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
                   {reportJson.trendIdentification.signals.map((signal, idx) => (
                     <li key={`${signal}-${idx}`}>{signal}</li>
@@ -173,9 +182,18 @@ export default function ReportDetailPage() {
               <CardTitle>Skill Demand</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-              <p>Increasing: {(reportJson.skillDemand?.increasing || []).join(", ") || "N/A"}</p>
-              <p>Emerging: {(reportJson.skillDemand?.emerging || []).join(", ") || "N/A"}</p>
-              <p>Decreasing: {(reportJson.skillDemand?.decreasing || []).join(", ") || "N/A"}</p>
+              <p>
+                Increasing:{" "}
+                {(reportJson.skillDemand?.increasing || []).join(", ") || "N/A"}
+              </p>
+              <p>
+                Emerging:{" "}
+                {(reportJson.skillDemand?.emerging || []).join(", ") || "N/A"}
+              </p>
+              <p>
+                Decreasing:{" "}
+                {(reportJson.skillDemand?.decreasing || []).join(", ") || "N/A"}
+              </p>
             </CardContent>
           </Card>
           <Card className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
@@ -183,8 +201,17 @@ export default function ReportDetailPage() {
               <CardTitle>Competitive Positioning</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <p>Strengths: {(reportJson.competitivePositioning?.strengths || []).join(", ") || "N/A"}</p>
-              <p>Gaps: {(reportJson.competitivePositioning?.gaps || []).join(", ") || "N/A"}</p>
+              <p>
+                Strengths:{" "}
+                {(reportJson.competitivePositioning?.strengths || []).join(
+                  ", ",
+                ) || "N/A"}
+              </p>
+              <p>
+                Gaps:{" "}
+                {(reportJson.competitivePositioning?.gaps || []).join(", ") ||
+                  "N/A"}
+              </p>
               {reportJson.competitivePositioning?.peerComparison && (
                 <p>{reportJson.competitivePositioning.peerComparison}</p>
               )}
@@ -197,14 +224,17 @@ export default function ReportDetailPage() {
             <CardTitle>Recommended Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {reportJson.recommendedActions && reportJson.recommendedActions.length > 0 ? (
+            {reportJson.recommendedActions &&
+            reportJson.recommendedActions.length > 0 ? (
               <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
                 {reportJson.recommendedActions.map((action, idx) => (
                   <li key={`${action}-${idx}`}>{action}</li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-gray-500">No recommendations available.</p>
+              <p className="text-sm text-gray-500">
+                No recommendations available.
+              </p>
             )}
           </CardContent>
         </Card>

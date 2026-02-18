@@ -36,17 +36,23 @@ export default function ReceiptsPage() {
   const [cards, setCards] = useState<PricingCard[]>([]);
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
+    null,
+  );
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [bankTransferDetails, setBankTransferDetails] = useState<BankTransferSettings>({
-    enabled: true,
-    accountHolderName: BANK_TRANSFER_DETAILS.accountName,
-    bankName: BANK_TRANSFER_DETAILS.bankName,
-    accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
-    ifscSwiftCode: BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
-  });
-  const [bankTransferEmail, setBankTransferEmail] = useState(BANK_TRANSFER_ADMIN_EMAIL);
+  const [bankTransferDetails, setBankTransferDetails] =
+    useState<BankTransferSettings>({
+      enabled: true,
+      accountHolderName: BANK_TRANSFER_DETAILS.accountName,
+      bankName: BANK_TRANSFER_DETAILS.bankName,
+      accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
+      ifscSwiftCode:
+        BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
+    });
+  const [bankTransferEmail, setBankTransferEmail] = useState(
+    BANK_TRANSFER_ADMIN_EMAIL,
+  );
   const [bankTransferLoaded, setBankTransferLoaded] = useState(false);
 
   const paidCards = useMemo(() => cards.filter((c) => c.isPaid), [cards]);
@@ -56,11 +62,15 @@ export default function ReceiptsPage() {
         value: card.packageId,
         label: `${card.name} (${card.priceLabel})`,
       })),
-    [paidCards]
+    [paidCards],
   );
-  const bankTransferAvailable = bankTransferLoaded && bankTransferDetails.enabled;
+  const bankTransferAvailable =
+    bankTransferLoaded && bankTransferDetails.enabled;
   const bankDetailRows = [
-    { label: "Account Holder Name", value: bankTransferDetails.accountHolderName },
+    {
+      label: "Account Holder Name",
+      value: bankTransferDetails.accountHolderName,
+    },
     { label: "Bank Name", value: bankTransferDetails.bankName },
     { label: "Account Number", value: bankTransferDetails.accountNumber },
     { label: "IFSC/SWIFT Code", value: bankTransferDetails.ifscSwiftCode },
@@ -92,7 +102,9 @@ export default function ReceiptsPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.allSettled([loadCards(), loadReceipts()]).finally(() => setIsLoading(false));
+    Promise.allSettled([loadCards(), loadReceipts()]).finally(() =>
+      setIsLoading(false),
+    );
   }, []);
 
   useEffect(() => {
@@ -100,7 +112,9 @@ export default function ReceiptsPage() {
 
     void (async () => {
       try {
-        const res = await fetch("/api/bank-transfer/settings", { cache: "no-store" });
+        const res = await fetch("/api/bank-transfer/settings", {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data = (await res.json()) as BankTransferSettingsResponse;
         if (!active) return;
@@ -133,7 +147,7 @@ export default function ReceiptsPage() {
       toast.error(
         bankTransferLoaded
           ? "Bank transfer is currently disabled."
-          : "Bank transfer settings are still loading."
+          : "Bank transfer settings are still loading.",
       );
       return;
     }
@@ -165,7 +179,9 @@ export default function ReceiptsPage() {
         throw new Error("Upload failed");
       }
 
-      toast.success("Receipt submitted. We will verify and activate your subscription.");
+      toast.success(
+        "Receipt submitted. We will verify and activate your subscription.",
+      );
       setReceiptFile(null);
       await loadReceipts();
     } catch {
@@ -179,17 +195,21 @@ export default function ReceiptsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
       <div className="max-w-5xl mx-auto px-6 space-y-8">
         <div>
-          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Receipts</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
+            Receipts
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Upload your bank transfer receipt and email it to {bankTransferEmail}. We verify and activate
-            manually.
+            Upload your bank transfer receipt and email it to{" "}
+            {bankTransferEmail}. We verify and activate manually.
           </p>
         </div>
 
         <Card>
           <CardContent className="p-6 space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bank Transfer Details</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Bank Transfer Details
+              </h2>
               {!bankTransferLoaded ? (
                 <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
                   Loading bank transfer details...
@@ -217,7 +237,10 @@ export default function ReceiptsPage() {
             <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
               <div className="space-y-2">
                 <Label>Package</Label>
-                <Select value={selectedPackageId ?? ""} onValueChange={setSelectedPackageId}>
+                <Select
+                  value={selectedPackageId ?? ""}
+                  onValueChange={setSelectedPackageId}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select package" />
                   </SelectTrigger>
@@ -236,12 +259,17 @@ export default function ReceiptsPage() {
                   type="file"
                   accept="image/png,image/jpeg"
                   disabled={!bankTransferAvailable}
-                  onChange={(event) => setReceiptFile(event.target.files?.[0] || null)}
+                  onChange={(event) =>
+                    setReceiptFile(event.target.files?.[0] || null)
+                  }
                 />
               </div>
             </div>
 
-            <Button onClick={handleUpload} disabled={isUploading || !bankTransferAvailable}>
+            <Button
+              onClick={handleUpload}
+              disabled={isUploading || !bankTransferAvailable}
+            >
               {isUploading ? "Uploading..." : "Submit Receipt"}
             </Button>
           </CardContent>
@@ -249,11 +277,17 @@ export default function ReceiptsPage() {
 
         <Card>
           <CardContent className="p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Your Receipts</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Your Receipts
+            </h2>
             {isLoading ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Loading receipts...</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Loading receipts...
+              </p>
             ) : receipts.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">No receipts uploaded yet.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No receipts uploaded yet.
+              </p>
             ) : (
               <div className="space-y-3">
                 {receipts.map((receipt) => (
@@ -263,10 +297,13 @@ export default function ReceiptsPage() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {receipt.packageName ?? "Package"} · ${Number(receipt.amount ?? 0).toFixed(2)}
+                        {receipt.packageName ?? "Package"} · $
+                        {Number(receipt.amount ?? 0).toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {receipt.createdAt ? new Date(receipt.createdAt).toLocaleDateString() : ""}
+                        {receipt.createdAt
+                          ? new Date(receipt.createdAt).toLocaleDateString()
+                          : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -275,8 +312,8 @@ export default function ReceiptsPage() {
                           receipt.status === "succeed"
                             ? "bg-green-100 text-green-700"
                             : receipt.status === "rejected"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-amber-100 text-amber-700"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
                         }`}
                       >
                         {receipt.status}

@@ -44,7 +44,12 @@ function parseStatusFromPayload(payload: unknown, fallback: number): number {
   if (!payload || typeof payload !== "object") return fallback;
   const code = (payload as { code?: unknown }).code;
   const asNumber = typeof code === "string" ? Number.parseInt(code, 10) : code;
-  if (typeof asNumber === "number" && Number.isFinite(asNumber) && asNumber >= 100 && asNumber <= 599) {
+  if (
+    typeof asNumber === "number" &&
+    Number.isFinite(asNumber) &&
+    asNumber >= 100 &&
+    asNumber <= 599
+  ) {
     return asNumber;
   }
   return fallback;
@@ -65,7 +70,7 @@ async function panelFetch<T>(
     params?: Record<string, string | number | boolean | undefined | null>;
     body?: unknown;
     init?: RequestInit;
-  }
+  },
 ): Promise<PanelApiSuccess<T>> {
   const url = new URL(panelApiBaseUrl() + withLeadingSlash(path));
 
@@ -93,7 +98,9 @@ async function panelFetch<T>(
         headers.set("Content-Type", "application/json; charset=utf-8");
       }
       const contentType = headers.get("Content-Type") ?? "";
-      body = contentType.includes("application/json") ? JSON.stringify(rawBody) : (rawBody as BodyInit);
+      body = contentType.includes("application/json")
+        ? JSON.stringify(rawBody)
+        : (rawBody as BodyInit);
     }
   }
 
@@ -121,7 +128,7 @@ async function panelFetch<T>(
         throw new PanelApiRequestError(
           `Invalid JSON response from Panel API for ${url.toString()}`,
           fallbackStatus,
-          payload
+          payload,
         );
       }
 
@@ -142,14 +149,19 @@ async function panelFetch<T>(
         error instanceof PanelApiRequestError
           ? error
           : error instanceof Error && error.name === "AbortError"
-          ? new PanelApiRequestError(`Panel API timeout for ${url.toString()}`, 504, null)
-          : new PanelApiRequestError(
-              `Panel API request failed for ${url.toString()}`,
-              502,
-              error instanceof Error ? error.message : error
-            );
+            ? new PanelApiRequestError(
+                `Panel API timeout for ${url.toString()}`,
+                504,
+                null,
+              )
+            : new PanelApiRequestError(
+                `Panel API request failed for ${url.toString()}`,
+                502,
+                error instanceof Error ? error.message : error,
+              );
 
-      const canRetry = attempt < maxAttempts && isRetryableStatus(normalizedError.status);
+      const canRetry =
+        attempt < maxAttempts && isRetryableStatus(normalizedError.status);
       if (!canRetry) {
         throw normalizedError;
       }
@@ -160,13 +172,17 @@ async function panelFetch<T>(
     }
   }
 
-  throw new PanelApiRequestError(`Panel API request failed for ${url.toString()}`, 502, null);
+  throw new PanelApiRequestError(
+    `Panel API request failed for ${url.toString()}`,
+    502,
+    null,
+  );
 }
 
 export async function panelGet<T>(
   path: string,
   params?: Record<string, string | number | boolean | undefined | null>,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<PanelApiSuccess<T>> {
   return panelFetch("GET", path, { params, init });
 }
@@ -174,7 +190,7 @@ export async function panelGet<T>(
 export async function panelPost<T>(
   path: string,
   body?: unknown,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<PanelApiSuccess<T>> {
   return panelFetch("POST", path, { body, init });
 }

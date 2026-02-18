@@ -32,25 +32,35 @@ const withSuppressedPdfWarnings = async <T>(task: () => Promise<T>) => {
   }
 };
 
-const createPdfParser = async (rawTextMode: boolean | number): Promise<PdfParserInstance> => {
+const createPdfParser = async (
+  rawTextMode: boolean | number,
+): Promise<PdfParserInstance> => {
   const pdf2jsonModule = (await import("pdf2json")) as unknown as {
-    default: new (context: unknown, rawTextMode: boolean | number) => PdfParserInstance;
+    default: new (
+      context: unknown,
+      rawTextMode: boolean | number,
+    ) => PdfParserInstance;
   };
   return new pdf2jsonModule.default(null, rawTextMode);
 };
 
-export const extractPdfText = async (buffer: Buffer, rawTextMode: boolean | number = true) => {
+export const extractPdfText = async (
+  buffer: Buffer,
+  rawTextMode: boolean | number = true,
+) => {
   const parser = await createPdfParser(rawTextMode);
 
   return withSuppressedPdfWarnings(
     () =>
       new Promise<string>((resolve, reject) => {
-        parser.on("pdfParser_dataError", (errData: any) => reject(errData?.parserError ?? errData));
+        parser.on("pdfParser_dataError", (errData: any) =>
+          reject(errData?.parserError ?? errData),
+        );
         parser.on("pdfParser_dataReady", () => {
           resolve(parser.getRawTextContent());
         });
 
         parser.parseBuffer(buffer);
-      })
+      }),
   );
 };

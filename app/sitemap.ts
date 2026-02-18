@@ -48,10 +48,14 @@ const normalizeCustomUrl = (value: string): string | null => {
 async function fetchCustomLinks(): Promise<string[]> {
   try {
     const res = await panelGet<Record<string, unknown>>("get-system-settings");
-    const raw = typeof res?.data?.sitemap_custom_links === "string"
-      ? res.data.sitemap_custom_links
-      : "";
-    const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const raw =
+      typeof res?.data?.sitemap_custom_links === "string"
+        ? res.data.sitemap_custom_links
+        : "";
+    const lines = raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
     const urls = lines.map(normalizeCustomUrl).filter(Boolean) as string[];
     return Array.from(new Set(urls));
   } catch {
@@ -71,14 +75,17 @@ async function fetchAllBlogs(): Promise<PanelBlog[]> {
         page,
       });
       const payload = res?.data;
-      const pageData = Array.isArray((payload as PanelPagination<PanelBlog>)?.data)
+      const pageData = Array.isArray(
+        (payload as PanelPagination<PanelBlog>)?.data,
+      )
         ? ((payload as PanelPagination<PanelBlog>).data as PanelBlog[])
         : Array.isArray(payload)
-        ? (payload as PanelBlog[])
-        : [];
+          ? (payload as PanelBlog[])
+          : [];
       posts.push(...pageData);
       const meta = payload as PanelPagination<PanelBlog>;
-      lastPage = Number(meta?.last_page ?? meta?.current_page ?? lastPage) || lastPage;
+      lastPage =
+        Number(meta?.last_page ?? meta?.current_page ?? lastPage) || lastPage;
       page += 1;
     } catch {
       break;
@@ -160,7 +167,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const category of categories) {
     if (!category?.value) continue;
     entries.push({
-      url: buildUrl(`/career-blog/category/${encodeURIComponent(category.value)}`),
+      url: buildUrl(
+        `/career-blog/category/${encodeURIComponent(category.value)}`,
+      ),
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.5,

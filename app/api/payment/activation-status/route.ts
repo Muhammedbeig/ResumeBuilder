@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { panelInternalGet, PanelInternalApiError } from "@/lib/panel-internal-api";
-import { confirmPayPalPaymentTransaction, PayPalConfirmationError } from "@/lib/paypal-confirmation";
+import {
+  panelInternalGet,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
+import {
+  confirmPayPalPaymentTransaction,
+  PayPalConfirmationError,
+} from "@/lib/paypal-confirmation";
 import { getSessionUserId } from "@/lib/session-user";
-import { confirmStripePaymentTransaction, StripeConfirmationError } from "@/lib/stripe-confirmation";
+import {
+  confirmStripePaymentTransaction,
+  StripeConfirmationError,
+} from "@/lib/stripe-confirmation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,10 +32,16 @@ type InternalTransaction = {
   orderId: string | null;
 };
 
-async function tryAutoConfirmPendingTransaction(userId: string, paymentTransactionId: string) {
-  const txRes = await panelInternalGet<{ transaction: InternalTransaction }>(`payment/transactions/${paymentTransactionId}`, {
-    userId,
-  });
+async function tryAutoConfirmPendingTransaction(
+  userId: string,
+  paymentTransactionId: string,
+) {
+  const txRes = await panelInternalGet<{ transaction: InternalTransaction }>(
+    `payment/transactions/${paymentTransactionId}`,
+    {
+      userId,
+    },
+  );
   const tx = txRes.transaction;
   if (!tx) {
     return;
@@ -64,29 +79,44 @@ export async function GET(request: Request) {
     : "payment/activation-status";
 
   try {
-    const data = await panelInternalGet<ActivationStatusResponse>(path, { userId });
+    const data = await panelInternalGet<ActivationStatusResponse>(path, {
+      userId,
+    });
 
-    if (data.status === "pending" && paymentTransactionId && /^\d+$/.test(paymentTransactionId)) {
+    if (
+      data.status === "pending" &&
+      paymentTransactionId &&
+      /^\d+$/.test(paymentTransactionId)
+    ) {
       try {
         await tryAutoConfirmPendingTransaction(userId, paymentTransactionId);
       } catch (error) {
         const isRecoverableGatewayError =
-          (error instanceof StripeConfirmationError || error instanceof PayPalConfirmationError) &&
+          (error instanceof StripeConfirmationError ||
+            error instanceof PayPalConfirmationError) &&
           (error.status ?? 500) < 500;
         if (!isRecoverableGatewayError) {
           console.error("Activation auto-confirm error:", error);
         }
       }
 
-      const refreshed = await panelInternalGet<ActivationStatusResponse>(path, { userId });
+      const refreshed = await panelInternalGet<ActivationStatusResponse>(path, {
+        userId,
+      });
       return NextResponse.json(refreshed);
     }
 
     return NextResponse.json(data);
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return NextResponse.json({ error: "Failed to read activation status" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to read activation status" },
+      { status: 500 },
+    );
   }
 }

@@ -48,21 +48,31 @@ interface CoverLetterContextType {
   currentCoverLetter: CoverLetter | null;
   coverLetterData: CoverLetterData;
   isLoading: boolean;
-  createCoverLetter: (title: string, template: string, initialData?: CoverLetterData) => Promise<CoverLetter>;
+  createCoverLetter: (
+    title: string,
+    template: string,
+    initialData?: CoverLetterData,
+  ) => Promise<CoverLetter>;
   loadCoverLetter: (id: string) => Promise<void>;
   deleteCoverLetter: (id: string) => Promise<void>;
   updateCoverLetterData: (data: Partial<CoverLetterData>) => void;
-  updatePersonalInfo: (info: Partial<CoverLetterData['personalInfo']>) => void;
-  updateRecipientInfo: (info: Partial<CoverLetterData['recipientInfo']>) => void;
-  updateContent: (content: Partial<CoverLetterData['content']>) => void;
-  updateMetadata: (metadata: Partial<NonNullable<CoverLetterData['metadata']>>) => void;
+  updatePersonalInfo: (info: Partial<CoverLetterData["personalInfo"]>) => void;
+  updateRecipientInfo: (
+    info: Partial<CoverLetterData["recipientInfo"]>,
+  ) => void;
+  updateContent: (content: Partial<CoverLetterData["content"]>) => void;
+  updateMetadata: (
+    metadata: Partial<NonNullable<CoverLetterData["metadata"]>>,
+  ) => void;
   saveCoverLetter: (isAutoSave?: boolean) => Promise<void>;
   syncGuestData: () => Promise<void>;
   importedData: CoverLetterData | null;
   setImportedData: (data: CoverLetterData | null) => void;
 }
 
-export const CoverLetterContext = createContext<CoverLetterContextType | undefined>(undefined);
+export const CoverLetterContext = createContext<
+  CoverLetterContextType | undefined
+>(undefined);
 
 const LOCAL_STORAGE_PREFIX = "resupra_guest_cl_";
 
@@ -73,9 +83,13 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
   const currentPathId = params?.id as string;
 
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
-  const [currentCoverLetter, setCurrentCoverLetter] = useState<CoverLetter | null>(null);
-  const [coverLetterData, setCoverLetterData] = useState<CoverLetterData>(emptyCoverLetterData);
-  const [importedData, setImportedData] = useState<CoverLetterData | null>(null);
+  const [currentCoverLetter, setCurrentCoverLetter] =
+    useState<CoverLetter | null>(null);
+  const [coverLetterData, setCoverLetterData] =
+    useState<CoverLetterData>(emptyCoverLetterData);
+  const [importedData, setImportedData] = useState<CoverLetterData | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const getLocalLetters = useCallback(() => {
@@ -86,9 +100,9 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
         try {
           const data = JSON.parse(localStorage.getItem(key)!);
           guestLetters.push({
-              ...data.letter,
-              createdAt: new Date(data.letter.createdAt),
-              updatedAt: new Date(data.letter.updatedAt),
+            ...data.letter,
+            createdAt: new Date(data.letter.createdAt),
+            updatedAt: new Date(data.letter.updatedAt),
           });
         } catch (e) {
           console.error("Error parsing local cover letter", e);
@@ -102,12 +116,20 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
     const localLetters = getLocalLetters();
 
     if (!session?.user) {
-      setCoverLetters(localLetters.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setCoverLetters(
+        localLetters.sort(
+          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+        ),
+      );
       return;
     }
 
     // Load from API (not implemented yet, but combining for now)
-    setCoverLetters(localLetters.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+    setCoverLetters(
+      localLetters.sort(
+        (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+      ),
+    );
   }, [session?.user, getLocalLetters]);
 
   useEffect(() => {
@@ -116,7 +138,7 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
 
   const syncGuestData = useCallback(async () => {
     if (!session?.user) return;
-    
+
     const localKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -137,9 +159,9 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
 
         // Simulate API call for sync
         localStorage.removeItem(key);
-        
+
         if (oldId === currentPathId) {
-            syncedCurrentId = "synced-" + oldId; 
+          syncedCurrentId = "synced-" + oldId;
         }
       }
       await refreshCoverLetters();
@@ -148,7 +170,7 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
         router.replace(`/cover-letter/${syncedCurrentId}`);
       }
     } catch (error) {
-        console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -175,12 +197,15 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
-        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${guestId}`, JSON.stringify({
-          letter: newLetter,
-          data: dataToUse
-        }));
-        
+
+        localStorage.setItem(
+          `${LOCAL_STORAGE_PREFIX}${guestId}`,
+          JSON.stringify({
+            letter: newLetter,
+            data: dataToUse,
+          }),
+        );
+
         setCoverLetters((prev) => [newLetter, ...prev]);
         setCurrentCoverLetter(newLetter);
         setCoverLetterData(dataToUse);
@@ -201,90 +226,117 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
       setCoverLetterData(dataToUse);
       return newLetter;
     },
-    [session?.user]
+    [session?.user],
   );
 
-  const loadCoverLetter = useCallback(async (id: string) => {
-    if (currentCoverLetter?.id === id) return;
+  const loadCoverLetter = useCallback(
+    async (id: string) => {
+      if (currentCoverLetter?.id === id) return;
 
-    if (id.startsWith("local-")) {
-      const local = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}${id}`);
-      if (local) {
-        const parsed = JSON.parse(local);
-        setCurrentCoverLetter({
+      if (id.startsWith("local-")) {
+        const local = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}${id}`);
+        if (local) {
+          const parsed = JSON.parse(local);
+          setCurrentCoverLetter({
             ...parsed.letter,
             createdAt: new Date(parsed.letter.createdAt),
             updatedAt: new Date(parsed.letter.updatedAt),
-        });
-        setCoverLetterData(parsed.data);
+          });
+          setCoverLetterData(parsed.data);
+        }
+        return;
       }
-      return;
-    }
-  }, [currentCoverLetter?.id]);
+    },
+    [currentCoverLetter?.id],
+  );
 
-  const deleteCoverLetter = useCallback(async (id: string) => {
-    if (id.startsWith("local-")) {
+  const deleteCoverLetter = useCallback(
+    async (id: string) => {
+      if (id.startsWith("local-")) {
         localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}${id}`);
-        setCoverLetters(prev => prev.filter(l => l.id !== id));
+        setCoverLetters((prev) => prev.filter((l) => l.id !== id));
         if (currentCoverLetter?.id === id) {
-            setCurrentCoverLetter(null);
-            setCoverLetterData(emptyCoverLetterData);
+          setCurrentCoverLetter(null);
+          setCoverLetterData(emptyCoverLetterData);
         }
         toast.success("Deleted");
-    }
-  }, [currentCoverLetter?.id]);
+      }
+    },
+    [currentCoverLetter?.id],
+  );
 
-  const updateCoverLetterData = useCallback((data: Partial<CoverLetterData>) => {
-    setCoverLetterData(prev => ({ ...prev, ...data }));
-  }, []);
+  const updateCoverLetterData = useCallback(
+    (data: Partial<CoverLetterData>) => {
+      setCoverLetterData((prev) => ({ ...prev, ...data }));
+    },
+    [],
+  );
 
-  const updatePersonalInfo = useCallback((info: Partial<CoverLetterData['personalInfo']>) => {
-    setCoverLetterData(prev => ({
-      ...prev,
-      personalInfo: { ...prev.personalInfo, ...info }
-    }));
-  }, []);
+  const updatePersonalInfo = useCallback(
+    (info: Partial<CoverLetterData["personalInfo"]>) => {
+      setCoverLetterData((prev) => ({
+        ...prev,
+        personalInfo: { ...prev.personalInfo, ...info },
+      }));
+    },
+    [],
+  );
 
-  const updateRecipientInfo = useCallback((info: Partial<CoverLetterData['recipientInfo']>) => {
-    setCoverLetterData(prev => ({
-      ...prev,
-      recipientInfo: { ...prev.recipientInfo, ...info }
-    }));
-  }, []);
+  const updateRecipientInfo = useCallback(
+    (info: Partial<CoverLetterData["recipientInfo"]>) => {
+      setCoverLetterData((prev) => ({
+        ...prev,
+        recipientInfo: { ...prev.recipientInfo, ...info },
+      }));
+    },
+    [],
+  );
 
-  const updateContent = useCallback((content: Partial<CoverLetterData['content']>) => {
-    setCoverLetterData(prev => ({
-      ...prev,
-      content: { ...prev.content, ...content }
-    }));
-  }, []);
+  const updateContent = useCallback(
+    (content: Partial<CoverLetterData["content"]>) => {
+      setCoverLetterData((prev) => ({
+        ...prev,
+        content: { ...prev.content, ...content },
+      }));
+    },
+    [],
+  );
 
-  const updateMetadata = useCallback((metadata: Partial<NonNullable<CoverLetterData['metadata']>>) => {
-    setCoverLetterData(prev => ({
-      ...prev,
-      metadata: { ...prev.metadata, ...metadata }
-    }));
-  }, []);
+  const updateMetadata = useCallback(
+    (metadata: Partial<NonNullable<CoverLetterData["metadata"]>>) => {
+      setCoverLetterData((prev) => ({
+        ...prev,
+        metadata: { ...prev.metadata, ...metadata },
+      }));
+    },
+    [],
+  );
 
-  const saveCoverLetter = useCallback(async (isAutoSave = false) => {
-    if (currentCoverLetter?.id.startsWith("local-")) {
-        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${currentCoverLetter.id}`, JSON.stringify({
+  const saveCoverLetter = useCallback(
+    async (isAutoSave = false) => {
+      if (currentCoverLetter?.id.startsWith("local-")) {
+        localStorage.setItem(
+          `${LOCAL_STORAGE_PREFIX}${currentCoverLetter.id}`,
+          JSON.stringify({
             letter: { ...currentCoverLetter, updatedAt: new Date() },
-            data: coverLetterData
-        }));
+            data: coverLetterData,
+          }),
+        );
         if (!isAutoSave) toast.success("Saved locally");
         return;
-    }
-    // Simulate API save for now (or implement real API call if available)
-    if (!isAutoSave) toast.success("Saved!");
-  }, [currentCoverLetter, coverLetterData]);
+      }
+      // Simulate API save for now (or implement real API call if available)
+      if (!isAutoSave) toast.success("Saved!");
+    },
+    [currentCoverLetter, coverLetterData],
+  );
 
   // Auto-save effect
   useEffect(() => {
     if (!currentCoverLetter) return;
 
     const timer = setTimeout(() => {
-        saveCoverLetter(true);
+      saveCoverLetter(true);
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -326,10 +378,14 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
       syncGuestData,
       importedData,
       setImportedData,
-    ]
+    ],
   );
 
-  return <CoverLetterContext.Provider value={value}>{children}</CoverLetterContext.Provider>;
+  return (
+    <CoverLetterContext.Provider value={value}>
+      {children}
+    </CoverLetterContext.Provider>
+  );
 }
 
 export function useCoverLetter() {

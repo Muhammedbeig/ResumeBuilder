@@ -20,11 +20,13 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
   },
   "/choose-builder": {
     title: "Choose Your Builder | ResuPro",
-    description: "Pick resume, CV, or cover letter workflows tailored to your goals.",
+    description:
+      "Pick resume, CV, or cover letter workflows tailored to your goals.",
   },
   "/pricing": {
     title: "Pricing & Plans | ResuPro",
-    description: "Compare free and paid plans for resumes, CVs, and AI-powered features.",
+    description:
+      "Compare free and paid plans for resumes, CVs, and AI-powered features.",
   },
   "/login": {
     title: "Sign In | ResuPro",
@@ -45,7 +47,8 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
   },
   "/ats-checker": {
     title: "ATS Checker | ResuPro",
-    description: "Analyze your resume against ATS requirements and improve match rate.",
+    description:
+      "Analyze your resume against ATS requirements and improve match rate.",
   },
   "/editor": {
     title: "Resume Editor | ResuPro",
@@ -67,7 +70,8 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
   },
   "/cv/start": {
     title: "Start a CV | ResuPro",
-    description: "Build an academic or professional CV with structured sections.",
+    description:
+      "Build an academic or professional CV with structured sections.",
   },
   "/cv/new": {
     title: "Select a CV Template | ResuPro",
@@ -111,11 +115,13 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
   },
   "/contact": {
     title: "Contact | ResuPro",
-    description: "Send a message to the ResuPro team. Your request is handled through our Admin Panel.",
+    description:
+      "Send a message to the ResuPro team. Your request is handled through our Admin Panel.",
   },
   "/privacy-policy": {
     title: "Privacy Policy | ResuPro",
-    description: "Learn how ResuPro collects, uses, and protects your information.",
+    description:
+      "Learn how ResuPro collects, uses, and protects your information.",
   },
   "/terms-of-service": {
     title: "Terms of Service | ResuPro",
@@ -128,24 +134,46 @@ const ROUTE_SEO: Record<string, SeoConfig> = {
 };
 
 const DYNAMIC_ROUTES: Array<{ pattern: RegExp; key: string; param: string }> = [
-  { pattern: /^\/career-blog\/tag\/([^/]+)$/, key: "/career-blog/tag/[slug]", param: "slug" },
-  { pattern: /^\/career-blog\/category\/([^/]+)$/, key: "/career-blog/category/[slug]", param: "slug" },
-  { pattern: /^\/career-blog\/([^/]+)$/, key: "/career-blog/[slug]", param: "slug" },
-  { pattern: /^\/templates\/([^/]+)$/, key: "/templates/[category]", param: "category" },
+  {
+    pattern: /^\/career-blog\/tag\/([^/]+)$/,
+    key: "/career-blog/tag/[slug]",
+    param: "slug",
+  },
+  {
+    pattern: /^\/career-blog\/category\/([^/]+)$/,
+    key: "/career-blog/category/[slug]",
+    param: "slug",
+  },
+  {
+    pattern: /^\/career-blog\/([^/]+)$/,
+    key: "/career-blog/[slug]",
+    param: "slug",
+  },
+  {
+    pattern: /^\/templates\/([^/]+)$/,
+    key: "/templates/[category]",
+    param: "category",
+  },
   { pattern: /^\/resume\/([^/]+)$/, key: "/resume/[id]", param: "id" },
   { pattern: /^\/cv\/([^/]+)$/, key: "/cv/[id]", param: "id" },
-  { pattern: /^\/cover-letter\/([^/]+)$/, key: "/cover-letter/[id]", param: "id" },
+  {
+    pattern: /^\/cover-letter\/([^/]+)$/,
+    key: "/cover-letter/[id]",
+    param: "id",
+  },
   { pattern: /^\/shared\/([^/]+)$/, key: "/shared/[id]", param: "id" },
 ];
 
 const DYNAMIC_SEO: Record<string, SeoConfig> = {
   "/career-blog/tag/[slug]": {
     title: "{slug} Career Articles | ResuPro",
-    description: "Browse {slug} career articles, guides, and job search tactics.",
+    description:
+      "Browse {slug} career articles, guides, and job search tactics.",
   },
   "/career-blog/category/[slug]": {
     title: "{slug} Career Articles | ResuPro",
-    description: "Browse {slug} career articles, guides, and job search tactics.",
+    description:
+      "Browse {slug} career articles, guides, and job search tactics.",
   },
   "/career-blog/[slug]": {
     title: "{slug} | ResuPro Career Blog",
@@ -153,7 +181,8 @@ const DYNAMIC_SEO: Record<string, SeoConfig> = {
   },
   "/templates/[category]": {
     title: "{category} Resume Templates | ResuPro",
-    description: "Browse {category} resume templates and start building in minutes.",
+    description:
+      "Browse {category} resume templates and start building in minutes.",
   },
   "/resume/[id]": {
     title: "Resume Editor | ResuPro",
@@ -177,15 +206,13 @@ const DYNAMIC_SEO: Record<string, SeoConfig> = {
 };
 
 const humanize = (value: string) =>
-  value
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  value.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 const applyTemplate = (template: SeoConfig, params: Record<string, string>) => {
   const inject = (text: string) =>
     Object.entries(params).reduce(
       (acc, [key, value]) => acc.replaceAll(`{${key}}`, humanize(value)),
-      text
+      text,
     );
 
   return {

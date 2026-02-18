@@ -10,13 +10,49 @@ interface CatalogTemplateProps {
 }
 
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: "basics", type: "basics", title: "Personal Info", isVisible: true, order: 0 },
-  { id: "summary", type: "summary", title: "Professional Summary", isVisible: true, order: 1 },
-  { id: "experience", type: "experience", title: "Experience", isVisible: true, order: 2 },
-  { id: "education", type: "education", title: "Education", isVisible: true, order: 3 },
+  {
+    id: "basics",
+    type: "basics",
+    title: "Personal Info",
+    isVisible: true,
+    order: 0,
+  },
+  {
+    id: "summary",
+    type: "summary",
+    title: "Professional Summary",
+    isVisible: true,
+    order: 1,
+  },
+  {
+    id: "experience",
+    type: "experience",
+    title: "Experience",
+    isVisible: true,
+    order: 2,
+  },
+  {
+    id: "education",
+    type: "education",
+    title: "Education",
+    isVisible: true,
+    order: 3,
+  },
   { id: "skills", type: "skills", title: "Skills", isVisible: true, order: 4 },
-  { id: "projects", type: "projects", title: "Projects", isVisible: true, order: 5 },
-  { id: "certifications", type: "certifications", title: "Certifications", isVisible: true, order: 6 },
+  {
+    id: "projects",
+    type: "projects",
+    title: "Projects",
+    isVisible: true,
+    order: 5,
+  },
+  {
+    id: "certifications",
+    type: "certifications",
+    title: "Certifications",
+    isVisible: true,
+    order: 6,
+  },
 ];
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -44,8 +80,20 @@ const getInitials = (name: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join("") || "YN";
 
-export function CatalogTemplate({ data, config, className = "" }: CatalogTemplateProps) {
-  const { basics, experiences, education, skills, projects, certifications, structure } = data;
+export function CatalogTemplate({
+  data,
+  config,
+  className = "",
+}: CatalogTemplateProps) {
+  const {
+    basics,
+    experiences,
+    education,
+    skills,
+    projects,
+    certifications,
+    structure,
+  } = data;
   const themeColor = data.metadata?.themeColor || "#6366f1";
   const bodyFont = data.metadata?.fontFamily || config.bodyFont;
   const headingFont = config.headingFont;
@@ -53,7 +101,8 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
   const scale = getFontScale(fontSize);
   const accentSoft = hexToRgba(themeColor, 0.14);
   const accentSoftStrong = hexToRgba(themeColor, 0.22);
-  const isSidebarLayout = config.layout === "sidebar-left" || config.layout === "sidebar-right";
+  const isSidebarLayout =
+    config.layout === "sidebar-left" || config.layout === "sidebar-right";
 
   const activeStructure =
     structure && structure.length > 0
@@ -76,11 +125,17 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
           <div className="mb-3">
             <h2
               className="text-sm font-semibold uppercase tracking-[0.2em]"
-              style={{ color: themeColor, fontFamily: `"${headingFont}", serif` }}
+              style={{
+                color: themeColor,
+                fontFamily: `"${headingFont}", serif`,
+              }}
             >
               {title}
             </h2>
-            <div className="mt-2 h-[2px] w-10" style={{ backgroundColor: themeColor }} />
+            <div
+              className="mt-2 h-[2px] w-10"
+              style={{ backgroundColor: themeColor }}
+            />
           </div>
         );
       case "pill":
@@ -101,10 +156,16 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
       case "stripe":
         return (
           <div className="mb-3 flex items-center gap-3">
-            <span className="h-6 w-1 rounded-full" style={{ backgroundColor: themeColor }} />
+            <span
+              className="h-6 w-1 rounded-full"
+              style={{ backgroundColor: themeColor }}
+            />
             <h2
               className="text-sm font-semibold uppercase tracking-[0.22em]"
-              style={{ color: themeColor, fontFamily: `"${headingFont}", serif` }}
+              style={{
+                color: themeColor,
+                fontFamily: `"${headingFont}", serif`,
+              }}
             >
               {title}
             </h2>
@@ -126,7 +187,12 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
   const renderBulletMarker = () => {
     switch (config.bulletStyle) {
       case "dash":
-        return <span className="absolute left-0 top-2 h-[2px] w-3" style={{ backgroundColor: themeColor }} />;
+        return (
+          <span
+            className="absolute left-0 top-2 h-[2px] w-3"
+            style={{ backgroundColor: themeColor }}
+          />
+        );
       case "diamond":
         return (
           <span
@@ -135,10 +201,20 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
           />
         );
       case "line":
-        return <span className="absolute left-0 top-1 h-4 w-1 rounded-full" style={{ backgroundColor: themeColor }} />;
+        return (
+          <span
+            className="absolute left-0 top-1 h-4 w-1 rounded-full"
+            style={{ backgroundColor: themeColor }}
+          />
+        );
       case "dot":
       default:
-        return <span className="absolute left-0 top-2 h-2 w-2 rounded-full" style={{ backgroundColor: themeColor }} />;
+        return (
+          <span
+            className="absolute left-0 top-2 h-2 w-2 rounded-full"
+            style={{ backgroundColor: themeColor }}
+          />
+        );
     }
   };
 
@@ -166,7 +242,9 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
     if (config.headerStyle === "center") {
       return (
         <div className="text-center mb-6">
-          {config.hasPhoto && <div className="flex justify-center mb-4">{photo}</div>}
+          {config.hasPhoto && (
+            <div className="flex justify-center mb-4">{photo}</div>
+          )}
           <h1
             className="text-3xl font-bold tracking-tight"
             style={{ fontFamily: `"${headingFont}", serif` }}
@@ -176,9 +254,16 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
           <p className="text-base mt-1" style={{ color: config.palette.muted }}>
             {basics.title || "Professional Title"}
           </p>
-          <div className="mt-3 flex flex-wrap justify-center gap-3 text-xs" style={{ color: config.palette.muted }}>
+          <div
+            className="mt-3 flex flex-wrap justify-center gap-3 text-xs"
+            style={{ color: config.palette.muted }}
+          >
             {contactItems.map((item) => (
-              <span key={item} className="px-2 py-1 rounded-full" style={{ backgroundColor: accentSoft }}>
+              <span
+                key={item}
+                className="px-2 py-1 rounded-full"
+                style={{ backgroundColor: accentSoft }}
+              >
                 {item}
               </span>
             ))}
@@ -199,14 +284,24 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
               >
                 {basics.name || "Your Name"}
               </h1>
-              <p className="text-base mt-1" style={{ color: config.palette.muted }}>
+              <p
+                className="text-base mt-1"
+                style={{ color: config.palette.muted }}
+              >
                 {basics.title || "Professional Title"}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs" style={{ color: config.palette.muted }}>
+          <div
+            className="flex flex-wrap gap-2 text-xs"
+            style={{ color: config.palette.muted }}
+          >
             {contactItems.map((item) => (
-              <span key={item} className="px-3 py-1 rounded-full" style={{ backgroundColor: accentSoft }}>
+              <span
+                key={item}
+                className="px-3 py-1 rounded-full"
+                style={{ backgroundColor: accentSoft }}
+              >
                 {item}
               </span>
             ))}
@@ -217,7 +312,9 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
 
     return (
       <div className="mb-6">
-        <div className={`flex gap-4 ${isSidebarLayout ? "flex-col items-start" : "items-center"}`}>
+        <div
+          className={`flex gap-4 ${isSidebarLayout ? "flex-col items-start" : "items-center"}`}
+        >
           {config.hasPhoto && photo}
           <div className={isSidebarLayout ? "w-full" : "min-w-0 flex-1"}>
             <h1
@@ -236,7 +333,10 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
             </p>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs" style={{ color: config.palette.muted }}>
+        <div
+          className="mt-3 flex flex-wrap gap-2 text-xs"
+          style={{ color: config.palette.muted }}
+        >
           {contactItems.map((item) => (
             <span
               key={item}
@@ -271,20 +371,32 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
             <div key={exp.id || idx}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-semibold" style={{ fontFamily: `"${headingFont}", serif` }}>
+                  <h3
+                    className="text-sm font-semibold"
+                    style={{ fontFamily: `"${headingFont}", serif` }}
+                  >
                     {exp.role}
                   </h3>
-                  <p className="text-xs" style={{ color: config.palette.muted }}>
+                  <p
+                    className="text-xs"
+                    style={{ color: config.palette.muted }}
+                  >
                     {exp.company} - {exp.location}
                   </p>
                 </div>
-                <span className="text-xs" style={{ color: config.palette.muted }}>
+                <span
+                  className="text-xs"
+                  style={{ color: config.palette.muted }}
+                >
                   {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                 </span>
               </div>
               <ul className="mt-2 space-y-1">
                 {exp.bullets.map((bullet, bIdx) => (
-                  <li key={bIdx} className="relative pl-5 text-sm leading-relaxed">
+                  <li
+                    key={bIdx}
+                    className="relative pl-5 text-sm leading-relaxed"
+                  >
                     {renderBulletMarker()}
                     <RichText inline text={bullet} />
                   </li>
@@ -307,19 +419,31 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
             <div key={edu.id || idx}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-semibold" style={{ fontFamily: `"${headingFont}", serif` }}>
+                  <h3
+                    className="text-sm font-semibold"
+                    style={{ fontFamily: `"${headingFont}", serif` }}
+                  >
                     {edu.institution}
                   </h3>
-                  <p className="text-xs" style={{ color: config.palette.muted }}>
+                  <p
+                    className="text-xs"
+                    style={{ color: config.palette.muted }}
+                  >
                     {edu.degree} in {edu.field}
                   </p>
                 </div>
-                <span className="text-xs" style={{ color: config.palette.muted }}>
+                <span
+                  className="text-xs"
+                  style={{ color: config.palette.muted }}
+                >
                   {edu.startDate} - {edu.endDate}
                 </span>
               </div>
               {edu.gpa && (
-                <p className="text-xs mt-1" style={{ color: config.palette.muted }}>
+                <p
+                  className="text-xs mt-1"
+                  style={{ color: config.palette.muted }}
+                >
                   GPA: {edu.gpa}
                 </p>
               )}
@@ -338,7 +462,10 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
         <div className="space-y-3">
           {skills.map((group, idx) => (
             <div key={group.id || idx}>
-              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: themeColor }}>
+              <p
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: themeColor }}
+              >
                 {group.name}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -346,7 +473,10 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
                   <span
                     key={skill}
                     className="text-xs px-2 py-1 rounded-full"
-                    style={{ backgroundColor: accentSoft, color: config.palette.text }}
+                    style={{
+                      backgroundColor: accentSoft,
+                      color: config.palette.text,
+                    }}
                   >
                     {skill}
                   </span>
@@ -368,7 +498,10 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
           {projects.map((project, idx) => (
             <div key={project.id || idx}>
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h3 className="text-sm font-semibold" style={{ fontFamily: `"${headingFont}", serif` }}>
+                <h3
+                  className="text-sm font-semibold"
+                  style={{ fontFamily: `"${headingFont}", serif` }}
+                >
                   {project.name}
                 </h3>
                 {project.link && (
@@ -381,10 +514,17 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
                   </a>
                 )}
               </div>
-              <RichText text={project.description} className="text-sm leading-relaxed mt-1" />
+              <RichText
+                text={project.description}
+                className="text-sm leading-relaxed mt-1"
+              />
               {project.technologies.length > 0 && (
-                <p className="text-xs mt-2" style={{ color: config.palette.muted }}>
-                  <span className="font-semibold">Tech:</span> {project.technologies.join(", ")}
+                <p
+                  className="text-xs mt-2"
+                  style={{ color: config.palette.muted }}
+                >
+                  <span className="font-semibold">Tech:</span>{" "}
+                  {project.technologies.join(", ")}
                 </p>
               )}
             </div>
@@ -402,7 +542,10 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
         <div className="space-y-2">
           {certifications.map((cert, idx) => (
             <div key={cert.id || idx}>
-              <p className="text-sm font-semibold" style={{ fontFamily: `"${headingFont}", serif` }}>
+              <p
+                className="text-sm font-semibold"
+                style={{ fontFamily: `"${headingFont}", serif` }}
+              >
                 {cert.name}
               </p>
               <p className="text-xs" style={{ color: config.palette.muted }}>
@@ -436,7 +579,9 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
   };
 
   const orderedSections = activeStructure
-    .filter((section) => section.type !== "basics" && section.isVisible !== false)
+    .filter(
+      (section) => section.type !== "basics" && section.isVisible !== false,
+    )
     .map((section) => ({
       id: section.id,
       content: renderSection(section),
@@ -456,7 +601,8 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
     return [first, second] as const;
   };
 
-  const [primaryOrderedSections, secondaryOrderedSections] = splitByOrder(orderedSections);
+  const [primaryOrderedSections, secondaryOrderedSections] =
+    splitByOrder(orderedSections);
 
   const containerClass =
     config.layout === "cards" ? "grid gap-6 md:grid-cols-2" : "space-y-4";
@@ -495,10 +641,16 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.15)_1px,transparent_1px)] bg-[size:28px_28px]" />
         )}
         {config.ornament === "stripes" && (
-          <div className="absolute -top-10 -left-10 h-40 w-[140%] rotate-2 opacity-30" style={{ backgroundColor: accentSoft }} />
+          <div
+            className="absolute -top-10 -left-10 h-40 w-[140%] rotate-2 opacity-30"
+            style={{ backgroundColor: accentSoft }}
+          />
         )}
         {config.ornament === "corner" && (
-          <div className="absolute top-6 right-6 h-20 w-20 border-2 rounded-xl" style={{ borderColor: accentSoftStrong }} />
+          <div
+            className="absolute top-6 right-6 h-20 w-20 border-2 rounded-xl"
+            style={{ borderColor: accentSoftStrong }}
+          />
         )}
         {config.ornament === "badge" && (
           <div
@@ -511,7 +663,8 @@ export function CatalogTemplate({ data, config, className = "" }: CatalogTemplat
       </div>
 
       <div className="relative z-10 p-10">
-        {config.layout === "sidebar-left" || config.layout === "sidebar-right" ? (
+        {config.layout === "sidebar-left" ||
+        config.layout === "sidebar-right" ? (
           <div
             className={`grid gap-8 ${
               config.layout === "sidebar-left"

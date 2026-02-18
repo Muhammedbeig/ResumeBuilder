@@ -43,10 +43,13 @@ type SocialLink = { name: string; icon: typeof Twitter; href: string };
 export async function Footer() {
   const settings = await fetchSiteSettings();
   const brandName = settings.companyName || DEFAULT_SITE_SETTINGS.companyName;
-  const description = settings.footerDescription || DEFAULT_SITE_SETTINGS.footerDescription;
+  const description =
+    settings.footerDescription || DEFAULT_SITE_SETTINGS.footerDescription;
   const footerLogo = settings.footerLogoUrl || settings.companyLogoUrl;
   const socialLinks: SocialLink[] = [
-    settings.social.x ? { name: "X", icon: Twitter, href: settings.social.x } : null,
+    settings.social.x
+      ? { name: "X", icon: Twitter, href: settings.social.x }
+      : null,
     settings.social.facebook
       ? { name: "Facebook", icon: Facebook, href: settings.social.facebook }
       : null,
@@ -64,8 +67,12 @@ export async function Footer() {
       : null,
   ].filter(Boolean) as SocialLink[];
   const appLinks = [
-    settings.appStoreLink ? { name: "App Store", href: settings.appStoreLink } : null,
-    settings.playStoreLink ? { name: "Google Play", href: settings.playStoreLink } : null,
+    settings.appStoreLink
+      ? { name: "App Store", href: settings.appStoreLink }
+      : null,
+    settings.playStoreLink
+      ? { name: "Google Play", href: settings.playStoreLink }
+      : null,
   ].filter(Boolean) as Array<{ name: string; href: string }>;
 
   const year = new Date().getFullYear();
@@ -110,8 +117,14 @@ export async function Footer() {
                       href={social.href}
                       className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                       aria-label={social.name}
-                      target={social.href.startsWith("http") ? "_blank" : undefined}
-                      rel={social.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      target={
+                        social.href.startsWith("http") ? "_blank" : undefined
+                      }
+                      rel={
+                        social.href.startsWith("http")
+                          ? "noopener noreferrer"
+                          : undefined
+                      }
                     >
                       <Icon className="w-5 h-5" />
                     </a>

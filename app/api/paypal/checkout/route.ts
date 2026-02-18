@@ -3,7 +3,12 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { getPayPalGatewayConfig } from "@/lib/panel-payment-gateways";
-import { panelInternalGet, panelInternalPatch, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  panelInternalPatch,
+  panelInternalPost,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 import { paypalRequest } from "@/lib/paypal";
 
@@ -18,19 +23,28 @@ const resolveHeaderValue = (value: string | null) => {
 const resolveRequestOrigin = (request: Request) => {
   try {
     const reqUrl = new URL(request.url);
-    const forwardedHost = resolveHeaderValue(request.headers.get("x-forwarded-host"));
-    const host = forwardedHost || resolveHeaderValue(request.headers.get("host")) || reqUrl.host;
+    const forwardedHost = resolveHeaderValue(
+      request.headers.get("x-forwarded-host"),
+    );
+    const host =
+      forwardedHost ||
+      resolveHeaderValue(request.headers.get("host")) ||
+      reqUrl.host;
     if (!host) return null;
 
-    const forwardedProto = resolveHeaderValue(request.headers.get("x-forwarded-proto")).toLowerCase();
+    const forwardedProto = resolveHeaderValue(
+      request.headers.get("x-forwarded-proto"),
+    ).toLowerCase();
     const isLocalHost =
-      host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+      host.startsWith("localhost") ||
+      host.startsWith("127.0.0.1") ||
+      host.startsWith("[::1]");
     const protocol =
       forwardedProto === "http" || forwardedProto === "https"
         ? forwardedProto
         : isLocalHost
-        ? "http"
-        : "https";
+          ? "http"
+          : "https";
 
     return `${protocol}://${host}`;
   } catch {
@@ -100,46 +114,65 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as { packageId?: string; returnUrl?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    packageId?: string;
+    returnUrl?: string;
+  };
   const packageId = parsePackageId(body.packageId);
   if (!packageId) {
-    return NextResponse.json({ error: "Missing or invalid packageId" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing or invalid packageId" },
+      { status: 400 },
+    );
   }
 
   let paymentTransactionId: string | null = null;
 
   try {
-    const packageRes = await panelInternalGet<{ package: InternalPackage }>(`packages/${packageId}`);
+    const packageRes = await panelInternalGet<{ package: InternalPackage }>(
+      `packages/${packageId}`,
+    );
     const pkg = packageRes.package;
     if (!pkg || pkg.status !== 1 || pkg.type !== "item_listing") {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });
     }
     if (!(pkg.finalPrice > 0)) {
-      return NextResponse.json({ error: "This package does not require payment" }, { status: 400 });
+      return NextResponse.json(
+        { error: "This package does not require payment" },
+        { status: 400 },
+      );
     }
 
     const paypalCfg = await getPayPalGatewayConfig();
     if (!paypalCfg) {
       return NextResponse.json(
-        { error: "PayPal is not enabled or not configured in the Admin Panel." },
-        { status: 503 }
+        {
+          error: "PayPal is not enabled or not configured in the Admin Panel.",
+        },
+        { status: 503 },
       );
     }
 
-    const profile = await panelInternalGet<UserPaymentProfile>("user/payment-profile", { userId });
+    const profile = await panelInternalGet<UserPaymentProfile>(
+      "user/payment-profile",
+      { userId },
+    );
     if (!profile?.id) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const txRes = await panelInternalPost<{ transaction: { id: string } }>("payment/transactions", {
-      userId,
-      body: {
-        packageId: pkg.id,
-        amount: pkg.finalPrice,
-        gateway: "Paypal",
-        status: "pending",
+    const txRes = await panelInternalPost<{ transaction: { id: string } }>(
+      "payment/transactions",
+      {
+        userId,
+        body: {
+          packageId: pkg.id,
+          amount: pkg.finalPrice,
+          gateway: "Paypal",
+          status: "pending",
+        },
       },
-    });
+    );
     paymentTransactionId = txRes.transaction.id;
 
     const baseUrl = resolveBaseUrl(request);
@@ -153,30 +186,34 @@ export async function POST(request: Request) {
     cancelUrl.searchParams.set("paypal", "cancel");
     cancelUrl.searchParams.set("payment_transaction_id", paymentTransactionId);
 
-    const order = await paypalRequest<PayPalOrder>(paypalCfg, "/v2/checkout/orders", {
-      method: "POST",
-      body: JSON.stringify({
-        intent: "CAPTURE",
-        purchase_units: [
-          {
-            custom_id: `${paymentTransactionId}:${profile.id}`,
-            amount: {
-              currency_code: paypalCfg.currencyCode,
-              value: pkg.finalPrice.toFixed(2),
+    const order = await paypalRequest<PayPalOrder>(
+      paypalCfg,
+      "/v2/checkout/orders",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          intent: "CAPTURE",
+          purchase_units: [
+            {
+              custom_id: `${paymentTransactionId}:${profile.id}`,
+              amount: {
+                currency_code: paypalCfg.currencyCode,
+                value: pkg.finalPrice.toFixed(2),
+              },
+              description: pkg.name,
             },
-            description: pkg.name,
+          ],
+          payer: {
+            email_address: profile.email || undefined,
           },
-        ],
-        payer: {
-          email_address: profile.email || undefined,
-        },
-        application_context: {
-          return_url: successUrl.toString(),
-          cancel_url: cancelUrl.toString(),
-          user_action: "PAY_NOW",
-        },
-      }),
-    });
+          application_context: {
+            return_url: successUrl.toString(),
+            cancel_url: cancelUrl.toString(),
+            user_action: "PAY_NOW",
+          },
+        }),
+      },
+    );
 
     if (!order?.id) {
       throw new Error("PayPal order creation failed");
@@ -196,19 +233,28 @@ export async function POST(request: Request) {
   } catch (error) {
     if (paymentTransactionId) {
       try {
-        await panelInternalPatch(`payment/transactions/${paymentTransactionId}`, {
-          userId,
-          body: { status: "failed" },
-        });
+        await panelInternalPatch(
+          `payment/transactions/${paymentTransactionId}`,
+          {
+            userId,
+            body: { status: "failed" },
+          },
+        );
       } catch {
         // ignore cleanup errors
       }
     }
 
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 },
+      );
     }
     console.error("PayPal checkout error:", error);
-    return NextResponse.json({ error: "Unable to start PayPal checkout. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to start PayPal checkout. Please try again." },
+      { status: 500 },
+    );
   }
 }

@@ -273,7 +273,7 @@ export const MONTH_OPTIONS = [
 
 export const buildYearOptions = (
   startYear = 1970,
-  endYear = new Date().getFullYear() + 1
+  endYear = new Date().getFullYear() + 1,
 ) => {
   const years: string[] = [];
   for (let year = endYear; year >= startYear; year -= 1) {
@@ -478,7 +478,7 @@ const BULLET_BANK: KeywordBucket[] = [
 export const getSuggestedBullets = (jobTitle: string, limit = 8) => {
   const normalized = normalize(jobTitle);
   const matches = BULLET_BANK.filter((bucket) =>
-    bucket.keywords.some((keyword) => normalized.includes(keyword))
+    bucket.keywords.some((keyword) => normalized.includes(keyword)),
   );
 
   const bullets = matches.length
@@ -491,7 +491,7 @@ export const getSuggestedBullets = (jobTitle: string, limit = 8) => {
 export const getRelatedJobTitles = (
   jobTitle: string,
   options = JOB_TITLE_SUGGESTIONS,
-  limit = 8
+  limit = 8,
 ) => {
   const tokens = tokenize(jobTitle);
   if (tokens.length === 0) {
@@ -503,7 +503,7 @@ export const getRelatedJobTitles = (
       const normalizedTitle = normalize(title);
       const score = tokens.reduce(
         (acc, token) => (normalizedTitle.includes(token) ? acc + 1 : acc),
-        0
+        0,
       );
       return { title, score };
     })

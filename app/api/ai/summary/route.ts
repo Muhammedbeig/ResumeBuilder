@@ -28,7 +28,10 @@ export async function POST(request: Request) {
     : undefined;
 
   if (!resumeData) {
-    return NextResponse.json({ error: "Resume data is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Resume data is required" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -36,8 +39,10 @@ export async function POST(request: Request) {
     const experienceSummaries = resumeData.experiences
       .slice(0, 3)
       .map((exp) => {
-        const bullets = exp.bullets?.filter((bullet) => bullet.trim()).slice(0, 3) || [];
-        const bulletText = bullets.length > 0 ? ` Highlights: ${bullets.join(" | ")}` : "";
+        const bullets =
+          exp.bullets?.filter((bullet) => bullet.trim()).slice(0, 3) || [];
+        const bulletText =
+          bullets.length > 0 ? ` Highlights: ${bullets.join(" | ")}` : "";
         return `${exp.role} at ${exp.company}.${bulletText}`;
       })
       .join("\n");
@@ -86,8 +91,8 @@ Return JSON only in this exact shape:
 
     return NextResponse.json({ summary, summaries: limitedSummaries });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "AI request failed";
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
-

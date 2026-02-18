@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth";
 import { cookies } from "next/headers";
 
 import { authOptions } from "@/lib/auth";
-import { panelInternalGet, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getPlanChoiceCookieKey, parsePlanChoice } from "@/lib/plan-choice";
 import { getSessionUserId } from "@/lib/session-user";
 
@@ -12,9 +15,13 @@ type SubscriptionData = {
   subscriptionPlanId: "weekly" | "monthly" | "annual" | null;
 };
 
-async function fetchSubscription(userId: string): Promise<SubscriptionData | null> {
+async function fetchSubscription(
+  userId: string,
+): Promise<SubscriptionData | null> {
   try {
-    return await panelInternalGet<SubscriptionData>("user/subscription", { userId });
+    return await panelInternalGet<SubscriptionData>("user/subscription", {
+      userId,
+    });
   } catch (error) {
     if (error instanceof PanelInternalApiError && error.status === 401) {
       return null;
@@ -29,14 +36,21 @@ export async function requirePaidAiAccess() {
 
   const cookieStore = await cookies();
   const planChoiceCookieKey = getPlanChoiceCookieKey(userId);
-  const planChoice = parsePlanChoice(cookieStore.get(planChoiceCookieKey)?.value);
+  const planChoice = parsePlanChoice(
+    cookieStore.get(planChoiceCookieKey)?.value,
+  );
   const hasPaidChoice = planChoice === "paid";
 
   const subscription = userId ? await fetchSubscription(userId) : null;
-  const isSubscribed = subscription?.subscription === "pro" || subscription?.subscription === "business";
+  const isSubscribed =
+    subscription?.subscription === "pro" ||
+    subscription?.subscription === "business";
 
   if (!isSubscribed && !hasPaidChoice) {
-    return NextResponse.json({ error: "AI is disabled for the free version." }, { status: 402 });
+    return NextResponse.json(
+      { error: "AI is disabled for the free version." },
+      { status: 402 },
+    );
   }
 
   return null;
@@ -54,9 +68,14 @@ export async function requireAnnualAccess() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const isAnnual = subscription.subscription !== "free" && subscription.subscriptionPlanId === "annual";
+  const isAnnual =
+    subscription.subscription !== "free" &&
+    subscription.subscriptionPlanId === "annual";
   if (!isAnnual) {
-    return NextResponse.json({ error: "Annual plan required for Career Management reports." }, { status: 402 });
+    return NextResponse.json(
+      { error: "Annual plan required for Career Management reports." },
+      { status: 402 },
+    );
   }
 
   return null;

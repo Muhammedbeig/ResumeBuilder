@@ -1,7 +1,7 @@
-import type { ResumeData, SectionConfig } from '@/types';
-import { useMemo } from 'react';
-import { getFontScale } from '@/lib/typography';
-import { RichText } from '@/components/editor/RichText';
+import type { ResumeData, SectionConfig } from "@/types";
+import { useMemo } from "react";
+import { getFontScale } from "@/lib/typography";
+import { RichText } from "@/components/editor/RichText";
 
 interface ModernCVTemplateProps {
   data: ResumeData;
@@ -9,12 +9,42 @@ interface ModernCVTemplateProps {
 }
 
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: 'summary', type: 'summary', title: 'Profile', isVisible: true, order: 0 },
-  { id: 'experience', type: 'experience', title: 'Experience', isVisible: true, order: 1 },
-  { id: 'projects', type: 'projects', title: 'Projects', isVisible: true, order: 2 },
-  { id: 'education', type: 'education', title: 'Education', isVisible: true, order: 3 },
-  { id: 'skills', type: 'skills', title: 'Skills', isVisible: true, order: 4 },
-  { id: 'certifications', type: 'certifications', title: 'Certifications', isVisible: true, order: 5 },
+  {
+    id: "summary",
+    type: "summary",
+    title: "Profile",
+    isVisible: true,
+    order: 0,
+  },
+  {
+    id: "experience",
+    type: "experience",
+    title: "Experience",
+    isVisible: true,
+    order: 1,
+  },
+  {
+    id: "projects",
+    type: "projects",
+    title: "Projects",
+    isVisible: true,
+    order: 2,
+  },
+  {
+    id: "education",
+    type: "education",
+    title: "Education",
+    isVisible: true,
+    order: 3,
+  },
+  { id: "skills", type: "skills", title: "Skills", isVisible: true, order: 4 },
+  {
+    id: "certifications",
+    type: "certifications",
+    title: "Certifications",
+    isVisible: true,
+    order: 5,
+  },
 ];
 
 function hexToRgba(hex: string, alpha: number) {
@@ -25,11 +55,22 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps) {
-  const { basics, experiences, education, skills, projects, certifications, structure } = data;
+export function ModernCVTemplate({
+  data,
+  className = "",
+}: ModernCVTemplateProps) {
+  const {
+    basics,
+    experiences,
+    education,
+    skills,
+    projects,
+    certifications,
+    structure,
+  } = data;
 
-  const themeColor = data.metadata?.themeColor || '#134e4a'; // Default teal-900
-  const fontName = data.metadata?.fontFamily || 'Inter';
+  const themeColor = data.metadata?.themeColor || "#134e4a"; // Default teal-900
+  const fontName = data.metadata?.fontFamily || "Inter";
   const fontSize = data.metadata?.fontSize;
   const scale = getFontScale(fontSize);
 
@@ -39,49 +80,73 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
     }
     return DEFAULT_STRUCTURE;
   }, [data.structure]);
-  
-  const mainSections = activeStructure.filter(s => ['summary', 'experience', 'projects'].includes(s.type));
-  const sidebarSections = activeStructure.filter(s => ['education', 'skills', 'certifications'].includes(s.type));
+
+  const mainSections = activeStructure.filter((s) =>
+    ["summary", "experience", "projects"].includes(s.type),
+  );
+  const sidebarSections = activeStructure.filter((s) =>
+    ["education", "skills", "certifications"].includes(s.type),
+  );
 
   const renderMainSection = (section: SectionConfig) => {
     if (!section.isVisible) return null;
     switch (section.type) {
-      case 'summary':
+      case "summary":
         if (!basics.summary) return null;
         return (
           <div key={section.id} className="mb-8">
-            <h2 
-                className="text-xl font-bold mb-3 border-b-2 pb-2"
-                style={{ color: themeColor, borderColor: hexToRgba(themeColor, 0.2) }}
+            <h2
+              className="text-xl font-bold mb-3 border-b-2 pb-2"
+              style={{
+                color: themeColor,
+                borderColor: hexToRgba(themeColor, 0.2),
+              }}
             >
-                Profile
+              Profile
             </h2>
-            <RichText text={basics.summary} className="text-slate-600 leading-relaxed text-md" />
+            <RichText
+              text={basics.summary}
+              className="text-slate-600 leading-relaxed text-md"
+            />
           </div>
         );
-      case 'experience':
+      case "experience":
         if (experiences.length === 0) return null;
         return (
           <div key={section.id} className="mb-8">
-            <h2 
-                className="text-xl font-bold mb-4 border-b-2 pb-2"
-                style={{ color: themeColor, borderColor: hexToRgba(themeColor, 0.2) }}
+            <h2
+              className="text-xl font-bold mb-4 border-b-2 pb-2"
+              style={{
+                color: themeColor,
+                borderColor: hexToRgba(themeColor, 0.2),
+              }}
             >
-                Experience
+              Experience
             </h2>
             <div className="space-y-6">
               {experiences.map((exp) => (
-                <div key={exp.id} className="relative pl-4 border-l-2" style={{ borderColor: hexToRgba(themeColor, 0.3) }}>
+                <div
+                  key={exp.id}
+                  className="relative pl-4 border-l-2"
+                  style={{ borderColor: hexToRgba(themeColor, 0.3) }}
+                >
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-1">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">{exp.role}</h3>
-                      <p className="font-medium" style={{ color: themeColor }}>{exp.company}</p>
+                      <h3 className="text-lg font-bold text-slate-800">
+                        {exp.role}
+                      </h3>
+                      <p className="font-medium" style={{ color: themeColor }}>
+                        {exp.company}
+                      </p>
                     </div>
-                    <span 
-                        className="text-xs font-semibold px-2 py-1 rounded mt-1 sm:mt-0"
-                        style={{ backgroundColor: hexToRgba(themeColor, 0.1), color: themeColor }}
+                    <span
+                      className="text-xs font-semibold px-2 py-1 rounded mt-1 sm:mt-0"
+                      style={{
+                        backgroundColor: hexToRgba(themeColor, 0.1),
+                        color: themeColor,
+                      }}
                     >
-                      {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mb-2">{exp.location}</p>
@@ -97,30 +162,48 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
             </div>
           </div>
         );
-      case 'projects':
+      case "projects":
         if (projects.length === 0) return null;
         return (
           <div key={section.id} className="mb-8">
-            <h2 
-                className="text-xl font-bold mb-4 border-b-2 pb-2"
-                style={{ color: themeColor, borderColor: hexToRgba(themeColor, 0.2) }}
+            <h2
+              className="text-xl font-bold mb-4 border-b-2 pb-2"
+              style={{
+                color: themeColor,
+                borderColor: hexToRgba(themeColor, 0.2),
+              }}
             >
-                Key Projects
+              Key Projects
             </h2>
             <div className="grid grid-cols-1 gap-4">
               {projects.map((project) => (
-                <div key={project.id} className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div
+                  key={project.id}
+                  className="bg-slate-50 p-4 rounded-lg border border-slate-100"
+                >
                   <div className="flex justify-between items-baseline mb-2">
                     <h3 className="font-bold text-slate-800">{project.name}</h3>
                     {project.link && (
-                      <a href={project.link} className="text-xs hover:underline" style={{ color: themeColor }}>View</a>
+                      <a
+                        href={project.link}
+                        className="text-xs hover:underline"
+                        style={{ color: themeColor }}
+                      >
+                        View
+                      </a>
                     )}
                   </div>
-                  <RichText text={project.description} className="text-sm text-slate-600 mb-2" />
+                  <RichText
+                    text={project.description}
+                    className="text-sm text-slate-600 mb-2"
+                  />
                   {project.technologies.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {project.technologies.map((t, i) => (
-                        <span key={i} className="text-[10px] bg-white text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded">
+                        <span
+                          key={i}
+                          className="text-[10px] bg-white text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded"
+                        >
                           {t}
                         </span>
                       ))}
@@ -131,42 +214,62 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
             </div>
           </div>
         );
-      default: return null;
+      default:
+        return null;
     }
   };
 
   const renderSidebarSection = (section: SectionConfig) => {
     if (!section.isVisible) return null;
     switch (section.type) {
-      case 'education':
+      case "education":
         if (education.length === 0) return null;
         return (
           <div key={section.id} className="mb-8">
-            <h2 className="text-lg font-bold text-white mb-4 border-b pb-1" style={{ borderColor: 'rgba(255,255,255,0.3)' }}>Education</h2>
+            <h2
+              className="text-lg font-bold text-white mb-4 border-b pb-1"
+              style={{ borderColor: "rgba(255,255,255,0.3)" }}
+            >
+              Education
+            </h2>
             <div className="space-y-4">
               {education.map((edu) => (
                 <div key={edu.id}>
                   <h3 className="font-bold text-white/90">{edu.institution}</h3>
                   <p className="text-white/80 text-sm">{edu.degree}</p>
-                  {edu.field && <p className="text-white/70 text-xs">{edu.field}</p>}
-                  <p className="text-white/60 text-xs mt-1">{edu.startDate} - {edu.endDate}</p>
+                  {edu.field && (
+                    <p className="text-white/70 text-xs">{edu.field}</p>
+                  )}
+                  <p className="text-white/60 text-xs mt-1">
+                    {edu.startDate} - {edu.endDate}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         );
-      case 'skills':
+      case "skills":
         if (skills.length === 0) return null;
         return (
           <div key={section.id} className="mb-8">
-            <h2 className="text-lg font-bold text-white mb-4 border-b pb-1" style={{ borderColor: 'rgba(255,255,255,0.3)' }}>Skills</h2>
+            <h2
+              className="text-lg font-bold text-white mb-4 border-b pb-1"
+              style={{ borderColor: "rgba(255,255,255,0.3)" }}
+            >
+              Skills
+            </h2>
             <div className="space-y-3">
               {skills.map((group) => (
                 <div key={group.id}>
-                  <p className="text-white/80 text-xs uppercase font-bold tracking-wider mb-1">{group.name}</p>
+                  <p className="text-white/80 text-xs uppercase font-bold tracking-wider mb-1">
+                    {group.name}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {group.skills.map((skill, i) => (
-                      <span key={i} className="text-sm text-white bg-black/20 px-2 py-1 rounded">
+                      <span
+                        key={i}
+                        className="text-sm text-white bg-black/20 px-2 py-1 rounded"
+                      >
                         {skill}
                       </span>
                     ))}
@@ -176,11 +279,16 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
             </div>
           </div>
         );
-      case 'certifications':
+      case "certifications":
         if (certifications.length === 0) return null;
         return (
           <div key={section.id} className="mb-8">
-            <h2 className="text-lg font-bold text-white mb-4 border-b pb-1" style={{ borderColor: 'rgba(255,255,255,0.3)' }}>Certifications</h2>
+            <h2
+              className="text-lg font-bold text-white mb-4 border-b pb-1"
+              style={{ borderColor: "rgba(255,255,255,0.3)" }}
+            >
+              Certifications
+            </h2>
             <div className="space-y-3">
               {certifications.map((cert) => (
                 <div key={cert.id}>
@@ -192,7 +300,8 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
             </div>
           </div>
         );
-      default: return null;
+      default:
+        return null;
     }
   };
 
@@ -200,41 +309,61 @@ export function ModernCVTemplate({ data, className = '' }: ModernCVTemplateProps
     <div
       id="cv-modern"
       className={`resume-template flex flex-col md:flex-row min-h-[11in] bg-white text-slate-800 ${className}`}
-      style={{ 
+      style={{
         fontFamily: `"${fontName}", sans-serif`,
-        zoom: scale
+        zoom: scale,
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@300;400;500;700&display=swap');
       `}</style>
 
       {/* Sidebar (Left) - Colored */}
-      <aside className="w-full md:w-1/3 text-white p-8" style={{ backgroundColor: themeColor }}>
+      <aside
+        className="w-full md:w-1/3 text-white p-8"
+        style={{ backgroundColor: themeColor }}
+      >
         <div className="mb-8 text-center md:text-left">
-            {basics.image && (
-                <div className="w-32 h-32 mx-auto md:mx-0 mb-4 rounded-full overflow-hidden border-4 shadow-lg" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
-                    <img src={basics.image} alt={basics.name} className="w-full h-full object-cover" />
-                </div>
-            )}
-            <h1 className="text-2xl font-bold mb-2 tracking-tight">{basics.name}</h1>
-            <p className="text-white/80 mb-6">{basics.title}</p>
-            
-            <div className="space-y-2 text-sm text-white/70">
-                {basics.email && <div className="break-all">{basics.email}</div>}
-                {basics.phone && <div>{basics.phone}</div>}
-                {basics.location && <div>{basics.location}</div>}
-                {basics.linkedin && <div className="text-xs text-white/60">{basics.linkedin.replace(/^https?:\/\//, '')}</div>}
-                {basics.github && <div className="text-xs text-white/60">{basics.github.replace(/^https?:\/\//, '')}</div>}
+          {basics.image && (
+            <div
+              className="w-32 h-32 mx-auto md:mx-0 mb-4 rounded-full overflow-hidden border-4 shadow-lg"
+              style={{ borderColor: "rgba(255,255,255,0.2)" }}
+            >
+              <img
+                src={basics.image}
+                alt={basics.name}
+                className="w-full h-full object-cover"
+              />
             </div>
+          )}
+          <h1 className="text-2xl font-bold mb-2 tracking-tight">
+            {basics.name}
+          </h1>
+          <p className="text-white/80 mb-6">{basics.title}</p>
+
+          <div className="space-y-2 text-sm text-white/70">
+            {basics.email && <div className="break-all">{basics.email}</div>}
+            {basics.phone && <div>{basics.phone}</div>}
+            {basics.location && <div>{basics.location}</div>}
+            {basics.linkedin && (
+              <div className="text-xs text-white/60">
+                {basics.linkedin.replace(/^https?:\/\//, "")}
+              </div>
+            )}
+            {basics.github && (
+              <div className="text-xs text-white/60">
+                {basics.github.replace(/^https?:\/\//, "")}
+              </div>
+            )}
+          </div>
         </div>
 
-        {sidebarSections.map(section => renderSidebarSection(section))}
+        {sidebarSections.map((section) => renderSidebarSection(section))}
       </aside>
 
       {/* Main Content (Right) - White */}
       <main className="w-full md:w-2/3 p-8 md:p-12 text-slate-800">
-        {mainSections.map(section => renderMainSection(section))}
+        {mainSections.map((section) => renderMainSection(section))}
       </main>
     </div>
   );

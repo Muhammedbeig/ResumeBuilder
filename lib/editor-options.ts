@@ -27,5 +27,5 @@ export const FONT_SIZE_MAX = 72;
 
 export const FONT_SIZE_OPTIONS = Array.from(
   { length: FONT_SIZE_MAX - FONT_SIZE_MIN + 1 },
-  (_, index) => FONT_SIZE_MIN + index
+  (_, index) => FONT_SIZE_MIN + index,
 );

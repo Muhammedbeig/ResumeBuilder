@@ -1,5 +1,8 @@
 import { json } from "@/lib/json";
-import { getFirebaseWebConfig, isFirebaseWebConfigComplete } from "@/lib/firebase-config";
+import {
+  getFirebaseWebConfig,
+  isFirebaseWebConfigComplete,
+} from "@/lib/firebase-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,4 +14,3 @@ export async function GET() {
     ...config,
   });
 }
-

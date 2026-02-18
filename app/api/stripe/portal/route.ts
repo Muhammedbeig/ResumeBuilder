@@ -4,14 +4,20 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { getStripeGatewayConfig } from "@/lib/panel-payment-gateways";
-import { panelInternalGet, panelInternalPatch, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  panelInternalPatch,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const resolveBaseUrl = (request: Request) =>
-  process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || new URL(request.url).origin;
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.NEXTAUTH_URL ||
+  new URL(request.url).origin;
 
 type UserPaymentProfile = {
   id: string;
@@ -28,7 +34,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const profile = await panelInternalGet<UserPaymentProfile>("user/payment-profile", { userId });
+    const profile = await panelInternalGet<UserPaymentProfile>(
+      "user/payment-profile",
+      { userId },
+    );
     if (!profile?.id) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -36,8 +45,10 @@ export async function GET(request: Request) {
     const stripeCfg = await getStripeGatewayConfig();
     if (!stripeCfg) {
       return NextResponse.json(
-        { error: "Stripe is not enabled or not configured in the Admin Panel." },
-        { status: 503 }
+        {
+          error: "Stripe is not enabled or not configured in the Admin Panel.",
+        },
+        { status: 503 },
       );
     }
 
@@ -61,7 +72,9 @@ export async function GET(request: Request) {
     const returnUrlParam = searchParams.get("returnUrl");
     const baseUrl = resolveBaseUrl(request);
     const returnUrl =
-      returnUrlParam && returnUrlParam.startsWith("/") ? new URL(returnUrlParam, baseUrl).toString() : baseUrl;
+      returnUrlParam && returnUrlParam.startsWith("/")
+        ? new URL(returnUrlParam, baseUrl).toString()
+        : baseUrl;
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
@@ -71,8 +84,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(portalSession.url);
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 },
+      );
     }
-    return NextResponse.json({ error: "Failed to start Stripe portal." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to start Stripe portal." },
+      { status: 500 },
+    );
   }
 }

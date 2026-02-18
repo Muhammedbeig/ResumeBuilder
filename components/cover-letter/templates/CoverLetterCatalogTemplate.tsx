@@ -9,20 +9,36 @@ interface CoverLetterCatalogTemplateProps {
   className?: string;
 }
 
-export function CoverLetterCatalogTemplate({ data, config, className = "" }: CoverLetterCatalogTemplateProps) {
-  const themeColor = data.metadata?.themeColor || config.accentColor || "#0f172a";
+export function CoverLetterCatalogTemplate({
+  data,
+  config,
+  className = "",
+}: CoverLetterCatalogTemplateProps) {
+  const themeColor =
+    data.metadata?.themeColor || config.accentColor || "#0f172a";
   const bodyFont = data.metadata?.fontFamily || config.bodyFont || "Inter";
   const headingFont = config.headingFont || bodyFont;
   const fontSize = data.metadata?.fontSize;
   const scale = getFontScale(fontSize);
-  const headerAlign = config.headerStyle === "center" ? "text-center" : "text-left";
+  const headerAlign =
+    config.headerStyle === "center" ? "text-center" : "text-left";
 
   const SectionSeparator = () => {
     if (config.sectionSeparator === "line") {
-      return <div className="my-6 h-px w-full" style={{ backgroundColor: themeColor }} />;
+      return (
+        <div
+          className="my-6 h-px w-full"
+          style={{ backgroundColor: themeColor }}
+        />
+      );
     }
     if (config.sectionSeparator === "bar") {
-      return <div className="my-6 h-1 w-16" style={{ backgroundColor: themeColor }} />;
+      return (
+        <div
+          className="my-6 h-1 w-16"
+          style={{ backgroundColor: themeColor }}
+        />
+      );
     }
     return null;
   };
@@ -40,7 +56,8 @@ export function CoverLetterCatalogTemplate({ data, config, className = "" }: Cov
           {data.personalInfo.email} | {data.personalInfo.phone}
         </p>
         <p>
-          {data.personalInfo.address}, {data.personalInfo.city} {data.personalInfo.zipCode}
+          {data.personalInfo.address}, {data.personalInfo.city}{" "}
+          {data.personalInfo.zipCode}
         </p>
       </div>
     </div>
@@ -68,7 +85,10 @@ export function CoverLetterCatalogTemplate({ data, config, className = "" }: Cov
       <RichText text={data.content.opening} />
       <RichText text={data.content.body} />
       <RichText text={data.content.closing} />
-      <div className="pt-4 text-base font-semibold" style={{ color: themeColor }}>
+      <div
+        className="pt-4 text-base font-semibold"
+        style={{ color: themeColor }}
+      >
         <RichText inline text={data.content.signature} />
       </div>
     </div>
@@ -80,7 +100,7 @@ export function CoverLetterCatalogTemplate({ data, config, className = "" }: Cov
       style={{ fontFamily: `"${bodyFont}", sans-serif`, zoom: scale }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=${headingFont.replace(/ /g, '+')}:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${bodyFont.replace(/ /g, "+")}:wght@300;400;500;700&family=${headingFont.replace(/ /g, "+")}:wght@400;600;700&display=swap');
       `}</style>
 
       {config.layout === "split" ? (
@@ -98,7 +118,10 @@ export function CoverLetterCatalogTemplate({ data, config, className = "" }: Cov
         <div>
           <HeaderBlock />
           {config.layout === "modern" && (
-            <div className="mb-6 border-l-4 pl-4" style={{ borderColor: themeColor }}>
+            <div
+              className="mb-6 border-l-4 pl-4"
+              style={{ borderColor: themeColor }}
+            >
               <RecipientBlock />
             </div>
           )}

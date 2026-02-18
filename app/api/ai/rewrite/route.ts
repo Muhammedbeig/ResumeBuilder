@@ -23,7 +23,10 @@ export async function POST(request: Request) {
   const context = body?.context ? String(body.context) : "";
 
   if (!bullet) {
-    return NextResponse.json({ error: "Bullet text is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Bullet text is required" },
+      { status: 400 },
+    );
   }
   const limitedBullet = truncateText(bullet, resourceSettings.limits.aiText);
   const limitedContext = truncateText(context, resourceSettings.limits.aiText);
@@ -49,8 +52,8 @@ Rewritten bullet:`;
 
     return NextResponse.json({ rewritten });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "AI request failed";
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
-

@@ -40,14 +40,16 @@ export const resumeTemplates = [
     id: "impact",
     name: "Impact",
     premium: true,
-    description: "Bold, sidebar-driven design for making a strong first impression.",
+    description:
+      "Bold, sidebar-driven design for making a strong first impression.",
     component: ImpactTemplate,
   },
   {
     id: "minimal",
     name: "Minimal",
     premium: false,
-    description: "Ultra-clean, whitespace-focused design with black typography.",
+    description:
+      "Ultra-clean, whitespace-focused design with black typography.",
     component: MinimalTemplate,
   },
   {
@@ -68,7 +70,8 @@ export const resumeTemplates = [
     id: "minimalist-professional",
     name: "Minimalist Professional",
     premium: false,
-    description: "Minimalist two-column template with photo and clean typography.",
+    description:
+      "Minimalist two-column template with photo and clean typography.",
     component: MinimalistProfessionalTemplate,
   },
   {
@@ -102,7 +105,10 @@ export const resumeTemplates = [
   ...catalogTemplates,
 ];
 
-export const resumeTemplateMap: Record<string, ComponentType<{ data: any; className?: string }>> = {
+export const resumeTemplateMap: Record<
+  string,
+  ComponentType<{ data: any; className?: string }>
+> = {
   classic: ClassicTemplate,
   modern: ModernTemplate,
   ats: ATSTemplate,

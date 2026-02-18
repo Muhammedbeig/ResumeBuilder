@@ -8,19 +8,60 @@ interface ExecutiveTemplateProps {
 }
 
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: 'summary', type: 'summary', title: 'Summary', isVisible: true, order: 0 },
-  { id: 'skills', type: 'skills', title: 'Skills', isVisible: true, order: 1 },
-  { id: 'experience', type: 'experience', title: 'Experience', isVisible: true, order: 2 },
-  { id: 'education', type: 'education', title: 'Education', isVisible: true, order: 3 },
-  { id: 'projects', type: 'projects', title: 'Projects', isVisible: true, order: 4 },
-  { id: 'certifications', type: 'certifications', title: 'Certifications', isVisible: true, order: 5 },
+  {
+    id: "summary",
+    type: "summary",
+    title: "Summary",
+    isVisible: true,
+    order: 0,
+  },
+  { id: "skills", type: "skills", title: "Skills", isVisible: true, order: 1 },
+  {
+    id: "experience",
+    type: "experience",
+    title: "Experience",
+    isVisible: true,
+    order: 2,
+  },
+  {
+    id: "education",
+    type: "education",
+    title: "Education",
+    isVisible: true,
+    order: 3,
+  },
+  {
+    id: "projects",
+    type: "projects",
+    title: "Projects",
+    isVisible: true,
+    order: 4,
+  },
+  {
+    id: "certifications",
+    type: "certifications",
+    title: "Certifications",
+    isVisible: true,
+    order: 5,
+  },
 ];
 
-export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplateProps) {
-  const { basics, experiences, education, skills, projects, certifications, languages } = data;
-  
-  const themeColor = data.metadata?.themeColor || '#7c3aed'; // Default purple-600
-  const fontName = data.metadata?.fontFamily || 'Inter';
+export function ExecutiveTemplate({
+  data,
+  className = "",
+}: ExecutiveTemplateProps) {
+  const {
+    basics,
+    experiences,
+    education,
+    skills,
+    projects,
+    certifications,
+    languages,
+  } = data;
+
+  const themeColor = data.metadata?.themeColor || "#7c3aed"; // Default purple-600
+  const fontName = data.metadata?.fontFamily || "Inter";
   const fontSize = data.metadata?.fontSize;
   const scale = getFontScale(fontSize);
 
@@ -31,40 +72,46 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
 
   const renderSection = (section: SectionConfig) => {
     switch (section.type) {
-      case 'skills':
+      case "skills":
         if (skills.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 
-                className="text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: themeColor }}
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: themeColor }}
             >
               Skills
             </h2>
             <div className="space-y-2">
               {skills.map((group) => (
                 <div key={group.id}>
-                  <p className="text-xs font-semibold text-gray-700">{group.name}</p>
-                  <p className="text-xs text-gray-600">{group.skills.join(", ")}</p>
+                  <p className="text-xs font-semibold text-gray-700">
+                    {group.name}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {group.skills.join(", ")}
+                  </p>
                 </div>
               ))}
             </div>
           </section>
         );
-      case 'education':
+      case "education":
         if (education.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 
-                className="text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: themeColor }}
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: themeColor }}
             >
               Education
             </h2>
             <div className="space-y-3">
               {education.map((edu) => (
                 <div key={edu.id}>
-                  <p className="text-sm font-semibold text-gray-900">{edu.institution}</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {edu.institution}
+                  </p>
                   <p className="text-xs text-gray-600">
                     {edu.degree} {edu.field ? `in ${edu.field}` : ""}
                   </p>
@@ -76,20 +123,22 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
             </div>
           </section>
         );
-      case 'certifications':
+      case "certifications":
         if (certifications.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 
-                className="text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: themeColor }}
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: themeColor }}
             >
               Certifications
             </h2>
             <div className="space-y-2">
               {certifications.map((cert) => (
                 <div key={cert.id}>
-                  <p className="text-sm font-semibold text-gray-900">{cert.name}</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {cert.name}
+                  </p>
                   <p className="text-xs text-gray-600">{cert.issuer}</p>
                   <p className="text-xs text-gray-500">{cert.date}</p>
                 </div>
@@ -97,26 +146,29 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
             </div>
           </section>
         );
-      case 'summary':
+      case "summary":
         if (!basics.summary) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 
-                className="text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: themeColor }}
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: themeColor }}
             >
               Summary
             </h2>
-            <RichText text={basics.summary} className="text-sm text-gray-700 leading-relaxed" />
+            <RichText
+              text={basics.summary}
+              className="text-sm text-gray-700 leading-relaxed"
+            />
           </section>
         );
-      case 'experience':
+      case "experience":
         if (experiences.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 
-                className="text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: themeColor }}
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: themeColor }}
             >
               Experience
             </h2>
@@ -125,7 +177,9 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
                 <div key={exp.id}>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{exp.role}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {exp.role}
+                      </p>
                       <p className="text-xs text-gray-600">
                         {exp.company} {exp.location ? `- ${exp.location}` : ""}
                       </p>
@@ -146,13 +200,13 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
             </div>
           </section>
         );
-      case 'projects':
+      case "projects":
         if (projects.length === 0) return null;
         return (
           <section key={section.id} className="resume-section">
-            <h2 
-                className="text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: themeColor }}
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: themeColor }}
             >
               Projects
             </h2>
@@ -160,12 +214,19 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
               {projects.map((project) => (
                 <div key={project.id}>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-900">{project.name}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {project.name}
+                    </p>
                     {project.link && (
-                      <span className="text-xs text-gray-500">{project.link}</span>
+                      <span className="text-xs text-gray-500">
+                        {project.link}
+                      </span>
                     )}
                   </div>
-                  <RichText text={project.description} className="text-xs text-gray-600" />
+                  <RichText
+                    text={project.description}
+                    className="text-xs text-gray-600"
+                  />
                   {project.technologies.length > 0 && (
                     <p className="text-xs text-gray-500">
                       Tech: {project.technologies.join(", ")}
@@ -181,20 +242,20 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
     }
   };
 
-  const sidebarSections = ['skills', 'education', 'certifications'];
-  const mainSections = ['summary', 'experience', 'projects'];
+  const sidebarSections = ["skills", "education", "certifications"];
+  const mainSections = ["summary", "experience", "projects"];
 
   return (
     <div
       id="resume-executive"
       className={`resume-template bg-white text-gray-900 p-12 font-sans ${className}`}
-      style={{ 
+      style={{
         fontFamily: `"${fontName}", sans-serif`,
-        zoom: scale
+        zoom: scale,
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@300;400;500;700&display=swap');
       `}</style>
 
       <header className="border-b border-gray-200 pb-4 mb-6">
@@ -220,15 +281,15 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
       <div className="grid grid-cols-3 gap-6">
         <aside className="col-span-1 space-y-4">
           {activeStructure.map((section) => {
-             if (sidebarSections.includes(section.type) && section.isVisible) {
-               return renderSection(section);
-             }
-             return null;
+            if (sidebarSections.includes(section.type) && section.isVisible) {
+              return renderSection(section);
+            }
+            return null;
           })}
 
           {languages.length > 0 && (
             <section className="resume-section">
-              <h2 
+              <h2
                 className="text-xs font-semibold uppercase tracking-widest mb-2"
                 style={{ color: themeColor }}
               >
@@ -246,11 +307,11 @@ export function ExecutiveTemplate({ data, className = "" }: ExecutiveTemplatePro
         </aside>
 
         <main className="col-span-2 space-y-5">
-           {activeStructure.map((section) => {
-             if (mainSections.includes(section.type) && section.isVisible) {
-               return renderSection(section);
-             }
-             return null;
+          {activeStructure.map((section) => {
+            if (mainSections.includes(section.type) && section.isVisible) {
+              return renderSection(section);
+            }
+            return null;
           })}
         </main>
       </div>

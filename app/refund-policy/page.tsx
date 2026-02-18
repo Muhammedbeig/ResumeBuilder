@@ -13,7 +13,9 @@ export default async function RefundPolicyPage() {
       <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
         <section className="max-w-4xl mx-auto px-6">
           <div className="text-center">
-            <p className="text-sm font-semibold text-purple-600 uppercase tracking-widest">Refunds</p>
+            <p className="text-sm font-semibold text-purple-600 uppercase tracking-widest">
+              Refunds
+            </p>
             <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
               Refund Policy
             </h1>

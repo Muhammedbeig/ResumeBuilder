@@ -398,7 +398,9 @@ textarea::selection,
 }
 
 .rich-content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   background: rgb(241 245 249);
   color: rgb(17 24 39);
   padding: 0.12rem 0.34rem;
@@ -478,7 +480,7 @@ nextjs-portal {
     margin: 0;
     size: auto;
   }
-  
+
   body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

@@ -39,7 +39,10 @@ export function SeoManager() {
 
     document.title = seo.title;
 
-    setMetaTag('meta[name="description"]', { name: "description", content: seo.description });
+    setMetaTag('meta[name="description"]', {
+      name: "description",
+      content: seo.description,
+    });
     if (seo.keywords?.length) {
       setMetaTag('meta[name="keywords"]', {
         name: "keywords",
@@ -51,7 +54,10 @@ export function SeoManager() {
       content: seo.noindex ? "noindex, nofollow" : "index, follow",
     });
 
-    setMetaTag('meta[property="og:title"]', { property: "og:title", content: seo.title });
+    setMetaTag('meta[property="og:title"]', {
+      property: "og:title",
+      content: seo.title,
+    });
     setMetaTag('meta[property="og:description"]', {
       property: "og:description",
       content: seo.description,
@@ -67,7 +73,10 @@ export function SeoManager() {
 
     if (canonical) {
       setLinkTag("canonical", canonical);
-      setMetaTag('meta[property="og:url"]', { property: "og:url", content: canonical });
+      setMetaTag('meta[property="og:url"]', {
+        property: "og:url",
+        content: canonical,
+      });
     }
   }, [pathname]);
 
@@ -77,7 +86,10 @@ export function SeoManager() {
       try {
         const res = await fetch("/api/site/settings", { cache: "no-store" });
         if (!res.ok) return;
-        const data = (await res.json()) as { faviconUrl?: string; themeColor?: string };
+        const data = (await res.json()) as {
+          faviconUrl?: string;
+          themeColor?: string;
+        };
         if (!active) return;
         if (data?.faviconUrl) {
           setLinkTag("icon", data.faviconUrl);

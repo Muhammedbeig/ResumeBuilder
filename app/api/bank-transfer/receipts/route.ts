@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { json } from "@/lib/json";
-import { panelInternalGet, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 
 export const runtime = "nodejs";
@@ -29,12 +32,21 @@ export async function GET() {
   }
 
   try {
-    const data = await panelInternalGet<{ receipts: Receipt[] }>("bank-transfer/receipts", { userId });
+    const data = await panelInternalGet<{ receipts: Receipt[] }>(
+      "bank-transfer/receipts",
+      { userId },
+    );
     return json({ receipts: data.receipts ?? [] });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return NextResponse.json({ error: "Failed to load receipts" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load receipts" },
+      { status: 500 },
+    );
   }
 }

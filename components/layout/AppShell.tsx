@@ -16,8 +16,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isEmbedRoute = pathname?.startsWith("/embed/") ?? false;
   const supportEmail = settings.companyEmail;
   const appLinks = [
-    settings.appStoreLink ? { label: "App Store", href: settings.appStoreLink } : null,
-    settings.playStoreLink ? { label: "Google Play", href: settings.playStoreLink } : null,
+    settings.appStoreLink
+      ? { label: "App Store", href: settings.appStoreLink }
+      : null,
+    settings.playStoreLink
+      ? { label: "Google Play", href: settings.playStoreLink }
+      : null,
   ].filter(Boolean) as Array<{ label: string; href: string }>;
 
   return (
@@ -33,12 +37,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               {brandName} is currently undergoing maintenance
             </h1>
             <p className="mt-4 text-gray-600 dark:text-gray-300">
-              We are applying updates and will be back shortly. Thank you for your patience.
+              We are applying updates and will be back shortly. Thank you for
+              your patience.
             </p>
             {supportEmail ? (
               <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 Need help? Contact us at{" "}
-                <a href={`mailto:${supportEmail}`} className="text-purple-600 hover:text-purple-500">
+                <a
+                  href={`mailto:${supportEmail}`}
+                  className="text-purple-600 hover:text-purple-500"
+                >
                   {supportEmail}
                 </a>
                 .

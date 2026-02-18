@@ -34,34 +34,47 @@ export class StripeConfirmationError extends Error {
   }
 }
 
-function isCheckoutSessionMismatch(checkoutSession: Stripe.Checkout.Session, tx: InternalTransaction, userId: string) {
+function isCheckoutSessionMismatch(
+  checkoutSession: Stripe.Checkout.Session,
+  tx: InternalTransaction,
+  userId: string,
+) {
   const md = checkoutSession.metadata ?? {};
   const mdTx = md.payment_transaction_id;
   const mdUser = md.user_id;
   const mdPkg = md.package_id;
 
   return (
-    (typeof checkoutSession.client_reference_id === "string" && checkoutSession.client_reference_id !== userId) ||
+    (typeof checkoutSession.client_reference_id === "string" &&
+      checkoutSession.client_reference_id !== userId) ||
     (mdTx && mdTx !== tx.id) ||
     (mdUser && mdUser !== userId) ||
     (mdPkg && mdPkg !== tx.packageId)
   );
 }
 
-function isPaymentIntentMismatch(paymentIntent: Stripe.PaymentIntent, tx: InternalTransaction, userId: string) {
+function isPaymentIntentMismatch(
+  paymentIntent: Stripe.PaymentIntent,
+  tx: InternalTransaction,
+  userId: string,
+) {
   const md = paymentIntent.metadata ?? {};
   const mdTx = md.payment_transaction_id;
   const mdUser = md.user_id;
   const mdPkg = md.package_id;
 
-  return (mdTx && mdTx !== tx.id) || (mdUser && mdUser !== userId) || (mdPkg && mdPkg !== tx.packageId);
+  return (
+    (mdTx && mdTx !== tx.id) ||
+    (mdUser && mdUser !== userId) ||
+    (mdPkg && mdPkg !== tx.packageId)
+  );
 }
 
 async function findPaymentIntentByMetadata(
   stripe: Stripe,
   paymentTransactionId: string,
   userId: string,
-  packageId: string | null
+  packageId: string | null,
 ) {
   const queryParts = [
     `metadata['payment_transaction_id']:'${paymentTransactionId}'`,
@@ -94,7 +107,8 @@ async function findPaymentIntentByMetadata(
       const md = intent.metadata ?? {};
       if (md.payment_transaction_id !== paymentTransactionId) return false;
       if (md.user_id !== userId) return false;
-      if (packageId && md.package_id && md.package_id !== packageId) return false;
+      if (packageId && md.package_id && md.package_id !== packageId)
+        return false;
       return true;
     });
 
@@ -123,9 +137,12 @@ export async function confirmStripePaymentTransaction({
   paymentTransactionId,
   checkoutSessionId,
 }: ConfirmStripePaymentInput) {
-  const txRes = await panelInternalGet<{ transaction: InternalTransaction }>(`payment/transactions/${paymentTransactionId}`, {
-    userId,
-  });
+  const txRes = await panelInternalGet<{ transaction: InternalTransaction }>(
+    `payment/transactions/${paymentTransactionId}`,
+    {
+      userId,
+    },
+  );
   const tx = txRes.transaction;
   if (!tx) {
     throw new StripeConfirmationError("Transaction not found", 404);
@@ -143,7 +160,9 @@ export async function confirmStripePaymentTransaction({
     throw new StripeConfirmationError("Transaction missing packageId", 400);
   }
 
-  const packageRes = await panelInternalGet<{ package: InternalPackage }>(`packages/${tx.packageId}`);
+  const packageRes = await panelInternalGet<{ package: InternalPackage }>(
+    `packages/${tx.packageId}`,
+  );
   const pkg = packageRes.package;
   if (!pkg || pkg.status !== 1 || pkg.type !== "item_listing") {
     throw new StripeConfirmationError("Package not found", 404);
@@ -151,7 +170,10 @@ export async function confirmStripePaymentTransaction({
 
   const stripeCfg = await getStripeGatewayConfig();
   if (!stripeCfg) {
-    throw new StripeConfirmationError("Stripe is not enabled or not configured in the Admin Panel.", 503);
+    throw new StripeConfirmationError(
+      "Stripe is not enabled or not configured in the Admin Panel.",
+      503,
+    );
   }
 
   const stripe = new Stripe(stripeCfg.secretKey, { typescript: true });
@@ -175,7 +197,7 @@ export async function confirmStripePaymentTransaction({
     paymentIntentId =
       typeof checkoutSession.payment_intent === "string"
         ? checkoutSession.payment_intent
-        : checkoutSession.payment_intent?.id ?? null;
+        : (checkoutSession.payment_intent?.id ?? null);
   };
 
   if (safeSessionId) {
@@ -190,11 +212,19 @@ export async function confirmStripePaymentTransaction({
     }
 
     if (!paymentIntent) {
-      paymentIntent = await findPaymentIntentByMetadata(stripe, tx.id, userId, tx.packageId);
+      paymentIntent = await findPaymentIntentByMetadata(
+        stripe,
+        tx.id,
+        userId,
+        tx.packageId,
+      );
     }
 
     if (!paymentIntent) {
-      throw new StripeConfirmationError("Payment intent not found for transaction", 404);
+      throw new StripeConfirmationError(
+        "Payment intent not found for transaction",
+        404,
+      );
     }
 
     if (isPaymentIntentMismatch(paymentIntent, tx, userId)) {
@@ -208,7 +238,9 @@ export async function confirmStripePaymentTransaction({
     paymentIntentId = paymentIntent.id;
   }
 
-  const orderIdForActivation = paymentIntentId ?? (knownOrderId.startsWith("pi_") ? knownOrderId : undefined);
+  const orderIdForActivation =
+    paymentIntentId ??
+    (knownOrderId.startsWith("pi_") ? knownOrderId : undefined);
 
   await panelInternalPost(`payment/transactions/${tx.id}/activate`, {
     userId,

@@ -11,9 +11,11 @@ export function resolvePayPalBaseUrl(mode: PayPalGatewayConfig["mode"]) {
 
 async function fetchPayPalAccessToken(
   config: PayPalGatewayConfig,
-  baseUrl: string
+  baseUrl: string,
 ): Promise<string> {
-  const auth = Buffer.from(`${config.clientId}:${config.secretKey}`).toString("base64");
+  const auth = Buffer.from(`${config.clientId}:${config.secretKey}`).toString(
+    "base64",
+  );
   const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
     method: "POST",
     headers: {
@@ -26,7 +28,10 @@ async function fetchPayPalAccessToken(
   const text = await res.text();
   const json = text ? (JSON.parse(text) as any) : null;
   if (!res.ok) {
-    const message = json?.error_description || json?.message || "Unable to fetch PayPal token";
+    const message =
+      json?.error_description ||
+      json?.message ||
+      "Unable to fetch PayPal token";
     throw new Error(`PayPal token error (${res.status}): ${message}`);
   }
 
@@ -40,7 +45,7 @@ async function fetchPayPalAccessToken(
 export async function paypalRequest<T>(
   config: PayPalGatewayConfig,
   path: string,
-  init: RequestInit
+  init: RequestInit,
 ): Promise<T> {
   const baseUrl = resolvePayPalBaseUrl(config.mode);
   const token = await fetchPayPalAccessToken(config, baseUrl);
@@ -62,7 +67,8 @@ export async function paypalRequest<T>(
   const text = await res.text();
   const json = text ? (JSON.parse(text) as T) : (null as T);
   if (!res.ok) {
-    const message = (json as any)?.message || (json as any)?.error || "PayPal API error";
+    const message =
+      (json as any)?.message || (json as any)?.error || "PayPal API error";
     throw new Error(`PayPal API error (${res.status}): ${message}`);
   }
 

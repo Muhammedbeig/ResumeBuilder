@@ -42,23 +42,43 @@ function readFirstEnvValue(names: string[]): string {
 }
 
 function readFirebaseConfigFromEnv(): FirebaseWebConfig {
-  const projectId = readFirstEnvValue(["NEXT_PUBLIC_FIREBASE_PROJECT_ID", "FIREBASE_PROJECT_ID"]);
+  const projectId = readFirstEnvValue([
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+    "FIREBASE_PROJECT_ID",
+  ]);
   return {
-    apiKey: readFirstEnvValue(["NEXT_PUBLIC_FIREBASE_API_KEY", "FIREBASE_API_KEY"]),
-    authDomain: readFirstEnvValue(["NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", "FIREBASE_AUTH_DOMAIN"]),
+    apiKey: readFirstEnvValue([
+      "NEXT_PUBLIC_FIREBASE_API_KEY",
+      "FIREBASE_API_KEY",
+    ]),
+    authDomain: readFirstEnvValue([
+      "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+      "FIREBASE_AUTH_DOMAIN",
+    ]),
     projectId,
-    storageBucket: readFirstEnvValue(["NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET", "FIREBASE_STORAGE_BUCKET"]),
+    storageBucket: readFirstEnvValue([
+      "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+      "FIREBASE_STORAGE_BUCKET",
+    ]),
     messagingSenderId: readFirstEnvValue([
       "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
       "FIREBASE_MESSAGING_SENDER_ID",
     ]),
-    appId: readFirstEnvValue(["NEXT_PUBLIC_FIREBASE_APP_ID", "FIREBASE_APP_ID"]),
-    measurementId: readFirstEnvValue(["NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID", "FIREBASE_MEASUREMENT_ID"]),
+    appId: readFirstEnvValue([
+      "NEXT_PUBLIC_FIREBASE_APP_ID",
+      "FIREBASE_APP_ID",
+    ]),
+    measurementId: readFirstEnvValue([
+      "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID",
+      "FIREBASE_MEASUREMENT_ID",
+    ]),
   };
 }
 
 async function readFirebaseConfigFromPanel(): Promise<Record<string, string>> {
-  const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+  const data = await panelInternalPost<{
+    settings: Record<string, string | null>;
+  }>("settings/batch", {
     body: { keys: [...SETTINGS_KEYS] },
   });
 
@@ -69,14 +89,16 @@ async function readFirebaseConfigFromPanel(): Promise<Record<string, string>> {
   return map;
 }
 
-export function isFirebaseWebConfigComplete(config: FirebaseWebConfig): boolean {
+export function isFirebaseWebConfigComplete(
+  config: FirebaseWebConfig,
+): boolean {
   return Boolean(
     config.apiKey &&
       config.authDomain &&
       config.projectId &&
       config.storageBucket &&
       config.messagingSenderId &&
-      config.appId
+      config.appId,
   );
 }
 
@@ -98,15 +120,21 @@ export async function getFirebaseWebConfig(): Promise<FirebaseWebConfig> {
   const resolved: FirebaseWebConfig = {
     apiKey: normalize(panelSettings?.apiKey) || envConfig.apiKey,
     authDomain: normalize(panelSettings?.authDomain) || envConfig.authDomain,
-    projectId: normalize(panelSettings?.projectId) || normalize(panelSettings?.firebase_project_id) || envConfig.projectId,
-    storageBucket: normalize(panelSettings?.storageBucket) || envConfig.storageBucket,
-    messagingSenderId: normalize(panelSettings?.messagingSenderId) || envConfig.messagingSenderId,
+    projectId:
+      normalize(panelSettings?.projectId) ||
+      normalize(panelSettings?.firebase_project_id) ||
+      envConfig.projectId,
+    storageBucket:
+      normalize(panelSettings?.storageBucket) || envConfig.storageBucket,
+    messagingSenderId:
+      normalize(panelSettings?.messagingSenderId) ||
+      envConfig.messagingSenderId,
     appId: normalize(panelSettings?.appId) || envConfig.appId,
-    measurementId: normalize(panelSettings?.measurementId) || envConfig.measurementId,
+    measurementId:
+      normalize(panelSettings?.measurementId) || envConfig.measurementId,
   };
 
   cached = resolved;
   cachedAt = now;
   return resolved;
 }
-

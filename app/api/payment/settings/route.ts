@@ -1,5 +1,8 @@
 import { json } from "@/lib/json";
-import { getGatewayConfigs, getGatewayConfigsFromEnv } from "@/lib/panel-payment-gateways";
+import {
+  getGatewayConfigs,
+  getGatewayConfigsFromEnv,
+} from "@/lib/panel-payment-gateways";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

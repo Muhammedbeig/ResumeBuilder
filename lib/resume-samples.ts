@@ -59,7 +59,11 @@ export const previewResumeData: ResumeData = {
     {
       id: "skills-2",
       name: "Collaboration",
-      skills: ["Workshop Facilitation", "Stakeholder Alignment", "Product Strategy"],
+      skills: [
+        "Workshop Facilitation",
+        "Stakeholder Alignment",
+        "Product Strategy",
+      ],
     },
   ],
   projects: [
@@ -139,7 +143,8 @@ export const placeholderResumeData: ResumeData = {
     {
       id: "proj-1",
       name: "Project Name",
-      description: "Describe the project, your role, and the impact or outcome.",
+      description:
+        "Describe the project, your role, and the impact or outcome.",
       technologies: ["Tech One", "Tech Two"],
       link: "",
       github: "",

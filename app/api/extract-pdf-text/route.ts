@@ -29,6 +29,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ text: limitedText });
   } catch (error) {
     console.error("PDF extraction error:", error);
-    return NextResponse.json({ error: "Failed to extract text from PDF" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to extract text from PDF" },
+      { status: 500 },
+    );
   }
 }

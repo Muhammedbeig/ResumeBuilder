@@ -25,7 +25,10 @@ export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const result = await panelInternalGet<{ resume: any; data: Record<string, unknown> }>(`resumes/${id}`, { userId });
+    const result = await panelInternalGet<{
+      resume: any;
+      data: Record<string, unknown>;
+    }>(`resumes/${id}`, { userId });
     return json({
       resume: result.resume,
       data: normalizeResumeData(result.data),
@@ -55,7 +58,10 @@ export async function PUT(request: Request, context: RouteContext) {
   if ("data" in body) payload.data = normalizeResumeData(body?.data);
 
   try {
-    const result = await panelInternalPut<{ resume: any; data: Record<string, unknown> }>(`resumes/${id}`, {
+    const result = await panelInternalPut<{
+      resume: any;
+      data: Record<string, unknown>;
+    }>(`resumes/${id}`, {
       userId,
       body: payload,
     });
@@ -81,7 +87,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const result = await panelInternalDelete<{ success: boolean }>(`resumes/${id}`, { userId });
+    const result = await panelInternalDelete<{ success: boolean }>(
+      `resumes/${id}`,
+      { userId },
+    );
     return json({ success: Boolean(result.success) });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {

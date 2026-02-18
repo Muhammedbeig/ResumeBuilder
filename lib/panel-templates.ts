@@ -128,9 +128,11 @@ function normalizeFontValue(value: unknown, fallback: string): string {
 
 export function normalizeResumeConfig(
   config?: Partial<ResumeTemplateConfig> | null,
-  fallbackId?: string
+  fallbackId?: string,
 ): ResumeTemplateCatalogEntry | null {
-  const fallback = fallbackId ? RESUME_TEMPLATE_CATALOG_MAP[fallbackId] : undefined;
+  const fallback = fallbackId
+    ? RESUME_TEMPLATE_CATALOG_MAP[fallbackId]
+    : undefined;
   if (!config && !fallback) return null;
 
   const merged: ResumeTemplateCatalogEntry = {
@@ -154,13 +156,21 @@ export function normalizeResumeConfig(
   merged.category = merged.category || fallback?.category || "custom";
   merged.description = merged.description || fallback?.description || "";
   merged.hasPhoto = Boolean(merged.hasPhoto);
-  merged.bodyFont = normalizeFontValue(merged.bodyFont, DEFAULT_RESUME_CONFIG.bodyFont);
-  merged.headingFont = normalizeFontValue(merged.headingFont, DEFAULT_RESUME_CONFIG.headingFont);
+  merged.bodyFont = normalizeFontValue(
+    merged.bodyFont,
+    DEFAULT_RESUME_CONFIG.bodyFont,
+  );
+  merged.headingFont = normalizeFontValue(
+    merged.headingFont,
+    DEFAULT_RESUME_CONFIG.headingFont,
+  );
 
   return merged;
 }
 
-export function normalizeCvConfig(config?: Partial<CvTemplateConfig> | null): Required<CvTemplateConfig> {
+export function normalizeCvConfig(
+  config?: Partial<CvTemplateConfig> | null,
+): Required<CvTemplateConfig> {
   const merged = {
     ...DEFAULT_CV_CONFIG,
     ...(config ?? {}),
@@ -174,26 +184,38 @@ export function normalizeCvConfig(config?: Partial<CvTemplateConfig> | null): Re
     },
     hasPhoto: Boolean(config?.hasPhoto ?? DEFAULT_CV_CONFIG.hasPhoto),
   };
-  merged.bodyFont = normalizeFontValue(merged.bodyFont, DEFAULT_CV_CONFIG.bodyFont);
-  merged.headingFont = normalizeFontValue(merged.headingFont, DEFAULT_CV_CONFIG.headingFont);
+  merged.bodyFont = normalizeFontValue(
+    merged.bodyFont,
+    DEFAULT_CV_CONFIG.bodyFont,
+  );
+  merged.headingFont = normalizeFontValue(
+    merged.headingFont,
+    DEFAULT_CV_CONFIG.headingFont,
+  );
   return merged;
 }
 
 export function normalizeCoverLetterConfig(
-  config?: Partial<CoverLetterTemplateConfig> | null
+  config?: Partial<CoverLetterTemplateConfig> | null,
 ): Required<CoverLetterTemplateConfig> {
   const merged = {
     ...DEFAULT_COVER_LETTER_CONFIG,
     ...(config ?? {}),
   };
-  merged.bodyFont = normalizeFontValue(merged.bodyFont, DEFAULT_COVER_LETTER_CONFIG.bodyFont);
-  merged.headingFont = normalizeFontValue(merged.headingFont, DEFAULT_COVER_LETTER_CONFIG.headingFont);
+  merged.bodyFont = normalizeFontValue(
+    merged.bodyFont,
+    DEFAULT_COVER_LETTER_CONFIG.bodyFont,
+  );
+  merged.headingFont = normalizeFontValue(
+    merged.headingFont,
+    DEFAULT_COVER_LETTER_CONFIG.headingFont,
+  );
   return merged;
 }
 
 export function mapCvConfigToResumeConfig(
   config?: Partial<CvTemplateConfig> | null,
-  fallbackId?: string
+  fallbackId?: string,
 ): ResumeTemplateCatalogEntry | null {
   const normalized = normalizeCvConfig(config);
   const resolvedPalette = {
@@ -232,6 +254,6 @@ export function mapCvConfigToResumeConfig(
       palette: resolvedPalette,
       background: resolvedBackground,
     },
-    fallbackId
+    fallbackId,
   );
 }

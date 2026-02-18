@@ -5,10 +5,7 @@ import { panelInternalPost } from "@/lib/panel-internal-api";
 
 const CACHE_TTL_MS = 60_000;
 
-const SETTINGS_KEYS = [
-  "AI_TEXT_LIMIT",
-  "ai_text_limit",
-] as const;
+const SETTINGS_KEYS = ["AI_TEXT_LIMIT", "ai_text_limit"] as const;
 
 export type ResourceSettings = {
   pdfRender: {
@@ -33,12 +30,18 @@ let cachedAt = 0;
 
 const DEFAULTS: ResourceSettings = {
   pdfRender: {
-    concurrency: envInt("PDF_RENDER_CONCURRENCY", envInt("PUPPETEER_CONCURRENCY", 2)),
+    concurrency: envInt(
+      "PDF_RENDER_CONCURRENCY",
+      envInt("PUPPETEER_CONCURRENCY", 2),
+    ),
     timeoutMs: envInt("PDF_RENDER_TIMEOUT_MS", 45_000),
   },
   rateLimits: {
     windowMs: envInt("RATE_LIMIT_WINDOW_MS", 60_000),
-    pdfExport: envInt("RATE_LIMIT_PDF_EXPORT", envInt("RATE_LIMIT_PUPPETEER", envInt("RATE_LIMIT_PDF", 12))),
+    pdfExport: envInt(
+      "RATE_LIMIT_PDF_EXPORT",
+      envInt("RATE_LIMIT_PUPPETEER", envInt("RATE_LIMIT_PDF", 12)),
+    ),
     pdf: envInt("RATE_LIMIT_PDF", 20),
     ai: envInt("RATE_LIMIT_AI", 20),
     aiHeavy: envInt("RATE_LIMIT_AI_HEAVY", 10),
@@ -52,7 +55,7 @@ const DEFAULTS: ResourceSettings = {
 function parseIntValue(
   value: string | undefined,
   fallback: number,
-  options?: { min?: number; max?: number }
+  options?: { min?: number; max?: number },
 ): number {
   const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed)) return fallback;
@@ -62,7 +65,10 @@ function parseIntValue(
   return next;
 }
 
-function pickSetting(map: Record<string, string>, key: string): string | undefined {
+function pickSetting(
+  map: Record<string, string>,
+  key: string,
+): string | undefined {
   if (key in map) return map[key];
   const lower = key.toLowerCase();
   if (lower in map) return map[lower];
@@ -72,7 +78,9 @@ function pickSetting(map: Record<string, string>, key: string): string | undefin
 }
 
 async function readSettings(): Promise<Record<string, string>> {
-  const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+  const data = await panelInternalPost<{
+    settings: Record<string, string | null>;
+  }>("settings/batch", {
     body: { keys: [...SETTINGS_KEYS] },
   });
 
@@ -102,7 +110,11 @@ export async function getResourceSettings(): Promise<ResourceSettings> {
     return DEFAULTS;
   }
 
-  const aiTextLimit = parseIntValue(pickSetting(settings, "AI_TEXT_LIMIT"), DEFAULTS.limits.aiText, { min: 500 });
+  const aiTextLimit = parseIntValue(
+    pickSetting(settings, "AI_TEXT_LIMIT"),
+    DEFAULTS.limits.aiText,
+    { min: 500 },
+  );
   const pdfTextLimit = DEFAULTS.limits.pdfText;
 
   cached = {

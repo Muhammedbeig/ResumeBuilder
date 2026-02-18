@@ -17,5 +17,5 @@ export const catalogTemplateMap = RESUME_TEMPLATE_CATALOG.reduce(
     acc[config.id] = Component;
     return acc;
   },
-  {} as Record<string, CatalogTemplateComponent>
+  {} as Record<string, CatalogTemplateComponent>,
 );

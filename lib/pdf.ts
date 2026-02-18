@@ -1,5 +1,5 @@
-import { toPng, toJpeg } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+import { toPng, toJpeg } from "html-to-image";
+import { jsPDF } from "jspdf";
 
 type PdfWatermarkOptions = {
   text: string;
@@ -20,30 +20,33 @@ type PdfBrandingOptions = {
 
 export async function generatePDF(
   elementId: string,
-  filename: string = 'resume.pdf',
-  options?: PdfBrandingOptions
+  filename: string = "resume.pdf",
+  options?: PdfBrandingOptions,
 ): Promise<string> {
   const element = document.getElementById(elementId);
-  if (!element) throw new Error('Element not found');
+  if (!element) throw new Error("Element not found");
 
   try {
-    // Use the live element directly. 
+    // Use the live element directly.
     // html-to-image handles the capture via SVG foreignObject.
     // We use pixelRatio 2 for better quality (simulating 2x scale).
     const dataUrl = await toJpeg(element, {
       quality: 0.95,
-      backgroundColor: '#ffffff',
+      backgroundColor: "#ffffff",
       pixelRatio: 2,
     });
 
-    const tempPdf = new jsPDF('p', 'mm', 'letter');
+    const tempPdf = new jsPDF("p", "mm", "letter");
     const imgProps = tempPdf.getImageProperties(dataUrl);
     const imgRatio = imgProps.height / imgProps.width;
     const letterRatio = 279 / 216;
     const a4Ratio = 297 / 210;
-    const format = Math.abs(imgRatio - a4Ratio) < Math.abs(imgRatio - letterRatio) ? 'a4' : 'letter';
+    const format =
+      Math.abs(imgRatio - a4Ratio) < Math.abs(imgRatio - letterRatio)
+        ? "a4"
+        : "letter";
 
-    const pdf = new jsPDF('p', 'mm', format);
+    const pdf = new jsPDF("p", "mm", format);
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
@@ -66,7 +69,9 @@ export async function generatePDF(
       const opacity = Math.min(1, Math.max(0, watermark.opacity ?? 0.18));
       const sizePx = Math.min(160, Math.max(10, watermark.size ?? 46));
       const fontSize = Math.round(sizePx * 0.75);
-      const rotation = Number.isFinite(watermark.rotation) ? watermark.rotation : 30;
+      const rotation = Number.isFinite(watermark.rotation)
+        ? watermark.rotation
+        : 30;
       const style = watermark.style ?? "single";
       const position = watermark.position ?? "center";
       const shade = Math.round(255 * (1 - opacity));
@@ -128,7 +133,7 @@ export async function generatePDF(
         pdf.setTextColor(120, 120, 120);
         pdf.setFontSize(9);
         pdf.text(options.footerText, pdfWidth / 2, pdfHeight - 6, {
-          align: 'center',
+          align: "center",
         });
       }
 
@@ -136,7 +141,7 @@ export async function generatePDF(
         const size = options.qrSizeMm ?? 18;
         const x = pdfWidth - size - 8;
         const y = pdfHeight - size - 10;
-        pdf.addImage(options.qrDataUrl, 'PNG', x, y, size, size);
+        pdf.addImage(options.qrDataUrl, "PNG", x, y, size, size);
       }
     };
 
@@ -146,13 +151,13 @@ export async function generatePDF(
       const scale = pdfHeight / imgHeight;
       const scaledWidth = imgWidth * scale;
       const x = (pdfWidth - scaledWidth) / 2;
-      pdf.addImage(dataUrl, 'JPEG', x, 0, scaledWidth, pdfHeight);
+      pdf.addImage(dataUrl, "JPEG", x, 0, scaledWidth, pdfHeight);
       addBranding();
-      const blob = pdf.output('blob');
+      const blob = pdf.output("blob");
       return URL.createObjectURL(blob);
     }
 
-    pdf.addImage(dataUrl, 'JPEG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(dataUrl, "JPEG", 0, position, imgWidth, imgHeight);
     addBranding();
     heightLeft -= pdfHeight;
 
@@ -160,21 +165,21 @@ export async function generatePDF(
     while (heightLeft > 2) {
       position -= pdfHeight;
       pdf.addPage();
-      pdf.addImage(dataUrl, 'JPEG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, "JPEG", 0, position, imgWidth, imgHeight);
       addBranding();
       heightLeft -= pdfHeight;
     }
 
-    const blob = pdf.output('blob');
+    const blob = pdf.output("blob");
     return URL.createObjectURL(blob);
   } catch (error) {
-    console.error('PDF Generation Error:', error);
+    console.error("PDF Generation Error:", error);
     throw error;
   }
 }
 
-export function downloadPDF(url: string, filename: string = 'resume.pdf') {
-  const link = document.createElement('a');
+export function downloadPDF(url: string, filename: string = "resume.pdf") {
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -184,22 +189,25 @@ export function downloadPDF(url: string, filename: string = 'resume.pdf') {
 
 export async function generateImage(elementId: string): Promise<string> {
   const element = document.getElementById(elementId);
-  if (!element) throw new Error('Element not found');
+  if (!element) throw new Error("Element not found");
 
   try {
     const dataUrl = await toPng(element, {
-      backgroundColor: '#ffffff',
+      backgroundColor: "#ffffff",
       pixelRatio: 2,
     });
     return dataUrl;
   } catch (error) {
-    console.error('Image Generation Error:', error);
+    console.error("Image Generation Error:", error);
     throw error;
   }
 }
 
-export function downloadImage(dataUrl: string, filename: string = 'resume.png') {
-  const link = document.createElement('a');
+export function downloadImage(
+  dataUrl: string,
+  filename: string = "resume.png",
+) {
+  const link = document.createElement("a");
   link.href = dataUrl;
   link.download = filename;
   document.body.appendChild(link);

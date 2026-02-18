@@ -12,6 +12,6 @@ export async function POST() {
   // This route is kept only to avoid breaking older clients.
   return NextResponse.json(
     { error: "Upgrade is not available via API yet." },
-    { status: 501 }
+    { status: 501 },
   );
 }

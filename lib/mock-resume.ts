@@ -18,7 +18,8 @@ export const MOCK_RESUME: Resume = {
       linkedin: "https://linkedin.com/in/alexjohnson",
       github: "https://github.com/alexjohnson",
       portfolio: "https://alexjohnson.dev",
-      summary: "Experienced Full Stack Engineer with over 6 years of experience in building scalable web applications. Proficient in React, Node.js, and Cloud technologies. Passionate about clean code, performance optimization, and developer experience.",
+      summary:
+        "Experienced Full Stack Engineer with over 6 years of experience in building scalable web applications. Proficient in React, Node.js, and Cloud technologies. Passionate about clean code, performance optimization, and developer experience.",
     },
     experiences: [
       {
@@ -82,7 +83,8 @@ export const MOCK_RESUME: Resume = {
       {
         id: "proj-1",
         name: "E-Commerce Dashboard",
-        description: "A comprehensive analytics dashboard for online retailers.",
+        description:
+          "A comprehensive analytics dashboard for online retailers.",
         technologies: ["React", "D3.js", "Node.js"],
         link: "https://demo.dashboard.com",
         github: "https://github.com/alexjohnson/dashboard",
@@ -90,7 +92,8 @@ export const MOCK_RESUME: Resume = {
       {
         id: "proj-2",
         name: "Task Master",
-        description: "A collaborative project management tool with real-time updates.",
+        description:
+          "A collaborative project management tool with real-time updates.",
         technologies: ["Vue.js", "Firebase", "Tailwind CSS"],
         github: "https://github.com/alexjohnson/taskmaster",
       },

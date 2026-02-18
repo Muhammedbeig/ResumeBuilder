@@ -2,7 +2,11 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { json } from "@/lib/json";
-import { panelInternalGet, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  panelInternalPost,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { normalizeResumeData } from "@/lib/resume-data";
 import { getSessionUserId } from "@/lib/session-user";
 
@@ -33,12 +37,16 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const title = typeof body?.title === "string" ? body.title : "Untitled CV";
-  const template = typeof body?.template === "string" ? body.template : "academic-cv";
+  const template =
+    typeof body?.template === "string" ? body.template : "academic-cv";
   const data = normalizeResumeData(body?.data);
   const source = typeof body?.source === "string" ? body.source : "manual";
 
   try {
-    const result = await panelInternalPost<{ cv: any; data: Record<string, unknown> }>("cvs", {
+    const result = await panelInternalPost<{
+      cv: any;
+      data: Record<string, unknown>;
+    }>("cvs", {
       userId,
       body: {
         title,

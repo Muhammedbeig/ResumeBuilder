@@ -50,13 +50,19 @@ type PdfQueueGlobal = {
   concurrency?: number;
 };
 
-const DEFAULT_CONCURRENCY = envInt("PDF_RENDER_CONCURRENCY", envInt("PUPPETEER_CONCURRENCY", 2));
+const DEFAULT_CONCURRENCY = envInt(
+  "PDF_RENDER_CONCURRENCY",
+  envInt("PUPPETEER_CONCURRENCY", 2),
+);
 const DEFAULT_TIMEOUT_MS = envInt("PDF_RENDER_TIMEOUT_MS", 45_000);
 
 const globalPdfQueue = globalThis as unknown as PdfQueueGlobal;
 
 function getQueue(concurrency: number) {
-  const normalized = Math.max(1, Math.floor(concurrency || DEFAULT_CONCURRENCY));
+  const normalized = Math.max(
+    1,
+    Math.floor(concurrency || DEFAULT_CONCURRENCY),
+  );
   if (!globalPdfQueue.queue) {
     globalPdfQueue.queue = new AsyncQueue(normalized);
     globalPdfQueue.concurrency = normalized;
@@ -89,9 +95,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 
 export async function runPdfRenderTask<T>(
   task: QueueTask<T>,
-  options?: { concurrency?: number; timeoutMs?: number }
+  options?: { concurrency?: number; timeoutMs?: number },
 ): Promise<T> {
   const queue = getQueue(options?.concurrency ?? DEFAULT_CONCURRENCY);
-  return queue.run(() => withTimeout(task(), options?.timeoutMs ?? DEFAULT_TIMEOUT_MS)) as Promise<T>;
+  return queue.run(() =>
+    withTimeout(task(), options?.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+  ) as Promise<T>;
 }
-

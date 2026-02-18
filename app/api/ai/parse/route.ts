@@ -95,8 +95,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ data: parsed });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "AI request failed";
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
-

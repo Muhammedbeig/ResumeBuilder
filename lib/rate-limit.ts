@@ -21,7 +21,10 @@ export const RATE_LIMITS = {
   ai: envInt("RATE_LIMIT_AI", 20),
   aiHeavy: envInt("RATE_LIMIT_AI_HEAVY", 10),
   pdf: envInt("RATE_LIMIT_PDF", 20),
-  pdfExport: envInt("RATE_LIMIT_PDF_EXPORT", envInt("RATE_LIMIT_PUPPETEER", 12)),
+  pdfExport: envInt(
+    "RATE_LIMIT_PDF_EXPORT",
+    envInt("RATE_LIMIT_PUPPETEER", 12),
+  ),
 };
 
 function getClientIp(req: Request): string {
@@ -68,7 +71,7 @@ export function rateLimit(req: Request, options: RateLimitOptions) {
           "X-RateLimit-Remaining": String(remaining),
           "X-RateLimit-Reset": String(Math.ceil(entry.resetAt / 1000)),
         },
-      }
+      },
     );
   }
 

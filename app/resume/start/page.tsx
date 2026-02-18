@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { FileUp, Plus, Upload, FileText, Loader2, Sparkles } from "lucide-react";
+import {
+  FileUp,
+  Plus,
+  Upload,
+  FileText,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useResume } from "@/contexts/ResumeContext";
@@ -57,7 +64,9 @@ export default function StartResumePage() {
     router.push("/resume/new");
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (!session?.user) {
       toast.error("Please sign in to use the AI import feature");
       router.push(`/login?callbackUrl=${window.location.pathname}`);
@@ -103,7 +112,9 @@ export default function StartResumePage() {
           return;
         }
         if (parseRes.status === 401) {
-          toast.error("Please sign in to use the AI import feature", { id: toastId });
+          toast.error("Please sign in to use the AI import feature", {
+            id: toastId,
+          });
           router.push(`/login?callbackUrl=${window.location.pathname}`);
           return;
         }
@@ -117,7 +128,10 @@ export default function StartResumePage() {
       router.push("/resume/new");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to process Resume. Please try again or start from scratch.", { id: toastId });
+      toast.error(
+        "Failed to process Resume. Please try again or start from scratch.",
+        { id: toastId },
+      );
     } finally {
       setIsUploading(false);
     }
@@ -125,14 +139,18 @@ export default function StartResumePage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             How would you like to start?
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Choose to start with a blank canvas or import your existing resume to get a head start.
+            Choose to start with a blank canvas or import your existing resume
+            to get a head start.
           </p>
         </div>
 
@@ -143,7 +161,10 @@ export default function StartResumePage() {
             whileTap={{ scale: 0.98 }}
             className="h-full"
           >
-            <Card className="h-full cursor-pointer hover:border-purple-500 transition-colors" onClick={handleStartFresh}>
+            <Card
+              className="h-full cursor-pointer hover:border-purple-500 transition-colors"
+              onClick={handleStartFresh}
+            >
               <CardContent className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
                 <div className="w-20 h-20 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                   <Plus className="w-10 h-10 text-purple-600 dark:text-purple-400" />
@@ -153,7 +174,8 @@ export default function StartResumePage() {
                     Create from Scratch
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Choose a professional template and build your Resume section by section.
+                    Choose a professional template and build your Resume section
+                    by section.
                   </p>
                 </div>
                 <Button variant="outline" className="w-full">
@@ -191,11 +213,16 @@ export default function StartResumePage() {
                     Import Existing Resume
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Upload your current PDF resume and let AI extract your information automatically.
+                    Upload your current PDF resume and let AI extract your
+                    information automatically.
                   </p>
                 </div>
                 <div className="relative w-full">
-                  <Button variant="outline" className="w-full" disabled={isUploading}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={isUploading}
+                  >
                     {isUploading ? "Processing..." : "Upload PDF"}
                   </Button>
                   <input

@@ -96,7 +96,8 @@ export default function CareerManagementPage() {
 
   const hasAnnualAccess = useMemo(() => {
     const planId =
-      serverSubscription?.subscriptionPlanId ?? session?.user?.subscriptionPlanId;
+      serverSubscription?.subscriptionPlanId ??
+      session?.user?.subscriptionPlanId;
     const subscription =
       serverSubscription?.subscription ?? session?.user?.subscription;
     return planId === "annual" || subscription === "business";
@@ -210,7 +211,8 @@ export default function CareerManagementPage() {
       setPeriodLabel(data?.report?.periodLabel || "");
       toast.success("Report generated and saved to Analytics");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to generate report";
+      const message =
+        error instanceof Error ? error.message : "Failed to generate report";
       toast.error(message);
     } finally {
       setIsGenerating(false);
@@ -274,23 +276,38 @@ export default function CareerManagementPage() {
                 Career Management
               </h1>
               <p className="text-gray-600 dark:text-gray-400 max-w-2xl mt-2">
-                Advanced quarterly intelligence that tracks your market value, competitive positioning, and skill momentum.
+                Advanced quarterly intelligence that tracks your market value,
+                competitive positioning, and skill momentum.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4">
-                <p className="text-xs uppercase tracking-wider text-gray-400">Insight cadence</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Quarterly</p>
-                <p className="text-xs text-gray-500">Recalibrated market value</p>
+                <p className="text-xs uppercase tracking-wider text-gray-400">
+                  Insight cadence
+                </p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Quarterly
+                </p>
+                <p className="text-xs text-gray-500">
+                  Recalibrated market value
+                </p>
               </div>
               <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4">
-                <p className="text-xs uppercase tracking-wider text-gray-400">Signal coverage</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Salary + Skills</p>
+                <p className="text-xs uppercase tracking-wider text-gray-400">
+                  Signal coverage
+                </p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Salary + Skills
+                </p>
                 <p className="text-xs text-gray-500">Demand shifts & gaps</p>
               </div>
               <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4">
-                <p className="text-xs uppercase tracking-wider text-gray-400">Positioning</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Competitive Edge</p>
+                <p className="text-xs uppercase tracking-wider text-gray-400">
+                  Positioning
+                </p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Competitive Edge
+                </p>
                 <p className="text-xs text-gray-500">Benchmarked to peers</p>
               </div>
             </div>
@@ -302,14 +319,20 @@ export default function CareerManagementPage() {
             <CardTitle>Import Resume Snapshot</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Tabs value={source} onValueChange={(value) => setSource(value as "resume" | "upload")}>
+            <Tabs
+              value={source}
+              onValueChange={(value) => setSource(value as "resume" | "upload")}
+            >
               <TabsList className="grid w-full grid-cols-2 max-w-md">
                 <TabsTrigger value="resume">Existing Resume</TabsTrigger>
                 <TabsTrigger value="upload">Upload PDF</TabsTrigger>
               </TabsList>
               <TabsContent value="resume" className="space-y-4">
                 <Label>Select a resume</Label>
-                <Select value={selectedResumeId} onValueChange={setSelectedResumeId}>
+                <Select
+                  value={selectedResumeId}
+                  onValueChange={setSelectedResumeId}
+                >
                   <SelectTrigger className="bg-white/70 dark:bg-gray-900/60 border-gray-200 dark:border-gray-800">
                     <SelectValue placeholder="Choose a resume" />
                   </SelectTrigger>
@@ -337,7 +360,9 @@ export default function CareerManagementPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {file ? file.name : "Choose a PDF to upload"}
                       </p>
-                      <p className="text-xs text-gray-500">PDF only - Max 10MB</p>
+                      <p className="text-xs text-gray-500">
+                        PDF only - Max 10MB
+                      </p>
                     </div>
                     <Label
                       htmlFor="resume-upload"
@@ -386,28 +411,41 @@ export default function CareerManagementPage() {
         {report && (
           <Card className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
             <CardHeader>
-              <CardTitle>Quarterly Market Value Report {periodLabel ? `(${periodLabel})` : ""}</CardTitle>
+              <CardTitle>
+                Quarterly Market Value Report{" "}
+                {periodLabel ? `(${periodLabel})` : ""}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {report.summary && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Summary</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{report.summary}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Summary
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {report.summary}
+                  </p>
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white/60 dark:bg-gray-900/40">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Salary Benchmark</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Salary Benchmark
+                  </h3>
                   <p className="text-gray-600 dark:text-gray-400">
                     {report.salaryBenchmark?.range || "Not available"}
                   </p>
                   {report.salaryBenchmark?.notes && (
-                    <p className="text-sm text-gray-500 mt-2">{report.salaryBenchmark.notes}</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {report.salaryBenchmark.notes}
+                    </p>
                   )}
                 </div>
                 <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white/60 dark:bg-gray-900/40">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Market Trend</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Market Trend
+                  </h3>
                   <p className="text-gray-600 dark:text-gray-400 capitalize">
                     {report.trendIdentification?.market || "neutral"}
                   </p>
@@ -423,18 +461,42 @@ export default function CareerManagementPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white/60 dark:bg-gray-900/40">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Skill Demand</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Skill Demand
+                  </h3>
                   <div className="text-sm text-gray-500 space-y-2">
-                    <p>Increasing: {(report.skillDemand?.increasing || []).join(", ") || "N/A"}</p>
-                    <p>Emerging: {(report.skillDemand?.emerging || []).join(", ") || "N/A"}</p>
-                    <p>Decreasing: {(report.skillDemand?.decreasing || []).join(", ") || "N/A"}</p>
+                    <p>
+                      Increasing:{" "}
+                      {(report.skillDemand?.increasing || []).join(", ") ||
+                        "N/A"}
+                    </p>
+                    <p>
+                      Emerging:{" "}
+                      {(report.skillDemand?.emerging || []).join(", ") || "N/A"}
+                    </p>
+                    <p>
+                      Decreasing:{" "}
+                      {(report.skillDemand?.decreasing || []).join(", ") ||
+                        "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white/60 dark:bg-gray-900/40">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Competitive Positioning</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Competitive Positioning
+                  </h3>
                   <div className="text-sm text-gray-500 space-y-2">
-                    <p>Strengths: {(report.competitivePositioning?.strengths || []).join(", ") || "N/A"}</p>
-                    <p>Gaps: {(report.competitivePositioning?.gaps || []).join(", ") || "N/A"}</p>
+                    <p>
+                      Strengths:{" "}
+                      {(report.competitivePositioning?.strengths || []).join(
+                        ", ",
+                      ) || "N/A"}
+                    </p>
+                    <p>
+                      Gaps:{" "}
+                      {(report.competitivePositioning?.gaps || []).join(", ") ||
+                        "N/A"}
+                    </p>
                     {report.competitivePositioning?.peerComparison && (
                       <p>{report.competitivePositioning.peerComparison}</p>
                     )}
@@ -442,16 +504,19 @@ export default function CareerManagementPage() {
                 </div>
               </div>
 
-              {report.recommendedActions && report.recommendedActions.length > 0 && (
-                <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white/60 dark:bg-gray-900/40">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Recommended Actions</h3>
-                  <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
-                    {report.recommendedActions.map((action, idx) => (
-                      <li key={`${action}-${idx}`}>{action}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {report.recommendedActions &&
+                report.recommendedActions.length > 0 && (
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white/60 dark:bg-gray-900/40">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      Recommended Actions
+                    </h3>
+                    <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
+                      {report.recommendedActions.map((action, idx) => (
+                        <li key={`${action}-${idx}`}>{action}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
             </CardContent>
           </Card>
         )}

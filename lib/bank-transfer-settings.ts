@@ -33,12 +33,15 @@ function parseEnabled(value: string): boolean | null {
   const normalized = value.trim().toLowerCase();
   if (!normalized) return null;
   if (["1", "true", "yes", "on", "enabled"].includes(normalized)) return true;
-  if (["0", "false", "no", "off", "disabled"].includes(normalized)) return false;
+  if (["0", "false", "no", "off", "disabled"].includes(normalized))
+    return false;
   return null;
 }
 
 async function readSettings(): Promise<Record<string, string>> {
-  const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+  const data = await panelInternalPost<{
+    settings: Record<string, string | null>;
+  }>("settings/batch", {
     body: { keys: [...SETTINGS_KEYS] },
   });
   const map: Record<string, string> = {};
@@ -59,7 +62,8 @@ async function getBankTransferSettingsBundle(): Promise<BankTransferSettingsBund
     accountHolderName: BANK_TRANSFER_DETAILS.accountName,
     bankName: BANK_TRANSFER_DETAILS.bankName,
     accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
-    ifscSwiftCode: BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
+    ifscSwiftCode:
+      BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
   };
 
   let settings: Record<string, string> | null = null;
@@ -88,7 +92,9 @@ async function getBankTransferSettingsBundle(): Promise<BankTransferSettingsBund
     ifscSwiftCode: normalize(settings.ifsc_swift_code),
   };
 
-  const adminEmail = normalize(settings.bank_transfer_admin_email) || normalize(settings.company_email);
+  const adminEmail =
+    normalize(settings.bank_transfer_admin_email) ||
+    normalize(settings.company_email);
 
   cached = {
     bankTransfer: resolvedBank,

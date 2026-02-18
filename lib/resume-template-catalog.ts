@@ -82,53 +82,181 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 };
 
 export const RESUME_TEMPLATE_CATEGORIES: ResumeTemplateCategory[] = [
-  { slug: "professional", label: "Professional", description: CATEGORY_DESCRIPTIONS.professional },
-  { slug: "modern", label: "Modern", description: CATEGORY_DESCRIPTIONS.modern },
-  { slug: "corporate", label: "Corporate", description: CATEGORY_DESCRIPTIONS.corporate },
-  { slug: "minimal", label: "Minimal", description: CATEGORY_DESCRIPTIONS.minimal },
-  { slug: "creative", label: "Creative", description: CATEGORY_DESCRIPTIONS.creative },
-  { slug: "monochrome", label: "Monochrome", description: CATEGORY_DESCRIPTIONS.monochrome },
-  { slug: "elegant", label: "Elegant", description: CATEGORY_DESCRIPTIONS.elegant },
-  { slug: "geometric", label: "Geometric", description: CATEGORY_DESCRIPTIONS.geometric },
+  {
+    slug: "professional",
+    label: "Professional",
+    description: CATEGORY_DESCRIPTIONS.professional,
+  },
+  {
+    slug: "modern",
+    label: "Modern",
+    description: CATEGORY_DESCRIPTIONS.modern,
+  },
+  {
+    slug: "corporate",
+    label: "Corporate",
+    description: CATEGORY_DESCRIPTIONS.corporate,
+  },
+  {
+    slug: "minimal",
+    label: "Minimal",
+    description: CATEGORY_DESCRIPTIONS.minimal,
+  },
+  {
+    slug: "creative",
+    label: "Creative",
+    description: CATEGORY_DESCRIPTIONS.creative,
+  },
+  {
+    slug: "monochrome",
+    label: "Monochrome",
+    description: CATEGORY_DESCRIPTIONS.monochrome,
+  },
+  {
+    slug: "elegant",
+    label: "Elegant",
+    description: CATEGORY_DESCRIPTIONS.elegant,
+  },
+  {
+    slug: "geometric",
+    label: "Geometric",
+    description: CATEGORY_DESCRIPTIONS.geometric,
+  },
   { slug: "line", label: "Line", description: CATEGORY_DESCRIPTIONS.line },
   { slug: "photo", label: "Photo", description: CATEGORY_DESCRIPTIONS.photo },
-  { slug: "feminine", label: "Feminine", description: CATEGORY_DESCRIPTIONS.feminine },
-  { slug: "classic", label: "Classic", description: CATEGORY_DESCRIPTIONS.classic },
+  {
+    slug: "feminine",
+    label: "Feminine",
+    description: CATEGORY_DESCRIPTIONS.feminine,
+  },
+  {
+    slug: "classic",
+    label: "Classic",
+    description: CATEGORY_DESCRIPTIONS.classic,
+  },
   { slug: "bold", label: "Bold", description: CATEGORY_DESCRIPTIONS.bold },
-  { slug: "aesthetic", label: "Aesthetic", description: CATEGORY_DESCRIPTIONS.aesthetic },
+  {
+    slug: "aesthetic",
+    label: "Aesthetic",
+    description: CATEGORY_DESCRIPTIONS.aesthetic,
+  },
   { slug: "tech", label: "Tech", description: CATEGORY_DESCRIPTIONS.tech },
-  { slug: "colorful", label: "Colorful", description: CATEGORY_DESCRIPTIONS.colorful },
+  {
+    slug: "colorful",
+    label: "Colorful",
+    description: CATEGORY_DESCRIPTIONS.colorful,
+  },
   { slug: "dark", label: "Dark", description: CATEGORY_DESCRIPTIONS.dark },
   { slug: "retro", label: "Retro", description: CATEGORY_DESCRIPTIONS.retro },
-  { slug: "playful", label: "Playful", description: CATEGORY_DESCRIPTIONS.playful },
-  { slug: "classy", label: "Classy", description: CATEGORY_DESCRIPTIONS.classy },
-  { slug: "purple", label: "Purple", description: CATEGORY_DESCRIPTIONS.purple },
+  {
+    slug: "playful",
+    label: "Playful",
+    description: CATEGORY_DESCRIPTIONS.playful,
+  },
+  {
+    slug: "classy",
+    label: "Classy",
+    description: CATEGORY_DESCRIPTIONS.classy,
+  },
+  {
+    slug: "purple",
+    label: "Purple",
+    description: CATEGORY_DESCRIPTIONS.purple,
+  },
   { slug: "fancy", label: "Fancy", description: CATEGORY_DESCRIPTIONS.fancy },
-  { slug: "infographic", label: "Infographic", description: CATEGORY_DESCRIPTIONS.infographic },
+  {
+    slug: "infographic",
+    label: "Infographic",
+    description: CATEGORY_DESCRIPTIONS.infographic,
+  },
   { slug: "gold", label: "Gold", description: CATEGORY_DESCRIPTIONS.gold },
   { slug: "grid", label: "Grid", description: CATEGORY_DESCRIPTIONS.grid },
-  { slug: "gradient", label: "Gradient", description: CATEGORY_DESCRIPTIONS.gradient },
-  { slug: "abstract", label: "Abstract", description: CATEGORY_DESCRIPTIONS.abstract },
-  { slug: "border", label: "Border", description: CATEGORY_DESCRIPTIONS.border },
-  { slug: "rectangle", label: "Rectangle", description: CATEGORY_DESCRIPTIONS.rectangle },
+  {
+    slug: "gradient",
+    label: "Gradient",
+    description: CATEGORY_DESCRIPTIONS.gradient,
+  },
+  {
+    slug: "abstract",
+    label: "Abstract",
+    description: CATEGORY_DESCRIPTIONS.abstract,
+  },
+  {
+    slug: "border",
+    label: "Border",
+    description: CATEGORY_DESCRIPTIONS.border,
+  },
+  {
+    slug: "rectangle",
+    label: "Rectangle",
+    description: CATEGORY_DESCRIPTIONS.rectangle,
+  },
   { slug: "new", label: "New", description: CATEGORY_DESCRIPTIONS.new },
-  { slug: "luxury", label: "Luxury", description: CATEGORY_DESCRIPTIONS.luxury },
-  { slug: "illustrated", label: "Illustrated", description: CATEGORY_DESCRIPTIONS.illustrated },
-  { slug: "vibrant", label: "Vibrant", description: CATEGORY_DESCRIPTIONS.vibrant },
-  { slug: "organic", label: "Organic", description: CATEGORY_DESCRIPTIONS.organic },
+  {
+    slug: "luxury",
+    label: "Luxury",
+    description: CATEGORY_DESCRIPTIONS.luxury,
+  },
+  {
+    slug: "illustrated",
+    label: "Illustrated",
+    description: CATEGORY_DESCRIPTIONS.illustrated,
+  },
+  {
+    slug: "vibrant",
+    label: "Vibrant",
+    description: CATEGORY_DESCRIPTIONS.vibrant,
+  },
+  {
+    slug: "organic",
+    label: "Organic",
+    description: CATEGORY_DESCRIPTIONS.organic,
+  },
   { slug: "fun", label: "Fun", description: CATEGORY_DESCRIPTIONS.fun },
   { slug: "logo", label: "Logo", description: CATEGORY_DESCRIPTIONS.logo },
   { slug: "light", label: "Light", description: CATEGORY_DESCRIPTIONS.light },
-  { slug: "shapes", label: "Shapes", description: CATEGORY_DESCRIPTIONS.shapes },
-  { slug: "watercolor", label: "Watercolor", description: CATEGORY_DESCRIPTIONS.watercolor },
-  { slug: "digital", label: "Digital", description: CATEGORY_DESCRIPTIONS.digital },
-  { slug: "pastel", label: "Pastel", description: CATEGORY_DESCRIPTIONS.pastel },
+  {
+    slug: "shapes",
+    label: "Shapes",
+    description: CATEGORY_DESCRIPTIONS.shapes,
+  },
+  {
+    slug: "watercolor",
+    label: "Watercolor",
+    description: CATEGORY_DESCRIPTIONS.watercolor,
+  },
+  {
+    slug: "digital",
+    label: "Digital",
+    description: CATEGORY_DESCRIPTIONS.digital,
+  },
+  {
+    slug: "pastel",
+    label: "Pastel",
+    description: CATEGORY_DESCRIPTIONS.pastel,
+  },
   { slug: "frame", label: "Frame", description: CATEGORY_DESCRIPTIONS.frame },
-  { slug: "collage", label: "Collage", description: CATEGORY_DESCRIPTIONS.collage },
+  {
+    slug: "collage",
+    label: "Collage",
+    description: CATEGORY_DESCRIPTIONS.collage,
+  },
   { slug: "cute", label: "Cute", description: CATEGORY_DESCRIPTIONS.cute },
-  { slug: "grunge", label: "Grunge", description: CATEGORY_DESCRIPTIONS.grunge },
-  { slug: "modular", label: "Modular", description: CATEGORY_DESCRIPTIONS.modular },
-  { slug: "pattern", label: "Pattern", description: CATEGORY_DESCRIPTIONS.pattern },
+  {
+    slug: "grunge",
+    label: "Grunge",
+    description: CATEGORY_DESCRIPTIONS.grunge,
+  },
+  {
+    slug: "modular",
+    label: "Modular",
+    description: CATEGORY_DESCRIPTIONS.modular,
+  },
+  {
+    slug: "pattern",
+    label: "Pattern",
+    description: CATEGORY_DESCRIPTIONS.pattern,
+  },
 ];
 
 const BODY_FONTS = [
@@ -224,7 +352,8 @@ const STYLE_SETS = [
   {
     background: {
       backgroundColor: "#0f172a",
-      backgroundImage: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #111827 100%)",
+      backgroundImage:
+        "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #111827 100%)",
     },
     palette: {
       text: "#f8fafc",
@@ -248,7 +377,8 @@ const STYLE_SETS = [
   {
     background: {
       backgroundColor: "#1f1147",
-      backgroundImage: "linear-gradient(135deg, #1f1147 0%, #2e1065 60%, #0f172a 100%)",
+      backgroundImage:
+        "linear-gradient(135deg, #1f1147 0%, #2e1065 60%, #0f172a 100%)",
     },
     palette: {
       text: "#f8fafc",
@@ -298,7 +428,8 @@ const STYLE_SETS = [
   {
     background: {
       backgroundColor: "#0b1220",
-      backgroundImage: "linear-gradient(135deg, #0b1220 0%, #111827 65%, #0f172a 100%)",
+      backgroundImage:
+        "linear-gradient(135deg, #0b1220 0%, #111827 65%, #0f172a 100%)",
     },
     palette: {
       text: "#f8fafc",
@@ -329,14 +460,48 @@ const LAYOUTS: ResumeTemplateCatalogEntry["layout"][] = [
   "cards",
 ];
 
-const HEADER_STYLES: ResumeTemplateCatalogEntry["headerStyle"][] = ["center", "split", "left"];
-const SECTION_STYLES: ResumeTemplateCatalogEntry["sectionStyle"][] = ["caps", "underline", "pill", "stripe"];
-const BULLET_STYLES: ResumeTemplateCatalogEntry["bulletStyle"][] = ["dot", "dash", "diamond", "line"];
-const ORNAMENTS: ResumeTemplateCatalogEntry["ornament"][] = ["orbs", "grid", "stripes", "corner", "badge", "none"];
+const HEADER_STYLES: ResumeTemplateCatalogEntry["headerStyle"][] = [
+  "center",
+  "split",
+  "left",
+];
+const SECTION_STYLES: ResumeTemplateCatalogEntry["sectionStyle"][] = [
+  "caps",
+  "underline",
+  "pill",
+  "stripe",
+];
+const BULLET_STYLES: ResumeTemplateCatalogEntry["bulletStyle"][] = [
+  "dot",
+  "dash",
+  "diamond",
+  "line",
+];
+const ORNAMENTS: ResumeTemplateCatalogEntry["ornament"][] = [
+  "orbs",
+  "grid",
+  "stripes",
+  "corner",
+  "badge",
+  "none",
+];
 
-const NAME_SUFFIXES = ["Studio", "Prime", "Edition", "Flow", "Line", "Stack", "Aura", "Wave", "Vista", "Core"];
+const NAME_SUFFIXES = [
+  "Studio",
+  "Prime",
+  "Edition",
+  "Flow",
+  "Line",
+  "Stack",
+  "Aura",
+  "Wave",
+  "Vista",
+  "Core",
+];
 
-const CATEGORY_OVERRIDES: Partial<Record<string, Partial<ResumeTemplateCatalogEntry>>> = {
+const CATEGORY_OVERRIDES: Partial<
+  Record<string, Partial<ResumeTemplateCatalogEntry>>
+> = {
   monochrome: {
     background: {
       backgroundColor: "#ffffff",
@@ -355,7 +520,8 @@ const CATEGORY_OVERRIDES: Partial<Record<string, Partial<ResumeTemplateCatalogEn
   dark: {
     background: {
       backgroundColor: "#0b0f1a",
-      backgroundImage: "linear-gradient(135deg, #0b0f1a 0%, #111827 60%, #0f172a 100%)",
+      backgroundImage:
+        "linear-gradient(135deg, #0b0f1a 0%, #111827 60%, #0f172a 100%)",
     },
     palette: {
       text: "#f8fafc",
@@ -434,8 +600,8 @@ const resolveHeadingFont = (bodyFont: string, index: number) => {
   return candidate;
 };
 
-export const RESUME_TEMPLATE_CATALOG: ResumeTemplateCatalogEntry[] = RESUME_TEMPLATE_CATEGORIES.map(
-  (category, index) => {
+export const RESUME_TEMPLATE_CATALOG: ResumeTemplateCatalogEntry[] =
+  RESUME_TEMPLATE_CATEGORIES.map((category, index) => {
     const layout = LAYOUTS[index % LAYOUTS.length];
     const headerStyle =
       HEADER_STYLES[Math.floor(index / LAYOUTS.length) % HEADER_STYLES.length];
@@ -448,7 +614,7 @@ export const RESUME_TEMPLATE_CATALOG: ResumeTemplateCatalogEntry[] = RESUME_TEMP
       BULLET_STYLES[
         Math.floor(
           index /
-            (LAYOUTS.length * HEADER_STYLES.length * SECTION_STYLES.length)
+            (LAYOUTS.length * HEADER_STYLES.length * SECTION_STYLES.length),
         ) % BULLET_STYLES.length
       ];
     const ornament =
@@ -458,7 +624,7 @@ export const RESUME_TEMPLATE_CATALOG: ResumeTemplateCatalogEntry[] = RESUME_TEMP
             (LAYOUTS.length *
               HEADER_STYLES.length *
               SECTION_STYLES.length *
-              BULLET_STYLES.length)
+              BULLET_STYLES.length),
         ) % ORNAMENTS.length
       ];
     const styleSet = STYLE_SETS[index % STYLE_SETS.length];
@@ -490,28 +656,30 @@ export const RESUME_TEMPLATE_CATALOG: ResumeTemplateCatalogEntry[] = RESUME_TEMP
       ...baseConfig,
       ...override,
       palette: override.palette ? override.palette : baseConfig.palette,
-      background: override.background ? override.background : baseConfig.background,
+      background: override.background
+        ? override.background
+        : baseConfig.background,
     };
-  }
-);
+  });
 
-export const RESUME_TEMPLATE_CATALOG_BY_CATEGORY = RESUME_TEMPLATE_CATALOG.reduce(
-  (acc, template) => {
-    if (!acc[template.category]) acc[template.category] = [];
-    acc[template.category].push(template);
-    return acc;
-  },
-  {} as Record<string, ResumeTemplateCatalogEntry[]>
-);
+export const RESUME_TEMPLATE_CATALOG_BY_CATEGORY =
+  RESUME_TEMPLATE_CATALOG.reduce(
+    (acc, template) => {
+      if (!acc[template.category]) acc[template.category] = [];
+      acc[template.category].push(template);
+      return acc;
+    },
+    {} as Record<string, ResumeTemplateCatalogEntry[]>,
+  );
 
 export const RESUME_TEMPLATE_CATALOG_MAP = RESUME_TEMPLATE_CATALOG.reduce(
   (acc, template) => {
     acc[template.id] = template;
     return acc;
   },
-  {} as Record<string, ResumeTemplateCatalogEntry>
+  {} as Record<string, ResumeTemplateCatalogEntry>,
 );
 
 export const RESUME_TEMPLATE_CATEGORY_SLUGS = RESUME_TEMPLATE_CATEGORIES.map(
-  (category) => category.slug
+  (category) => category.slug,
 );

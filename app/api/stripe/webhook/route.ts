@@ -11,13 +11,19 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(request: Request) {
   if (!webhookSecret) {
-    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Webhook secret not configured" },
+      { status: 500 },
+    );
   }
 
   const headerList = await headers();
   const signature = headerList.get("stripe-signature");
   if (!signature) {
-    return NextResponse.json({ error: "Missing Stripe signature" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing Stripe signature" },
+      { status: 400 },
+    );
   }
 
   const payload = await request.text();

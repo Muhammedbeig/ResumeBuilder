@@ -15,9 +15,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <ResumeProvider>
             <CVProvider>
-              <CoverLetterProvider>
-                {children}
-              </CoverLetterProvider>
+              <CoverLetterProvider>{children}</CoverLetterProvider>
             </CVProvider>
           </ResumeProvider>
         </ThemeProvider>

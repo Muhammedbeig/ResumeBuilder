@@ -22,8 +22,7 @@ export const previewCoverLetterData: CoverLetterData = {
     greeting: "Dear Ms. Connor,",
     opening:
       "I am excited to apply for the Senior Product Designer role at TechCorp Inc.",
-    body:
-      "With 7+ years of product design experience, I have led design systems and UX improvements that increased activation and reduced churn across SaaS products.",
+    body: "With 7+ years of product design experience, I have led design systems and UX improvements that increased activation and reduced churn across SaaS products.",
     closing: "Thank you for your time and consideration.",
     signature: "Alex Morgan",
   },

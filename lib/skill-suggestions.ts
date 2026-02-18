@@ -19,7 +19,14 @@ const uniqueList = (items: string[]) => {
 
 const SKILL_BUCKETS: SkillBucket[] = [
   {
-    keywords: ["machine learning", "ml", "ai", "data scientist", "deep learning", "model"],
+    keywords: [
+      "machine learning",
+      "ml",
+      "ai",
+      "data scientist",
+      "deep learning",
+      "model",
+    ],
     skills: [
       "Python",
       "PyTorch",
@@ -36,10 +43,26 @@ const SKILL_BUCKETS: SkillBucket[] = [
   },
   {
     keywords: ["data analyst", "analytics", "bi", "dashboard", "insights"],
-    skills: ["SQL", "Excel", "Power BI", "Tableau", "Python", "Pandas", "Looker"],
+    skills: [
+      "SQL",
+      "Excel",
+      "Power BI",
+      "Tableau",
+      "Python",
+      "Pandas",
+      "Looker",
+    ],
   },
   {
-    keywords: ["frontend", "front end", "ui", "ux", "web", "react", "javascript"],
+    keywords: [
+      "frontend",
+      "front end",
+      "ui",
+      "ux",
+      "web",
+      "react",
+      "javascript",
+    ],
     skills: [
       "HTML",
       "CSS",
@@ -53,7 +76,15 @@ const SKILL_BUCKETS: SkillBucket[] = [
     ],
   },
   {
-    keywords: ["backend", "back end", "api", "server", "node", "django", "flask"],
+    keywords: [
+      "backend",
+      "back end",
+      "api",
+      "server",
+      "node",
+      "django",
+      "flask",
+    ],
     skills: [
       "Node.js",
       "Express",
@@ -96,7 +127,14 @@ const SKILL_BUCKETS: SkillBucket[] = [
   },
   {
     keywords: ["product manager", "product owner", "roadmap", "agile"],
-    skills: ["Jira", "Agile", "Scrum", "OKRs", "A/B Testing", "Product Analytics"],
+    skills: [
+      "Jira",
+      "Agile",
+      "Scrum",
+      "OKRs",
+      "A/B Testing",
+      "Product Analytics",
+    ],
   },
   {
     keywords: ["marketing", "seo", "growth", "content", "campaign"],
@@ -138,25 +176,29 @@ const buildSignalTextFromRaw = (inputs: string[]) =>
 export const getSkillSuggestionsFromProfile = (
   title: string,
   experiences: Experience[],
-  limit = 20
+  limit = 20,
 ) => {
   const signal = buildSignalText(title, experiences);
   const skills = SKILL_BUCKETS.filter((bucket) =>
-    bucket.keywords.some((keyword) => signal.includes(keyword))
+    bucket.keywords.some((keyword) => signal.includes(keyword)),
   ).flatMap((bucket) => bucket.skills);
 
   const result = uniqueList(skills);
-  return result.length > 0 ? result.slice(0, limit) : FALLBACK_SKILLS.slice(0, limit);
+  return result.length > 0
+    ? result.slice(0, limit)
+    : FALLBACK_SKILLS.slice(0, limit);
 };
 
 export const getSkillSuggestionsFromText = (inputs: string[], limit = 20) => {
   const signal = buildSignalTextFromRaw(inputs);
   const skills = SKILL_BUCKETS.filter((bucket) =>
-    bucket.keywords.some((keyword) => signal.includes(keyword))
+    bucket.keywords.some((keyword) => signal.includes(keyword)),
   ).flatMap((bucket) => bucket.skills);
 
   const result = uniqueList(skills);
-  return result.length > 0 ? result.slice(0, limit) : FALLBACK_SKILLS.slice(0, limit);
+  return result.length > 0
+    ? result.slice(0, limit)
+    : FALLBACK_SKILLS.slice(0, limit);
 };
 
 export const mergeSkillSuggestions = (lists: string[][], limit = 30) => {

@@ -4,29 +4,34 @@ import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
 import { getPasswordPolicyError, normalizeName } from "@/lib/auth-validation";
-import { panelInternalPatch, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalPatch,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 
-const updateSchema = z.object({
-  name: z
-    .string()
-    .transform((value) => normalizeName(value))
-    .pipe(z.string().min(2).max(80))
-    .optional(),
-  image: z.string().optional(),
-  currentPassword: z.string().min(1).optional(),
-  newPassword: z.string().optional(),
-}).superRefine((payload, ctx) => {
-  if (!payload.newPassword) return;
-  const passwordError = getPasswordPolicyError(payload.newPassword);
-  if (passwordError) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["newPassword"],
-      message: passwordError,
-    });
-  }
-});
+const updateSchema = z
+  .object({
+    name: z
+      .string()
+      .transform((value) => normalizeName(value))
+      .pipe(z.string().min(2).max(80))
+      .optional(),
+    image: z.string().optional(),
+    currentPassword: z.string().min(1).optional(),
+    newPassword: z.string().optional(),
+  })
+  .superRefine((payload, ctx) => {
+    if (!payload.newPassword) return;
+    const passwordError = getPasswordPolicyError(payload.newPassword);
+    if (passwordError) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPassword"],
+        message: passwordError,
+      });
+    }
+  });
 
 type UpdatePayload = z.infer<typeof updateSchema>;
 
@@ -51,20 +56,32 @@ export async function PUT(req: Request) {
     const body = await req.json().catch(() => ({}));
     const result = updateSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ error: "Invalid input", details: result.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid input", details: result.error.flatten() },
+        { status: 400 },
+      );
     }
 
-    const data = await panelInternalPatch<InternalUpdateResponse>("user/profile", {
-      userId,
-      body: result.data as UpdatePayload,
-    });
+    const data = await panelInternalPatch<InternalUpdateResponse>(
+      "user/profile",
+      {
+        userId,
+        body: result.data as UpdatePayload,
+      },
+    );
 
     return NextResponse.json(data);
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 },
+      );
     }
     console.error("Update profile error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

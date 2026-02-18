@@ -48,23 +48,32 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const router = useRouter();
   const { setPlanChoice } = usePlanChoice();
   const isMountedRef = useRef(true);
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
+    null,
+  );
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isPayPalRedirecting, setIsPayPalRedirecting] = useState(false);
-  const safeReturnUrl = useMemo(() => normalizeReturnUrl(returnUrl), [returnUrl]);
+  const safeReturnUrl = useMemo(
+    () => normalizeReturnUrl(returnUrl),
+    [returnUrl],
+  );
   const [isPaymentConfirming, setIsPaymentConfirming] = useState(false);
-  const [bankTransferDetails, setBankTransferDetails] = useState<BankTransferSettings>({
-    enabled: true,
-    accountHolderName: BANK_TRANSFER_DETAILS.accountName,
-    bankName: BANK_TRANSFER_DETAILS.bankName,
-    accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
-    ifscSwiftCode: BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
-  });
-  const [bankTransferEmail, setBankTransferEmail] = useState(BANK_TRANSFER_ADMIN_EMAIL);
+  const [bankTransferDetails, setBankTransferDetails] =
+    useState<BankTransferSettings>({
+      enabled: true,
+      accountHolderName: BANK_TRANSFER_DETAILS.accountName,
+      bankName: BANK_TRANSFER_DETAILS.bankName,
+      accountNumber: BANK_TRANSFER_DETAILS.accountNumber,
+      ifscSwiftCode:
+        BANK_TRANSFER_DETAILS.swift || BANK_TRANSFER_DETAILS.iban || "",
+    });
+  const [bankTransferEmail, setBankTransferEmail] = useState(
+    BANK_TRANSFER_ADMIN_EMAIL,
+  );
   const [bankTransferLoaded, setBankTransferLoaded] = useState(false);
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
   const [stripeEnabled, setStripeEnabled] = useState(true);
@@ -77,15 +86,20 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   }, [flow, safeReturnUrl]);
   const stripeVisible = !paymentSettingsLoaded || stripeEnabled;
   const paypalVisible = !paymentSettingsLoaded || paypalEnabled;
-  const bankTransferAvailable = bankTransferLoaded && bankTransferDetails.enabled;
-  const bankTransferVisible = !bankTransferLoaded || bankTransferDetails.enabled;
+  const bankTransferAvailable =
+    bankTransferLoaded && bankTransferDetails.enabled;
+  const bankTransferVisible =
+    !bankTransferLoaded || bankTransferDetails.enabled;
   const bankTransferLabel = !bankTransferLoaded
     ? "Loading bank details..."
     : bankTransferAvailable
-    ? "Manual verification required"
-    : "Currently unavailable";
+      ? "Manual verification required"
+      : "Currently unavailable";
   const bankDetailRows = [
-    { label: "Account Holder Name", value: bankTransferDetails.accountHolderName },
+    {
+      label: "Account Holder Name",
+      value: bankTransferDetails.accountHolderName,
+    },
     { label: "Bank Name", value: bankTransferDetails.bankName },
     { label: "Account Number", value: bankTransferDetails.accountNumber },
     { label: "IFSC/SWIFT Code", value: bankTransferDetails.ifscSwiftCode },
@@ -96,31 +110,36 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     bankTransferAvailable ? "bank" : null,
   ].filter(Boolean) as PaymentMethod[];
 
-  const pollActivationStatus = useCallback(async (paymentTransactionId?: string | null) => {
-    const deadline = Date.now() + 30_000;
-    while (isMountedRef.current && Date.now() < deadline) {
-      const query = paymentTransactionId
-        ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
-        : "";
-      const res = await fetchWithTimeout(`/api/payment/activation-status${query}`, { cache: "no-store" }, 8000).catch(
-        () => null
-      );
+  const pollActivationStatus = useCallback(
+    async (paymentTransactionId?: string | null) => {
+      const deadline = Date.now() + 30_000;
+      while (isMountedRef.current && Date.now() < deadline) {
+        const query = paymentTransactionId
+          ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
+          : "";
+        const res = await fetchWithTimeout(
+          `/api/payment/activation-status${query}`,
+          { cache: "no-store" },
+          8000,
+        ).catch(() => null);
 
-      if (res && res.ok) {
-        const data: any = await res.json().catch(() => null);
-        if (data?.status === "active") {
-          return { status: "active" as const };
+        if (res && res.ok) {
+          const data: any = await res.json().catch(() => null);
+          if (data?.status === "active") {
+            return { status: "active" as const };
+          }
+          if (data?.status === "failed") {
+            return { status: "failed" as const };
+          }
         }
-        if (data?.status === "failed") {
-          return { status: "failed" as const };
-        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1200));
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-    }
-
-    return { status: "pending" as const };
-  }, []);
+      return { status: "pending" as const };
+    },
+    [],
+  );
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -137,9 +156,12 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     const paypalStatus = current.searchParams.get("paypal");
     if (!stripeStatus && !paypalStatus) return;
 
-    const paymentTransactionId = current.searchParams.get("payment_transaction_id");
+    const paymentTransactionId = current.searchParams.get(
+      "payment_transaction_id",
+    );
     const checkoutSessionId = current.searchParams.get("session_id");
-    const paypalOrderId = current.searchParams.get("order_id") ?? current.searchParams.get("token");
+    const paypalOrderId =
+      current.searchParams.get("order_id") ?? current.searchParams.get("token");
 
     // Remove payment params from the pricing URL so refresh/back doesn't re-run the handler.
     current.searchParams.delete("stripe");
@@ -166,7 +188,10 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       if (stripeStatus === "success") {
         target.searchParams.set("stripe", "success");
         if (paymentTransactionId) {
-          target.searchParams.set("payment_transaction_id", paymentTransactionId);
+          target.searchParams.set(
+            "payment_transaction_id",
+            paymentTransactionId,
+          );
         }
         if (checkoutSessionId) {
           target.searchParams.set("session_id", checkoutSessionId);
@@ -174,7 +199,10 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       } else if (paypalStatus === "success") {
         target.searchParams.set("paypal", "success");
         if (paymentTransactionId) {
-          target.searchParams.set("payment_transaction_id", paymentTransactionId);
+          target.searchParams.set(
+            "payment_transaction_id",
+            paymentTransactionId,
+          );
         }
         if (paypalOrderId) {
           target.searchParams.set("order_id", paypalOrderId);
@@ -188,25 +216,40 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       if (!isMountedRef.current) return;
       setIsPaymentConfirming(true);
       try {
-        if (stripeStatus === "success" && (paymentTransactionId || checkoutSessionId)) {
-          await fetchWithTimeout("/api/stripe/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              paymentTransactionId: paymentTransactionId ?? undefined,
-              sessionId: checkoutSessionId ?? undefined,
-            }),
-          }, 45000).catch(() => null);
+        if (
+          stripeStatus === "success" &&
+          (paymentTransactionId || checkoutSessionId)
+        ) {
+          await fetchWithTimeout(
+            "/api/stripe/confirm",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentTransactionId: paymentTransactionId ?? undefined,
+                sessionId: checkoutSessionId ?? undefined,
+              }),
+            },
+            45000,
+          ).catch(() => null);
         }
-        if (paypalStatus === "success" && paymentTransactionId && paypalOrderId) {
-          await fetchWithTimeout("/api/paypal/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              paymentTransactionId,
-              orderId: paypalOrderId,
-            }),
-          }, 45000).catch(() => null);
+        if (
+          paypalStatus === "success" &&
+          paymentTransactionId &&
+          paypalOrderId
+        ) {
+          await fetchWithTimeout(
+            "/api/paypal/confirm",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentTransactionId,
+                orderId: paypalOrderId,
+              }),
+            },
+            45000,
+          ).catch(() => null);
         }
 
         const activation = await pollActivationStatus(paymentTransactionId);
@@ -231,7 +274,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     void (async () => {
       try {
-        const res = await fetch("/api/bank-transfer/settings", { cache: "no-store" });
+        const res = await fetch("/api/bank-transfer/settings", {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data = (await res.json()) as BankTransferSettingsResponse;
         if (!active) return;
@@ -309,7 +354,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     }
 
     if (!/^\d+$/.test(selectedPackageId)) {
-      toast.error("Stripe checkout is only available when Panel packages are loaded.");
+      toast.error(
+        "Stripe checkout is only available when Panel packages are loaded.",
+      );
       return;
     }
 
@@ -318,15 +365,22 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: pricingCallbackUrl }),
+        body: JSON.stringify({
+          packageId: selectedPackageId,
+          returnUrl: pricingCallbackUrl,
+        }),
       });
       if (response.status === 401) {
-        router.push(`/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`);
+        router.push(
+          `/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`,
+        );
         return;
       }
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        toast.error(data?.error || "Unable to start Stripe checkout. Please try again.");
+        toast.error(
+          data?.error || "Unable to start Stripe checkout. Please try again.",
+        );
         return;
       }
       const data = await response.json();
@@ -350,7 +404,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     }
 
     if (!/^\d+$/.test(selectedPackageId)) {
-      toast.error("PayPal checkout is only available when Panel packages are loaded.");
+      toast.error(
+        "PayPal checkout is only available when Panel packages are loaded.",
+      );
       return;
     }
 
@@ -359,15 +415,22 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       const response = await fetch("/api/paypal/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId: selectedPackageId, returnUrl: pricingCallbackUrl }),
+        body: JSON.stringify({
+          packageId: selectedPackageId,
+          returnUrl: pricingCallbackUrl,
+        }),
       });
       if (response.status === 401) {
-        router.push(`/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`);
+        router.push(
+          `/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`,
+        );
         return;
       }
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        toast.error(data?.error || "Unable to start PayPal checkout. Please try again.");
+        toast.error(
+          data?.error || "Unable to start PayPal checkout. Please try again.",
+        );
         return;
       }
       const data = await response.json();
@@ -401,7 +464,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       });
 
       if (response.status === 401) {
-        router.push(`/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`);
+        router.push(
+          `/login?callbackUrl=${encodeURIComponent(pricingCallbackUrl)}`,
+        );
         return;
       }
 
@@ -409,7 +474,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
         throw new Error("Upload failed");
       }
 
-      toast.success("Receipt submitted. We will verify and activate your subscription.");
+      toast.success(
+        "Receipt submitted. We will verify and activate your subscription.",
+      );
       setReceiptFile(null);
       setIsPaymentOpen(false);
       setSelectedPackageId(null);
@@ -421,7 +488,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   };
 
   const selectedPackage = selectedPackageId
-    ? cards.find((c) => c.packageId === selectedPackageId) ?? null
+    ? (cards.find((c) => c.packageId === selectedPackageId) ?? null)
     : null;
 
   return (
@@ -441,14 +508,17 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
           onInteractOutside={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="text-base text-gray-900 dark:text-gray-100">Activating Your Plan</DialogTitle>
+            <DialogTitle className="text-base text-gray-900 dark:text-gray-100">
+              Activating Your Plan
+            </DialogTitle>
             <DialogDescription className="text-sm text-gray-600 dark:text-gray-300">
               <span className="inline-flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50/70 px-3 py-2 dark:border-purple-900/40 dark:bg-purple-900/20">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-300/50 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 dark:border-purple-500/40">
                   <Spinner className="h-4 w-4 text-purple-600 dark:text-cyan-300" />
                 </span>
                 <span className="text-left">
-                  Confirming your payment and activating your plan... This may take up to 10-15s.
+                  Confirming your payment and activating your plan... This may
+                  take up to 10-15s.
                 </span>
               </span>
             </DialogDescription>
@@ -456,7 +526,10 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isPaymentOpen && !!selectedPackageId} onOpenChange={setIsPaymentOpen}>
+      <Dialog
+        open={isPaymentOpen && !!selectedPackageId}
+        onOpenChange={setIsPaymentOpen}
+      >
         <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] overflow-y-auto rounded-3xl border border-slate-800 bg-slate-950 text-white shadow-2xl">
           <DialogHeader>
             <DialogTitle>Payment Method</DialogTitle>
@@ -468,10 +541,17 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-purple-400">Selected Plan</p>
-                <h3 className="mt-2 text-2xl font-semibold text-white">{selectedPackage?.name}</h3>
+                <p className="text-sm uppercase tracking-[0.3em] text-purple-400">
+                  Selected Plan
+                </p>
+                <h3 className="mt-2 text-2xl font-semibold text-white">
+                  {selectedPackage?.name}
+                </h3>
                 <p className="text-sm text-slate-400">
-                  {selectedPackage?.priceLabel} {selectedPackage?.subtitle ? `- ${selectedPackage.subtitle}` : ""}
+                  {selectedPackage?.priceLabel}{" "}
+                  {selectedPackage?.subtitle
+                    ? `- ${selectedPackage.subtitle}`
+                    : ""}
                 </p>
               </div>
             </div>
@@ -488,8 +568,12 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                         : "border-slate-800 bg-slate-950"
                     }`}
                   >
-                    <p className="text-sm font-semibold text-white">Card (Stripe)</p>
-                    <p className="text-xs text-slate-400">Visa, Mastercard, AMEX</p>
+                    <p className="text-sm font-semibold text-white">
+                      Card (Stripe)
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Visa, Mastercard, AMEX
+                    </p>
                   </button>
                 )}
 
@@ -504,14 +588,18 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                     }`}
                   >
                     <p className="text-sm font-semibold text-white">PayPal</p>
-                    <p className="text-xs text-slate-400">Pay with your PayPal account</p>
+                    <p className="text-xs text-slate-400">
+                      Pay with your PayPal account
+                    </p>
                   </button>
                 )}
 
                 {bankTransferVisible && (
                   <button
                     type="button"
-                    onClick={() => bankTransferAvailable && setPaymentMethod("bank")}
+                    onClick={() =>
+                      bankTransferAvailable && setPaymentMethod("bank")
+                    }
                     disabled={!bankTransferAvailable}
                     className={`rounded-2xl border px-4 py-5 text-left transition ${
                       paymentMethod === "bank"
@@ -519,17 +607,24 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                         : "border-slate-800 bg-slate-950"
                     } ${!bankTransferAvailable ? "cursor-not-allowed opacity-60" : ""}`}
                   >
-                    <p className="text-sm font-semibold text-white">Bank Transfer</p>
-                    <p className="text-xs text-slate-400">{bankTransferLabel}</p>
+                    <p className="text-sm font-semibold text-white">
+                      Bank Transfer
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {bankTransferLabel}
+                    </p>
                   </button>
                 )}
               </div>
 
               {stripeVisible && paymentMethod === "card" && (
                 <div className="rounded-2xl border border-slate-800 p-5">
-                  <h4 className="text-sm font-semibold text-white">Stripe Checkout</h4>
+                  <h4 className="text-sm font-semibold text-white">
+                    Stripe Checkout
+                  </h4>
                   <p className="mt-2 text-sm text-slate-400">
-                    Complete payment securely with Stripe, then return to unlock your plan.
+                    Complete payment securely with Stripe, then return to unlock
+                    your plan.
                   </p>
                   <div className="mt-4">
                     <Button
@@ -547,7 +642,8 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                 <div className="rounded-2xl border border-slate-800 p-5">
                   <h4 className="text-sm font-semibold text-white">PayPal</h4>
                   <p className="mt-2 text-sm text-slate-400">
-                    Complete payment with PayPal, then return to unlock your plan.
+                    Complete payment with PayPal, then return to unlock your
+                    plan.
                   </p>
                   <div className="mt-4">
                     <Button
@@ -555,7 +651,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                       disabled={isPayPalRedirecting}
                       className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
                     >
-                      {isPayPalRedirecting ? "Redirecting..." : "Continue to PayPal"}
+                      {isPayPalRedirecting
+                        ? "Redirecting..."
+                        : "Continue to PayPal"}
                     </Button>
                   </div>
                 </div>
@@ -564,7 +662,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
               {paymentMethod === "bank" && bankTransferAvailable && (
                 <>
                   <div className="rounded-2xl border border-slate-800 p-5">
-                    <h4 className="text-sm font-semibold text-white">Bank Details</h4>
+                    <h4 className="text-sm font-semibold text-white">
+                      Bank Details
+                    </h4>
                     {bankDetailRows.length > 0 ? (
                       <div className="mt-3 grid gap-2 text-sm text-slate-300">
                         {bankDetailRows.map((row) => (
@@ -575,16 +675,20 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                       </div>
                     ) : (
                       <p className="mt-2 text-sm text-slate-400">
-                        Bank details are not available yet. Please check back later.
+                        Bank details are not available yet. Please check back
+                        later.
                       </p>
                     )}
                   </div>
 
                   <div className="rounded-2xl border border-slate-800 p-5">
-                    <h4 className="text-sm font-semibold text-white">Upload Receipt</h4>
+                    <h4 className="text-sm font-semibold text-white">
+                      Upload Receipt
+                    </h4>
                     <p className="mt-2 text-sm text-slate-400">
-                      After payment, upload your receipt and email it to {bankTransferEmail}. We will verify
-                      and activate your subscription.
+                      After payment, upload your receipt and email it to{" "}
+                      {bankTransferEmail}. We will verify and activate your
+                      subscription.
                     </p>
                     <div className="mt-4 space-y-3">
                       <Label htmlFor="receipt-upload">Receipt File</Label>
@@ -592,7 +696,9 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
                         id="receipt-upload"
                         type="file"
                         accept="image/png,image/jpeg"
-                        onChange={(event) => setReceiptFile(event.target.files?.[0] || null)}
+                        onChange={(event) =>
+                          setReceiptFile(event.target.files?.[0] || null)
+                        }
                       />
                       <Button
                         onClick={handleReceiptUpload}
@@ -612,4 +718,3 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
     </div>
   );
 }
-

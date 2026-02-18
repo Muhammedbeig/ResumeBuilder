@@ -22,7 +22,11 @@ function resolveTargetUrl(request: Request, rawReturnUrl: string | null): URL {
   return new URL("/pricing", origin);
 }
 
-async function confirmStripePayment(origin: string, paymentTransactionId: string | null, sessionId: string | null) {
+async function confirmStripePayment(
+  origin: string,
+  paymentTransactionId: string | null,
+  sessionId: string | null,
+) {
   if (!paymentTransactionId && !sessionId) return;
 
   const body: Record<string, string> = {};
@@ -53,7 +57,8 @@ async function confirmStripePayment(origin: string, paymentTransactionId: string
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const stripeStatus = url.searchParams.get("stripe") === "cancel" ? "cancel" : "success";
+  const stripeStatus =
+    url.searchParams.get("stripe") === "cancel" ? "cancel" : "success";
   const paymentTransactionId = url.searchParams.get("payment_transaction_id");
   const sessionId = url.searchParams.get("session_id");
   const returnUrl = url.searchParams.get("return_url");

@@ -25,7 +25,10 @@ export async function POST(request: Request) {
   const jobDescription = body?.jobDescription;
 
   if (!resumeData || !jobDescription) {
-    return NextResponse.json({ error: "Resume data and job description are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Resume data and job description are required" },
+      { status: 400 },
+    );
   }
 
   const jobText =
@@ -34,7 +37,9 @@ export async function POST(request: Request) {
       : [
           jobDescription?.title ? `Title: ${jobDescription.title}` : "",
           jobDescription?.company ? `Company: ${jobDescription.company}` : "",
-          jobDescription?.description ? `Description: ${jobDescription.description}` : "",
+          jobDescription?.description
+            ? `Description: ${jobDescription.description}`
+            : "",
           Array.isArray(jobDescription?.requirements)
             ? `Requirements: ${jobDescription.requirements.join(", ")}`
             : "",
@@ -45,7 +50,7 @@ export async function POST(request: Request) {
 
   try {
     const model = await getGeminiModel();
-    
+
     const prompt = `You are a strict ATS (Applicant Tracking System) Auditor and Expert Resume Optimizer.
 
 Role: 
@@ -92,38 +97,45 @@ Return a SINGLE JSON object:
     // Final safety filter for formatting and length
     if (data.suggestions && Array.isArray(data.suggestions)) {
       data.suggestions = data.suggestions
-        .map(s => {
+        .map((s) => {
           // Remove any markdown
-          let cleanText = s.suggested.replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '');
-          
+          let cleanText = s.suggested
+            .replace(/\*\*/g, "")
+            .replace(/__/g, "")
+            .replace(/\*/g, "");
+
           // If the AI failed the length constraint, we attempt to keep only complete sentences that fit
-          if (cleanText.length > 220 || cleanText.split(' ').length > 30) {
-             const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
-             let limitedText = "";
-             for (const sentence of sentences) {
-                 if ((limitedText + sentence).length <= 220 && (limitedText + sentence).split(' ').length <= 30) {
-                     limitedText += sentence;
-                 } else {
-                     break;
-                 }
-             }
-             cleanText = limitedText.trim() || cleanText.substring(0, 217) + "...";
+          if (cleanText.length > 220 || cleanText.split(" ").length > 30) {
+            const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+            let limitedText = "";
+            for (const sentence of sentences) {
+              if (
+                (limitedText + sentence).length <= 220 &&
+                (limitedText + sentence).split(" ").length <= 30
+              ) {
+                limitedText += sentence;
+              } else {
+                break;
+              }
+            }
+            cleanText =
+              limitedText.trim() || cleanText.substring(0, 217) + "...";
           }
 
           return {
             ...s,
-            suggested: cleanText
+            suggested: cleanText,
           };
         })
         // Filter out any suggestions that might have become empty after cleaning
-        .filter(s => s.suggested.length > 0);
+        .filter((s) => s.suggested.length > 0);
     }
 
     return NextResponse.json(data);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "AI request failed";
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
     console.error("AI Analysis Error:", error);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
-

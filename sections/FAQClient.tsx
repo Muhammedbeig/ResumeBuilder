@@ -60,7 +60,9 @@ export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
                 }`}
               >
                 <button
-                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  onClick={() =>
+                    setOpenIndex(openIndex === index ? null : index)
+                  }
                   className="w-full px-6 py-5 flex items-center justify-between text-left group"
                 >
                   <div className="flex items-center gap-4">
@@ -73,7 +75,9 @@ export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
                     >
                       <HelpCircle
                         className={`w-5 h-5 transition-colors ${
-                          openIndex === index ? "text-purple-600" : "text-gray-500"
+                          openIndex === index
+                            ? "text-purple-600"
+                            : "text-gray-500"
                         }`}
                       />
                     </div>
@@ -89,7 +93,10 @@ export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
                   </div>
                   <motion.div
                     animate={{ rotate: openIndex === index ? 180 : 0 }}
-                    transition={{ duration: 0.3, ease: [0.68, -0.6, 0.32, 1.6] }}
+                    transition={{
+                      duration: 0.3,
+                      ease: [0.68, -0.6, 0.32, 1.6],
+                    }}
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                       openIndex === index
                         ? "bg-purple-100 dark:bg-purple-900/30"
@@ -98,7 +105,9 @@ export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
                   >
                     <ChevronDown
                       className={`w-5 h-5 transition-colors ${
-                        openIndex === index ? "text-purple-600" : "text-gray-500"
+                        openIndex === index
+                          ? "text-purple-600"
+                          : "text-gray-500"
                       }`}
                     />
                   </motion.div>
@@ -132,4 +141,3 @@ export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
     </section>
   );
 }
-

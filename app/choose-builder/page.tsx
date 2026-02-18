@@ -2,7 +2,17 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { FileText, FileCode, Mail, Upload, Sparkles, ChevronRight, Zap, Target, BookOpen } from "lucide-react";
+import {
+  FileText,
+  FileCode,
+  Mail,
+  Upload,
+  Sparkles,
+  ChevronRight,
+  Zap,
+  Target,
+  BookOpen,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
@@ -45,7 +55,7 @@ export default function ChooseBuilderPage() {
       bgColor: "bg-purple-500",
       startHref: "/resume/new",
       importHref: "/resume/start",
-      features: ["ATS Friendly", "Multi-column", "Modern Design"]
+      features: ["ATS Friendly", "Multi-column", "Modern Design"],
     },
     {
       title: "CV",
@@ -56,7 +66,7 @@ export default function ChooseBuilderPage() {
       bgColor: "bg-cyan-500",
       startHref: "/cv/new",
       importHref: "/cv/start",
-      features: ["Academic Ready", "Comprehensive", "Clean Layout"]
+      features: ["Academic Ready", "Comprehensive", "Clean Layout"],
     },
     {
       title: "Cover Letter",
@@ -67,13 +77,16 @@ export default function ChooseBuilderPage() {
       bgColor: "bg-fuchsia-500",
       startHref: "/cover-letter/new",
       importHref: "/cover-letter/start",
-      features: ["Personalized", "AI-Enhanced", "Job Targeted"]
-    }
+      features: ["Personalized", "AI-Enhanced", "Job Targeted"],
+    },
   ];
 
   return (
     <div className="min-h-screen pt-32 pb-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       {/* Background Decor */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]" />
@@ -90,21 +103,26 @@ export default function ChooseBuilderPage() {
             <Sparkles className="w-4 h-4" />
             <span>Select Your Tool</span>
           </motion.div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white mb-6 tracking-tight"
           >
-            What are we <span className="bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent italic">building</span> today?
+            What are we{" "}
+            <span className="bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent italic">
+              building
+            </span>{" "}
+            today?
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
           >
-            Empower your career with professional documents crafted specifically for your goals.
+            Empower your career with professional documents crafted specifically
+            for your goals.
           </motion.p>
         </div>
 
@@ -120,25 +138,34 @@ export default function ChooseBuilderPage() {
             >
               <Card className="h-full border-gray-200 dark:border-gray-800 overflow-hidden bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl flex flex-col relative">
                 {/* Visual Accent */}
-                <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${builder.color}`} />
-                
+                <div
+                  className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${builder.color}`}
+                />
+
                 <div className="p-8 pb-4">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${builder.color} flex items-center justify-center mb-6 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform`}>
+                  <div
+                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${builder.color} flex items-center justify-center mb-6 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform`}
+                  >
                     <builder.icon className="w-7 h-7 text-white" />
                   </div>
                   <div className="mb-4">
                     <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 mb-1 block">
                       {builder.subtitle}
                     </span>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{builder.title}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {builder.title}
+                    </h3>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
                     {builder.description}
                   </p>
-                  
+
                   <div className="space-y-3 mb-8">
-                    {builder.features.map(f => (
-                      <div key={f} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                    {builder.features.map((f) => (
+                      <div
+                        key={f}
+                        className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500"
+                      >
                         <Zap className="w-3 h-3 text-amber-500" />
                         {f}
                       </div>
@@ -154,10 +181,12 @@ export default function ChooseBuilderPage() {
                     Start from Scratch
                     <ChevronRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                   </Button>
-                  
+
                   <div className="flex items-center gap-4 py-2">
                     <div className="flex-1 h-px bg-gray-200 dark:border-gray-800" />
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">or</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      or
+                    </span>
                     <div className="flex-1 h-px bg-gray-200 dark:border-gray-800" />
                   </div>
 
@@ -180,7 +209,7 @@ export default function ChooseBuilderPage() {
         </div>
 
         {/* Bottom Tip */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
@@ -189,7 +218,11 @@ export default function ChooseBuilderPage() {
           <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm max-w-lg">
             <Target className="w-5 h-5 text-purple-600" />
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-tight">
-              <span className="font-bold text-gray-900 dark:text-white italic text-xs">Expert Tip:</span> We recommend importing your latest document to save up to 15 minutes of typing.
+              <span className="font-bold text-gray-900 dark:text-white italic text-xs">
+                Expert Tip:
+              </span>{" "}
+              We recommend importing your latest document to save up to 15
+              minutes of typing.
             </p>
           </div>
         </motion.div>

@@ -7,7 +7,7 @@ import { fetchTemplateById } from "@/lib/template-client";
 export function usePanelTemplate(
   type: TemplateType,
   templateId?: string | null,
-  enabled: boolean = true
+  enabled: boolean = true,
 ) {
   const [template, setTemplate] = useState<PanelTemplate | null>(null);
 

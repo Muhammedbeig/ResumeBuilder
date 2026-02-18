@@ -4,15 +4,18 @@ import { Footer } from "@/sections/Footer";
 const principles = [
   {
     title: "Clarity beats complexity",
-    description: "Simple structure helps recruiters and ATS systems read your story quickly.",
+    description:
+      "Simple structure helps recruiters and ATS systems read your story quickly.",
   },
   {
     title: "Evidence drives trust",
-    description: "We push for impact metrics and outcomes instead of vague responsibilities.",
+    description:
+      "We push for impact metrics and outcomes instead of vague responsibilities.",
   },
   {
     title: "Momentum matters",
-    description: "Fast feedback and live previews keep people moving instead of stalling.",
+    description:
+      "Fast feedback and live previews keep people moving instead of stalling.",
   },
 ];
 
@@ -42,13 +45,15 @@ export default function AboutStoryPage() {
           <Link href="/about" className="text-sm font-semibold text-purple-600">
             Back to About
           </Link>
-          <p className="mt-3 text-sm font-semibold text-purple-600 uppercase tracking-widest">Our Story</p>
+          <p className="mt-3 text-sm font-semibold text-purple-600 uppercase tracking-widest">
+            Our Story
+          </p>
           <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
             Built for people who want to tell their work with clarity
           </h1>
           <p className="mt-4 text-gray-600 dark:text-gray-300">
-            ResuPro started as a simple idea: if we can make it easier to explain impact, more people
-            will land roles that match their skills.
+            ResuPro started as a simple idea: if we can make it easier to
+            explain impact, more people will land roles that match their skills.
           </p>
         </div>
 
@@ -58,33 +63,47 @@ export default function AboutStoryPage() {
               key={chapter.title}
               className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
             >
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{chapter.title}</h2>
-              <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">{chapter.description}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {chapter.title}
+              </h2>
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                {chapter.description}
+              </p>
             </div>
           ))}
         </div>
 
         <div className="mt-16 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Our principles</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Our principles
+          </h2>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
             {principles.map((principle) => (
               <div key={principle.title}>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{principle.title}</h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{principle.description}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {principle.title}
+                </h3>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                  {principle.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
 
         <div className="mt-16 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Our roadmap</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Our roadmap
+          </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            We are focused on building a complete career toolkit. Here is what we are prioritizing next.
+            We are focused on building a complete career toolkit. Here is what
+            we are prioritizing next.
           </p>
           <ul className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
             <li className="flex gap-2">
               <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />
-              More personalized suggestions based on your exact role and industry.
+              More personalized suggestions based on your exact role and
+              industry.
             </li>
             <li className="flex gap-2">
               <span className="mt-2 h-1.5 w-1.5 rounded-full bg-purple-500" />

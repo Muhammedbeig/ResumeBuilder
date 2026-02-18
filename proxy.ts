@@ -34,12 +34,16 @@ export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   if (pathname === "/") return NextResponse.next();
-  if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+  if (
+    PUBLIC_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
     return NextResponse.next();
   }
 
   const isProtected = PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 
   if (!isProtected) return NextResponse.next();

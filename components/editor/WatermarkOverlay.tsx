@@ -55,7 +55,9 @@ export function WatermarkOverlay({ text, settings }: WatermarkOverlayProps) {
   const positionClass = positionClasses[position] ?? positionClasses.center;
 
   return (
-    <div className={`pointer-events-none absolute inset-0 flex ${positionClass} p-10`}>
+    <div
+      className={`pointer-events-none absolute inset-0 flex ${positionClass} p-10`}
+    >
       <span
         className="select-none font-bold uppercase tracking-[0.35em] text-black"
         style={textStyle}

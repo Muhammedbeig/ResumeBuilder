@@ -52,7 +52,9 @@ export function DesignControls({
 }: DesignControlsProps) {
   const selectedFont = metadata?.fontFamily || "";
   const selectedFontSize = normalizeFontSizeValue(metadata?.fontSize);
-  const fontPlaceholder = defaultFontLabel ? `Default (${defaultFontLabel})` : "Default (Template)";
+  const fontPlaceholder = defaultFontLabel
+    ? `Default (${defaultFontLabel})`
+    : "Default (Template)";
 
   useEffect(() => {
     if (!selectedFont) return;
@@ -80,7 +82,9 @@ export function DesignControls({
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Palette className="w-4 h-4 text-purple-600" />
-            <h3 className="font-medium text-gray-900 dark:text-white">Accent Color</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">
+              Accent Color
+            </h3>
           </div>
           <div className="flex flex-wrap gap-3">
             {COLOR_OPTIONS.map((color) => (
@@ -116,7 +120,10 @@ export function DesignControls({
           <div>
             <Label>Font Family</Label>
             <Combobox
-              options={FONT_FAMILIES.map((font) => ({ value: font, label: font }))}
+              options={FONT_FAMILIES.map((font) => ({
+                value: font,
+                label: font,
+              }))}
               value={selectedFont}
               onChange={(value) => onUpdate({ fontFamily: value })}
               placeholder={fontPlaceholder}
@@ -144,27 +151,28 @@ export function DesignControls({
         </CardContent>
       </Card>
 
-      {typeof advancedFormattingEnabled === "boolean" && onAdvancedFormattingChange && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">
-                  Advanced Formatting
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Enable bold/italic/bullets on all text fields.
-                </p>
+      {typeof advancedFormattingEnabled === "boolean" &&
+        onAdvancedFormattingChange && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Advanced Formatting
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Enable bold/italic/bullets on all text fields.
+                  </p>
+                </div>
+                <Switch
+                  checked={advancedFormattingEnabled}
+                  onCheckedChange={onAdvancedFormattingChange}
+                  className="data-[state=checked]:bg-purple-600"
+                />
               </div>
-              <Switch
-                checked={advancedFormattingEnabled}
-                onCheckedChange={onAdvancedFormattingChange}
-                className="data-[state=checked]:bg-purple-600"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
       {typeof watermarkEnabled === "boolean" && onWatermarkToggle && (
         <Card>
@@ -193,7 +201,13 @@ export function DesignControls({
       <Button
         variant="outline"
         className="w-full"
-        onClick={() => onUpdate({ themeColor: undefined, fontFamily: undefined, fontSize: undefined })}
+        onClick={() =>
+          onUpdate({
+            themeColor: undefined,
+            fontFamily: undefined,
+            fontSize: undefined,
+          })
+        }
       >
         <RotateCcw className="w-4 h-4 mr-2" />
         Reset to Template Defaults

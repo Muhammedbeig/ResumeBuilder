@@ -28,14 +28,18 @@ import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { toast } from "sonner";
 
 // Reusing Resume type alias for CV to avoid duplicating types if they are identical
-type CV = Resume; 
+type CV = Resume;
 
 interface CVContextType {
   cvs: CV[];
   currentCV: CV | null;
   cvData: ResumeData;
   isLoading: boolean;
-  createCV: (title: string, template: string, initialData?: ResumeData) => Promise<CV>;
+  createCV: (
+    title: string,
+    template: string,
+    initialData?: ResumeData,
+  ) => Promise<CV>;
   loadCV: (cvId: string) => Promise<void>;
   deleteCV: (id: string) => Promise<void>;
   selectCV: (cv: CV) => void;
@@ -44,7 +48,9 @@ interface CVContextType {
   updateTemplate: (template: string) => void;
   updateCVData: (data: Partial<ResumeData>) => void;
   updateBasics: (basics: Partial<ResumeData["basics"]>) => void;
-  updateMetadata: (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => void;
+  updateMetadata: (
+    metadata: Partial<NonNullable<ResumeData["metadata"]>>,
+  ) => void;
   addExperience: (experience: Omit<Experience, "id">) => void;
   updateExperience: (id: string, experience: Partial<Experience>) => void;
   removeExperience: (id: string) => void;
@@ -63,9 +69,18 @@ interface CVContextType {
   updateStructure: (structure: import("@/types").SectionConfig[]) => void;
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
-  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string[]>;
-  suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
-  suggestResponsibilitiesAI: (jobTitle: string, description?: string) => Promise<string[]>;
+  suggestSummaryAI: (
+    resumeData: ResumeData,
+    targetRole?: string,
+  ) => Promise<string[]>;
+  suggestSkillsAI: (
+    jobTitle: string,
+    description?: string,
+  ) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
+  suggestResponsibilitiesAI: (
+    jobTitle: string,
+    description?: string,
+  ) => Promise<string[]>;
   generatePDF?: (templateId: string) => Promise<void>;
   importedData: ResumeData | null;
   setImportedData: (data: ResumeData | null) => void;
@@ -101,12 +116,14 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const aiInFlightRef = useRef(new Map<string, Promise<unknown>>());
   const hasSubscription = useMemo(
-    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
-    [session?.user?.subscription]
+    () =>
+      session?.user?.subscription === "pro" ||
+      session?.user?.subscription === "business",
+    [session?.user?.subscription],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
-    [planChoice, hasSubscription]
+    [planChoice, hasSubscription],
   );
 
   const getLocalCVs = useCallback(() => {
@@ -129,7 +146,9 @@ export function CVProvider({ children }: { children: ReactNode }) {
     const localCVs = getLocalCVs();
 
     if (!session?.user) {
-      setCVs(localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setCVs(
+        localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+      );
       return;
     }
 
@@ -138,15 +157,25 @@ export function CVProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/cvs");
       if (!response.ok) {
         console.error("Failed to load CVs", response.status);
-        setCVs(localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+        setCVs(
+          localCVs.sort(
+            (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+          ),
+        );
         return;
       }
       const data = await response.json();
       const remoteCVs = normalizeCVList(data.cvs || []);
-      setCVs([...remoteCVs, ...localCVs].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setCVs(
+        [...remoteCVs, ...localCVs].sort(
+          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+        ),
+      );
     } catch (error) {
       console.error("Failed to load CVs", error);
-      setCVs(localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setCVs(
+        localCVs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +187,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const syncGuestData = useCallback(async () => {
     if (!session?.user) return;
-    
+
     const localKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -180,13 +209,13 @@ export function CVProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/cvs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            title: localData.cv.title, 
-            template: localData.cv.template, 
-            data: localData.data 
+          body: JSON.stringify({
+            title: localData.cv.title,
+            template: localData.cv.template,
+            data: localData.data,
           }),
         });
-        
+
         if (response.ok) {
           const result = await response.json();
           localStorage.removeItem(key);
@@ -231,12 +260,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
-        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${guestId}`, JSON.stringify({
-          cv: newCV,
-          data: dataToUse
-        }));
-        
+
+        localStorage.setItem(
+          `${LOCAL_STORAGE_PREFIX}${guestId}`,
+          JSON.stringify({
+            cv: newCV,
+            data: dataToUse,
+          }),
+        );
+
         setCVs((prev) => [newCV, ...prev]);
         setCurrentCV(newCV);
         setCVData(dataToUse);
@@ -263,7 +295,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [session?.user]
+    [session?.user],
   );
 
   const loadCV = useCallback(
@@ -297,7 +329,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [session?.user, currentCV?.id]
+    [session?.user, currentCV?.id],
   );
 
   const deleteCV = useCallback(
@@ -334,7 +366,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [session?.user, currentCV?.id]
+    [session?.user, currentCV?.id],
   );
 
   const selectCV = useCallback(
@@ -342,56 +374,62 @@ export function CVProvider({ children }: { children: ReactNode }) {
       setCurrentCV(cv);
       void loadCV(cv.id);
     },
-    [loadCV]
+    [loadCV],
   );
 
-  const saveCV = useCallback(async (isAutoSave = false) => {
-    if (!currentCV) return;
+  const saveCV = useCallback(
+    async (isAutoSave = false) => {
+      if (!currentCV) return;
 
-    if (currentCV.id.startsWith("local-")) {
-      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${currentCV.id}`, JSON.stringify({
-        cv: { ...currentCV, updatedAt: new Date() },
-        data: cvData
-      }));
-      if (!isAutoSave) toast.success("Progress saved locally");
-      return;
-    }
-
-    if (!session?.user) return;
-
-    if (!isAutoSave) setIsLoading(true);
-    try {
-      const response = await fetch(`/api/cvs/${currentCV.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: currentCV.title,
-          template: currentCV.template,
-          isPublic: currentCV.isPublic,
-          data: cvData,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to save CV");
+      if (currentCV.id.startsWith("local-")) {
+        localStorage.setItem(
+          `${LOCAL_STORAGE_PREFIX}${currentCV.id}`,
+          JSON.stringify({
+            cv: { ...currentCV, updatedAt: new Date() },
+            data: cvData,
+          }),
+        );
+        if (!isAutoSave) toast.success("Progress saved locally");
+        return;
       }
-      const data = await response.json();
-      const updatedCV = parseCVDates(data.cv);
-      
-      if (!isAutoSave) {
+
+      if (!session?.user) return;
+
+      if (!isAutoSave) setIsLoading(true);
+      try {
+        const response = await fetch(`/api/cvs/${currentCV.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: currentCV.title,
+            template: currentCV.template,
+            isPublic: currentCV.isPublic,
+            data: cvData,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to save CV");
+        }
+        const data = await response.json();
+        const updatedCV = parseCVDates(data.cv);
+
+        if (!isAutoSave) {
           setCurrentCV(updatedCV);
           setCVs((prev) =>
-            prev.map((cv) => (cv.id === updatedCV.id ? updatedCV : cv))
+            prev.map((cv) => (cv.id === updatedCV.id ? updatedCV : cv)),
           );
           setCVData(normalizeResumeData(data.data || cvData));
           toast.success("CV saved");
-      }
-    } catch (error) {
+        }
+      } catch (error) {
         console.error("Auto-save error:", error);
         if (!isAutoSave) toast.error("Failed to save CV");
-    } finally {
-      if (!isAutoSave) setIsLoading(false);
-    }
-  }, [session?.user, currentCV, cvData]);
+      } finally {
+        if (!isAutoSave) setIsLoading(false);
+      }
+    },
+    [session?.user, currentCV, cvData],
+  );
 
   // Auto-save effect
   useEffect(() => {
@@ -419,12 +457,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateMetadata = useCallback((metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
-    setCVData((prev) => ({
-      ...prev,
-      metadata: { ...(prev.metadata || {}), ...metadata },
-    }));
-  }, []);
+  const updateMetadata = useCallback(
+    (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
+      setCVData((prev) => ({
+        ...prev,
+        metadata: { ...(prev.metadata || {}), ...metadata },
+      }));
+    },
+    [],
+  );
 
   const addExperience = useCallback((experience: Omit<Experience, "id">) => {
     const newExp: Experience = { ...experience, id: Date.now().toString() };
@@ -434,14 +475,17 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateExperience = useCallback((id: string, experience: Partial<Experience>) => {
-    setCVData((prev) => ({
-      ...prev,
-      experiences: prev.experiences.map((exp) =>
-        exp.id === id ? { ...exp, ...experience } : exp
-      ),
-    }));
-  }, []);
+  const updateExperience = useCallback(
+    (id: string, experience: Partial<Experience>) => {
+      setCVData((prev) => ({
+        ...prev,
+        experiences: prev.experiences.map((exp) =>
+          exp.id === id ? { ...exp, ...experience } : exp,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeExperience = useCallback((id: string) => {
     setCVData((prev) => ({
@@ -458,12 +502,17 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateEducation = useCallback((id: string, education: Partial<Education>) => {
-    setCVData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu) => (edu.id === id ? { ...edu, ...education } : edu)),
-    }));
-  }, []);
+  const updateEducation = useCallback(
+    (id: string, education: Partial<Education>) => {
+      setCVData((prev) => ({
+        ...prev,
+        education: prev.education.map((edu) =>
+          edu.id === id ? { ...edu, ...education } : edu,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeEducation = useCallback((id: string) => {
     setCVData((prev) => ({
@@ -483,7 +532,9 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const updateProject = useCallback((id: string, project: Partial<Project>) => {
     setCVData((prev) => ({
       ...prev,
-      projects: prev.projects.map((proj) => (proj.id === id ? { ...proj, ...project } : proj)),
+      projects: prev.projects.map((proj) =>
+        proj.id === id ? { ...proj, ...project } : proj,
+      ),
     }));
   }, []);
 
@@ -502,12 +553,17 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateSkillGroup = useCallback((id: string, group: Partial<SkillGroup>) => {
-    setCVData((prev) => ({
-      ...prev,
-      skills: prev.skills.map((skill) => (skill.id === id ? { ...skill, ...group } : skill)),
-    }));
-  }, []);
+  const updateSkillGroup = useCallback(
+    (id: string, group: Partial<SkillGroup>) => {
+      setCVData((prev) => ({
+        ...prev,
+        skills: prev.skills.map((skill) =>
+          skill.id === id ? { ...skill, ...group } : skill,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeSkillGroup = useCallback((id: string) => {
     setCVData((prev) => ({
@@ -531,54 +587,64 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateStructure = useCallback((structure: import("@/types").SectionConfig[]) => {
-    setCVData((prev) => ({
-      ...prev,
-      structure,
-    }));
-  }, []);
+  const updateStructure = useCallback(
+    (structure: import("@/types").SectionConfig[]) => {
+      setCVData((prev) => ({
+        ...prev,
+        structure,
+      }));
+    },
+    [],
+  );
 
   const notifyAiLimit = useCallback(() => {
     toast.error("AI limit has done.");
   }, []);
 
-  const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
-    const key = `${path}:${JSON.stringify(payload)}`;
-    const inFlight = aiInFlightRef.current;
-    const existing = inFlight.get(key);
-    if (existing) return existing;
+  const callAI = useCallback(
+    async (path: string, payload: Record<string, unknown>) => {
+      const key = `${path}:${JSON.stringify(payload)}`;
+      const inFlight = aiInFlightRef.current;
+      const existing = inFlight.get(key);
+      if (existing) return existing;
 
-    const request = (async () => {
-      const response = await fetch(`/api/ai/${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const contentType = response.headers.get("content-type") || "";
-      const data = contentType.includes("application/json")
-        ? await response.json().catch(() => null)
-        : await response.text().catch(() => "");
-      if (!response.ok) {
-        const message =
-          data && typeof data === "object" && "error" in data && typeof data.error === "string"
-            ? data.error
-            : "AI request failed";
-        const isLimit = /quota|limit|resource exhausted|billing|payment/i.test(message);
-        if (response.status === 429 || (response.status === 402 && isLimit)) {
-          notifyAiLimit();
+      const request = (async () => {
+        const response = await fetch(`/api/ai/${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const contentType = response.headers.get("content-type") || "";
+        const data = contentType.includes("application/json")
+          ? await response.json().catch(() => null)
+          : await response.text().catch(() => "");
+        if (!response.ok) {
+          const message =
+            data &&
+            typeof data === "object" &&
+            "error" in data &&
+            typeof data.error === "string"
+              ? data.error
+              : "AI request failed";
+          const isLimit =
+            /quota|limit|resource exhausted|billing|payment/i.test(message);
+          if (response.status === 429 || (response.status === 402 && isLimit)) {
+            notifyAiLimit();
+          }
+          throw new Error(message);
         }
-        throw new Error(message);
-      }
-      return data;
-    })();
+        return data;
+      })();
 
-    inFlight.set(key, request);
-    try {
-      return await request;
-    } finally {
-      inFlight.delete(key);
-    }
-  }, [notifyAiLimit]);
+      inFlight.set(key, request);
+      try {
+        return await request;
+      } finally {
+        inFlight.delete(key);
+      }
+    },
+    [notifyAiLimit],
+  );
 
   const rewriteBulletAI = useCallback(
     async (experienceId: string, bulletIndex: number) => {
@@ -587,7 +653,9 @@ export function CVProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const experience = cvData.experiences.find((exp) => exp.id === experienceId);
+        const experience = cvData.experiences.find(
+          (exp) => exp.id === experienceId,
+        );
         if (!experience) return;
         const bullet = (experience.bullets[bulletIndex] || "").trim();
         if (!bullet) {
@@ -604,20 +672,23 @@ export function CVProvider({ children }: { children: ReactNode }) {
             exp.id === experienceId
               ? {
                   ...exp,
-                  bullets: exp.bullets.map((b, i) => (i === bulletIndex ? rewritten : b)),
+                  bullets: exp.bullets.map((b, i) =>
+                    i === bulletIndex ? rewritten : b,
+                  ),
                 }
-              : exp
+              : exp,
           ),
         }));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
+        const message =
+          error instanceof Error ? error.message : "AI request failed";
         toast.error(message);
         console.error("Error rewriting bullet:", error);
       } finally {
         setIsLoading(false);
       }
     },
-    [cvData.experiences, callAI, canUsePaid]
+    [cvData.experiences, callAI, canUsePaid],
   );
 
   const generateSummaryAI = useCallback(
@@ -628,7 +699,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result = await callAI("summary", { resumeData: cvData, targetRole });
+        const result = await callAI("summary", {
+          resumeData: cvData,
+          targetRole,
+        });
         const suggestions = extractSummarySuggestions(result);
         const summary = suggestions[0] ?? "";
         setCVData((prev) => ({
@@ -636,14 +710,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
           basics: { ...prev.basics, summary },
         }));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
+        const message =
+          error instanceof Error ? error.message : "AI request failed";
         toast.error(message);
         console.error("Error generating summary:", error);
       } finally {
         setIsLoading(false);
       }
     },
-    [cvData, callAI, canUsePaid]
+    [cvData, callAI, canUsePaid],
   );
 
   const suggestSummaryAI = useCallback(
@@ -653,7 +728,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result: any = await callAI("summary", { resumeData: data, targetRole });
+        const result: any = await callAI("summary", {
+          resumeData: data,
+          targetRole,
+        });
         return extractSummarySuggestions(result).slice(0, 3);
       } catch (error) {
         console.error("Error suggesting summary:", error);
@@ -662,7 +740,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI, canUsePaid]
+    [callAI, canUsePaid],
   );
 
   const suggestSkillsAI = useCallback(
@@ -672,7 +750,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result: any = await callAI("suggestions/skills", { jobTitle, description });
+        const result: any = await callAI("suggestions/skills", {
+          jobTitle,
+          description,
+        });
         return result || { hardSkills: [], softSkills: [] };
       } catch (error) {
         console.error("Error suggesting skills:", error);
@@ -681,7 +762,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI, canUsePaid]
+    [callAI, canUsePaid],
   );
 
   const suggestResponsibilitiesAI = useCallback(
@@ -691,7 +772,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result: any = await callAI("suggestions/responsibilities", { jobTitle, description });
+        const result: any = await callAI("suggestions/responsibilities", {
+          jobTitle,
+          description,
+        });
         return (result.responsibilities as string[]) || [];
       } catch (error) {
         console.error("Error suggesting responsibilities:", error);
@@ -700,7 +784,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI, canUsePaid]
+    [callAI, canUsePaid],
   );
 
   const value = useMemo(
@@ -779,7 +863,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       suggestSkillsAI,
       suggestResponsibilitiesAI,
       setImportedData,
-    ]
+    ],
   );
 
   return <CVContext.Provider value={value}>{children}</CVContext.Provider>;

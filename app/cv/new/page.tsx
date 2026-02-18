@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense, useCallback, type ComponentType } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  Suspense,
+  useCallback,
+  type ComponentType,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
@@ -33,10 +40,12 @@ function NewCVContent() {
   const { createCV, importedData } = useCV();
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled CV");
-  const [templates, setTemplates] = useState<TemplateOption[]>(() => [...cvTemplates]);
+  const [templates, setTemplates] = useState<TemplateOption[]>(() => [
+    ...cvTemplates,
+  ]);
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-  
+
   const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
 
@@ -56,7 +65,7 @@ function NewCVContent() {
       const mapped: TemplateOption[] = panelTemplates.map((template) => {
         const component = resolveCvTemplateComponent(
           template.template_id,
-          template.config as CvTemplateConfig
+          template.config as CvTemplateConfig,
         );
 
         return {
@@ -81,12 +90,14 @@ function NewCVContent() {
   }, []);
 
   const hasSubscription = useMemo(
-    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
-    [session?.user?.subscription]
+    () =>
+      session?.user?.subscription === "pro" ||
+      session?.user?.subscription === "business",
+    [session?.user?.subscription],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
-    [planChoice, hasSubscription]
+    [planChoice, hasSubscription],
   );
 
   useEffect(() => {
@@ -117,44 +128,64 @@ function NewCVContent() {
     return true;
   }, [isAuthenticated, planChoice, openPlanModal]);
 
-  const handleSelectTemplate = useCallback(async (templateId: string, premium: boolean) => {
-    if (!ensurePlanChosen()) return;
-    if (premium && !canUsePaid) {
-      if (!isAuthenticated) {
-        toast.error("Please sign in to unlock premium templates");
-        router.push(`/login?callbackUrl=${window.location.pathname}`);
+  const handleSelectTemplate = useCallback(
+    async (templateId: string, premium: boolean) => {
+      if (!ensurePlanChosen()) return;
+      if (premium && !canUsePaid) {
+        if (!isAuthenticated) {
+          toast.error("Please sign in to unlock premium templates");
+          router.push(`/login?callbackUrl=${window.location.pathname}`);
+          return;
+        }
+        toast.info("Premium templates are available in the Paid plan.");
+        openPlanModal();
         return;
       }
-      toast.info("Premium templates are available in the Paid plan.");
-      openPlanModal();
-      return;
-    }
-    setIsCreating(true);
-    try {
-      const cv = await createCV(
-        title.trim() || "Untitled CV",
-        templateId,
-        importedData || placeholderResumeData
-      );
-      toast.success("CV created successfully!");
-      router.push(`/cv/${cv.id}`);
-    } catch {
-      toast.error("Failed to create CV");
-    } finally {
-      setIsCreating(false);
-    }
-  }, [canUsePaid, isAuthenticated, router, title, createCV, importedData, openPlanModal]);
+      setIsCreating(true);
+      try {
+        const cv = await createCV(
+          title.trim() || "Untitled CV",
+          templateId,
+          importedData || placeholderResumeData,
+        );
+        toast.success("CV created successfully!");
+        router.push(`/cv/${cv.id}`);
+      } catch {
+        toast.error("Failed to create CV");
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [
+      canUsePaid,
+      isAuthenticated,
+      router,
+      title,
+      createCV,
+      importedData,
+      openPlanModal,
+    ],
+  );
 
   // Auto-select template if query param is present
   useEffect(() => {
     if (templateIdFromQuery && isLoaded && status !== "loading") {
       if (isAuthenticated && !planChoice) return;
-      const template = templates.find(t => t.id === templateIdFromQuery);
+      const template = templates.find((t) => t.id === templateIdFromQuery);
       if (template && !isCreating) {
         handleSelectTemplate(template.id, template.premium);
       }
     }
-  }, [templateIdFromQuery, isLoaded, status, isCreating, handleSelectTemplate, templates, isAuthenticated, planChoice]);
+  }, [
+    templateIdFromQuery,
+    isLoaded,
+    status,
+    isCreating,
+    handleSelectTemplate,
+    templates,
+    isAuthenticated,
+    planChoice,
+  ]);
 
   if (status === "loading") {
     return (
@@ -166,14 +197,18 @@ function NewCVContent() {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Choose a CV Template
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Pick a template to start editing your Curriculum Vitae. Premium templates are marked with Pro.
+            Pick a template to start editing your Curriculum Vitae. Premium
+            templates are marked with Pro.
           </p>
         </div>
 
@@ -193,7 +228,10 @@ function NewCVContent() {
             const Preview = template.component;
             const isLocked = template.premium && !canUsePaid;
             return (
-              <Card key={template.id} className="overflow-hidden border-gray-200 dark:border-gray-800">
+              <Card
+                key={template.id}
+                className="overflow-hidden border-gray-200 dark:border-gray-800"
+              >
                 <div className="relative bg-gray-50 dark:bg-gray-900/50 p-4">
                   <div className="absolute right-4 top-4 flex items-center gap-2">
                     {template.premium && (
@@ -219,7 +257,9 @@ function NewCVContent() {
                   <Button
                     className="w-full"
                     disabled={isCreating || isLocked}
-                    onClick={() => handleSelectTemplate(template.id, template.premium)}
+                    onClick={() =>
+                      handleSelectTemplate(template.id, template.premium)
+                    }
                   >
                     {isCreating ? "Creating..." : "Use this template"}
                   </Button>
@@ -235,7 +275,13 @@ function NewCVContent() {
 
 export default function NewCVPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Spinner />
+        </div>
+      }
+    >
       <NewCVContent />
     </Suspense>
   );

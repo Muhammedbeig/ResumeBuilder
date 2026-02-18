@@ -23,7 +23,7 @@ import {
   Check,
   CheckCircle2,
   Sparkles,
-  Eye
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,11 +94,17 @@ export function ResumeEditorPage() {
   const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const { data: session, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
-  const { settings: siteSettings, loaded: siteSettingsLoaded } = useSiteSettings();
-  const watermarkAvailable = siteSettingsLoaded ? siteSettings.watermark.enabled : true;
-  const watermarkText = siteSettings.companyName || DEFAULT_SITE_SETTINGS.companyName;
+  const { settings: siteSettings, loaded: siteSettingsLoaded } =
+    useSiteSettings();
+  const watermarkAvailable = siteSettingsLoaded
+    ? siteSettings.watermark.enabled
+    : true;
+  const watermarkText =
+    siteSettings.companyName || DEFAULT_SITE_SETTINGS.companyName;
   const [subscriptionOverride, setSubscriptionOverride] = useState(false);
-  const [serverSubscription, setServerSubscription] = useState<string | null>(null);
+  const [serverSubscription, setServerSubscription] = useState<string | null>(
+    null,
+  );
   const hasSubscription = useMemo(
     () =>
       subscriptionOverride ||
@@ -106,11 +112,11 @@ export function ResumeEditorPage() {
       serverSubscription === "business" ||
       session?.user?.subscription === "pro" ||
       session?.user?.subscription === "business",
-    [subscriptionOverride, serverSubscription, session?.user?.subscription]
+    [subscriptionOverride, serverSubscription, session?.user?.subscription],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
-    [planChoice, hasSubscription]
+    [planChoice, hasSubscription],
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMountedRef = useRef(true);
@@ -137,7 +143,7 @@ export function ResumeEditorPage() {
     updateProject,
     removeProject,
     addCertification,
-    removeCertification
+    removeCertification,
   } = useResume();
 
   const [activeTab, setActiveTab] = useState("basics");
@@ -145,13 +151,18 @@ export function ResumeEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-  const [isSubscriptionActivating, setIsSubscriptionActivating] = useState(false);
+  const [isSubscriptionActivating, setIsSubscriptionActivating] =
+    useState(false);
   const lastUserIdRef = useRef<string | null>(null);
   const [zoom, setZoom] = useState([90]);
   const [advancedFormatting, setAdvancedFormatting] = useState(false);
-  const [draftExperience, setDraftExperience] = useState<Partial<Experience> | null>(null);
-  const [draftSkillGroup, setDraftSkillGroup] = useState<Partial<SkillGroup> | null>(null);
-  const [usedSummarySuggestions, setUsedSummarySuggestions] = useState<string[]>([]);
+  const [draftExperience, setDraftExperience] =
+    useState<Partial<Experience> | null>(null);
+  const [draftSkillGroup, setDraftSkillGroup] =
+    useState<Partial<SkillGroup> | null>(null);
+  const [usedSummarySuggestions, setUsedSummarySuggestions] = useState<
+    string[]
+  >([]);
   const [summarySuggestions, setSummarySuggestions] = useState<string[]>([]);
   const summaryKeyRef = useRef("");
   const { ref: previewContainerRef, size: previewContainerSize } =
@@ -213,8 +224,12 @@ export function ResumeEditorPage() {
   }, [canUsePaid, resumeData.metadata?.watermarkEnabled, watermarkAvailable]);
 
   const availableSummarySuggestions = useMemo(() => {
-    const used = new Set(usedSummarySuggestions.map((item) => item.toLowerCase()));
-    return summarySuggestions.filter((suggestion) => !used.has(suggestion.toLowerCase()));
+    const used = new Set(
+      usedSummarySuggestions.map((item) => item.toLowerCase()),
+    );
+    return summarySuggestions.filter(
+      (suggestion) => !used.has(suggestion.toLowerCase()),
+    );
   }, [summarySuggestions, usedSummarySuggestions]);
 
   useEffect(() => {
@@ -239,7 +254,11 @@ export function ResumeEditorPage() {
 
   const syncSubscription = useCallback(async () => {
     try {
-      const response = await fetchWithTimeout("/api/user/subscription", { cache: "no-store" }, 8000);
+      const response = await fetchWithTimeout(
+        "/api/user/subscription",
+        { cache: "no-store" },
+        8000,
+      );
       if (!response.ok) return null;
       const data = await response.json();
       if (typeof data?.subscription === "string") {
@@ -251,40 +270,46 @@ export function ResumeEditorPage() {
           subscriptionPlanId: data.subscriptionPlanId ?? null,
         }).catch(() => undefined);
       }
-      return data as { subscription?: string; subscriptionPlanId?: string | null };
+      return data as {
+        subscription?: string;
+        subscriptionPlanId?: string | null;
+      };
     } catch {
       // ignore
     }
     return null;
   }, [updateSession]);
 
-  const pollActivationStatus = useCallback(async (paymentTransactionId?: string | null) => {
-    const deadline = Date.now() + 30_000;
-    while (isMountedRef.current && Date.now() < deadline) {
-      const query = paymentTransactionId
-        ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
-        : "";
-      const response = await fetchWithTimeout(
-        `/api/payment/activation-status${query}`,
-        { cache: "no-store" },
-        8000
-      ).catch(() => null);
+  const pollActivationStatus = useCallback(
+    async (paymentTransactionId?: string | null) => {
+      const deadline = Date.now() + 30_000;
+      while (isMountedRef.current && Date.now() < deadline) {
+        const query = paymentTransactionId
+          ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
+          : "";
+        const response = await fetchWithTimeout(
+          `/api/payment/activation-status${query}`,
+          { cache: "no-store" },
+          8000,
+        ).catch(() => null);
 
-      if (response?.ok) {
-        const data: any = await response.json().catch(() => null);
-        if (data?.status === "active") {
-          return "active" as const;
+        if (response?.ok) {
+          const data: any = await response.json().catch(() => null);
+          if (data?.status === "active") {
+            return "active" as const;
+          }
+          if (data?.status === "failed") {
+            return "failed" as const;
+          }
         }
-        if (data?.status === "failed") {
-          return "failed" as const;
-        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1200));
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-    }
-
-    return "pending" as const;
-  }, []);
+      return "pending" as const;
+    },
+    [],
+  );
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -303,25 +328,40 @@ export function ResumeEditorPage() {
       void (async () => {
         setIsSubscriptionActivating(true);
         try {
-          if (stripeStatus === "success" && (paymentTransactionId || checkoutSessionId)) {
-            await fetchWithTimeout("/api/stripe/confirm", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                paymentTransactionId: paymentTransactionId ?? undefined,
-                sessionId: checkoutSessionId ?? undefined,
-              }),
-            }, 45000).catch(() => null);
+          if (
+            stripeStatus === "success" &&
+            (paymentTransactionId || checkoutSessionId)
+          ) {
+            await fetchWithTimeout(
+              "/api/stripe/confirm",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentTransactionId: paymentTransactionId ?? undefined,
+                  sessionId: checkoutSessionId ?? undefined,
+                }),
+              },
+              45000,
+            ).catch(() => null);
           }
-          if (paypalStatus === "success" && paymentTransactionId && paypalOrderId) {
-            await fetchWithTimeout("/api/paypal/confirm", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                paymentTransactionId,
-                orderId: paypalOrderId,
-              }),
-            }, 45000).catch(() => null);
+          if (
+            paypalStatus === "success" &&
+            paymentTransactionId &&
+            paypalOrderId
+          ) {
+            await fetchWithTimeout(
+              "/api/paypal/confirm",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentTransactionId,
+                  orderId: paypalOrderId,
+                }),
+              },
+              45000,
+            ).catch(() => null);
           }
 
           const status = await pollActivationStatus(paymentTransactionId);
@@ -353,7 +393,8 @@ export function ResumeEditorPage() {
 
     void (async () => {
       const latest = await syncSubscription();
-      const ok = latest?.subscription === "pro" || latest?.subscription === "business";
+      const ok =
+        latest?.subscription === "pro" || latest?.subscription === "business";
       if (ok && !cancelled) {
         setSubscriptionOverride(true);
         setIsSubscriptionActivating(false);
@@ -373,7 +414,9 @@ export function ResumeEditorPage() {
       return;
     }
     const experienceText = previewData.experiences
-      .map((exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`)
+      .map(
+        (exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`,
+      )
       .join(" ")
       .trim();
     const skillsText = previewData.skills
@@ -385,14 +428,13 @@ export function ResumeEditorPage() {
     const timer = setTimeout(async () => {
       const suggestions = await suggestSummaryAI(
         previewData,
-        previewData.basics.title || undefined
+        previewData.basics.title || undefined,
       );
       setSummarySuggestions(suggestions);
       summaryKeyRef.current = key;
     }, AI_SUGGESTION_DELAY_MS);
     return () => clearTimeout(timer);
   }, [previewData, suggestSummaryAI, activeTab]);
-
 
   useEffect(() => {
     if (resumeId) {
@@ -401,15 +443,20 @@ export function ResumeEditorPage() {
   }, [resumeId, loadResume]);
 
   const activeTemplateId = currentResume?.template || "modern";
-  const shouldFetchTemplate = !resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap];
-  const panelTemplate = usePanelTemplate("resume", activeTemplateId, shouldFetchTemplate);
+  const shouldFetchTemplate =
+    !resumeTemplateMap[activeTemplateId as keyof typeof resumeTemplateMap];
+  const panelTemplate = usePanelTemplate(
+    "resume",
+    activeTemplateId,
+    shouldFetchTemplate,
+  );
   const templateConfig = useMemo(
     () => normalizeResumeConfig(panelTemplate?.config as any, activeTemplateId),
-    [panelTemplate?.config, activeTemplateId]
+    [panelTemplate?.config, activeTemplateId],
   );
   const ActiveTemplate = useMemo(
     () => resolveResumeTemplateComponent(activeTemplateId, templateConfig),
-    [activeTemplateId, templateConfig]
+    [activeTemplateId, templateConfig],
   );
   const exportElementId = "resume-preview-export";
 
@@ -447,10 +494,14 @@ export function ResumeEditorPage() {
     return (
       <div
         className={withScale ? "overflow-hidden" : undefined}
-        style={withScale ? { width: scaledWidth, height: scaledHeight } : undefined}
+        style={
+          withScale ? { width: scaledWidth, height: scaledHeight } : undefined
+        }
       >
         <div
-          className={withScale ? "transition-transform duration-200" : undefined}
+          className={
+            withScale ? "transition-transform duration-200" : undefined
+          }
           style={
             withScale
               ? {
@@ -466,9 +517,15 @@ export function ResumeEditorPage() {
             id={elementId}
             className="relative bg-white shadow-2xl min-h-[1056px] w-[816px] text-black overflow-hidden"
           >
-            <ActiveTemplate key={JSON.stringify(resumeData.structure)} data={previewData} />
+            <ActiveTemplate
+              key={JSON.stringify(resumeData.structure)}
+              data={previewData}
+            />
             {watermarkEnabled && (
-              <WatermarkOverlay text={watermarkText} settings={siteSettings.watermark} />
+              <WatermarkOverlay
+                text={watermarkText}
+                settings={siteSettings.watermark}
+              />
             )}
           </div>
         </div>
@@ -479,7 +536,8 @@ export function ResumeEditorPage() {
   const buildShareUrl = () => {
     if (typeof window === "undefined") return "";
     const origin = window.location.origin;
-    if (currentResume?.shortId) return `${origin}/shared/${currentResume.shortId}`;
+    if (currentResume?.shortId)
+      return `${origin}/shared/${currentResume.shortId}`;
     if (currentResume?.id) return `${origin}/shared/${currentResume.id}`;
     return origin;
   };
@@ -520,7 +578,7 @@ export function ResumeEditorPage() {
         latest?.subscription === "pro" || latest?.subscription === "business";
       if (!latestHasSubscription) {
         router.push(
-          `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`
+          `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`,
         );
         return;
       }
@@ -534,18 +592,22 @@ export function ResumeEditorPage() {
       await generatePDFContext(activeTemplateId);
       return;
     }
-    const pdfUrl = await generatePDF(exportElementId, 'resume.pdf');
-    const link = document.createElement('a');
+    const pdfUrl = await generatePDF(exportElementId, "resume.pdf");
+    const link = document.createElement("a");
     link.href = pdfUrl;
-    link.download = 'resume.pdf';
+    link.download = "resume.pdf";
     link.click();
   };
 
   const exportFreePDF = async () => {
     const shareUrl = buildShareUrl();
-    const qrDataUrl = shareUrl ? await createQrDataUrl(shareUrl, 160) : undefined;
-    const footerText = shareUrl ? `View online: ${shareUrl}` : `Created with ${watermarkText}`;
-    const pdfUrl = await generatePDF(exportElementId, 'resume.pdf', {
+    const qrDataUrl = shareUrl
+      ? await createQrDataUrl(shareUrl, 160)
+      : undefined;
+    const footerText = shareUrl
+      ? `View online: ${shareUrl}`
+      : `Created with ${watermarkText}`;
+    const pdfUrl = await generatePDF(exportElementId, "resume.pdf", {
       watermark: watermarkEnabled
         ? {
             text: watermarkText,
@@ -560,9 +622,9 @@ export function ResumeEditorPage() {
       qrDataUrl,
       qrSizeMm: 18,
     });
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = pdfUrl;
-    link.download = 'resume.pdf';
+    link.download = "resume.pdf";
     link.click();
   };
 
@@ -580,10 +642,10 @@ export function ResumeEditorPage() {
 
   const handleSave = async () => {
     if (!currentResume) return;
-    
+
     if (!session?.user && currentResume.id.startsWith("local-")) {
-        await saveResume();
-        return;
+      await saveResume();
+      return;
     }
 
     if (!session?.user) {
@@ -604,22 +666,25 @@ export function ResumeEditorPage() {
   };
 
   const mainTabs = [
-    { id: 'basics', label: 'Basics' },
-    { id: 'experience', label: 'Experience' },
-    { id: 'education', label: 'Education' },
-    { id: 'skills', label: 'Skills' },
-    { id: 'design', label: 'Design' },
+    { id: "basics", label: "Basics" },
+    { id: "experience", label: "Experience" },
+    { id: "education", label: "Education" },
+    { id: "skills", label: "Skills" },
+    { id: "design", label: "Design" },
   ];
 
   const moreTabs = [
-    { id: 'projects', label: 'Projects', icon: Code },
-    { id: 'certifications', label: 'Certifications', icon: Award },
-    { id: 'structure', label: 'Rearrange', icon: Layout },
+    { id: "projects", label: "Projects", icon: Code },
+    { id: "certifications", label: "Certifications", icon: Award },
+    { id: "structure", label: "Rearrange", icon: Layout },
   ];
 
   return (
     <>
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       <DownloadGateModal
         open={isDownloadModalOpen}
         onOpenChange={setIsDownloadModalOpen}
@@ -641,141 +706,212 @@ export function ResumeEditorPage() {
         }}
       >
         <div className="flex h-full flex-col lg:flex-row overflow-hidden">
-        {/* Editor Side (Left) */}
-        <div className="w-full lg:w-1/2 lg:border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
-          {/* Toolbar */}
-          <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
-            <h2 className="font-semibold text-gray-900 dark:text-white">Editor</h2>
-            <div className="flex items-center gap-2">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="lg:hidden">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-none p-0">
-                  <div className="h-full bg-gray-100 dark:bg-gray-950 overflow-y-auto overflow-x-auto">
-                    <div
-                      ref={mobilePreviewRef}
-                      className="w-full flex flex-col p-4"
-                    >
-                      <div className="w-full max-w-[816px] mx-auto flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-                        <span className="text-xs font-medium text-gray-500 px-2">Preview Zoom</span>
-                        <div className="flex items-center gap-4 w-48 px-2">
-                          <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
-                          <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+          {/* Editor Side (Left) */}
+          <div className="w-full lg:w-1/2 lg:border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
+            {/* Toolbar */}
+            <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
+              <h2 className="font-semibold text-gray-900 dark:text-white">
+                Editor
+              </h2>
+              <div className="flex items-center gap-2">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="lg:hidden">
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="right"
+                    className="w-full sm:max-w-none p-0"
+                  >
+                    <div className="h-full bg-gray-100 dark:bg-gray-950 overflow-y-auto overflow-x-auto">
+                      <div
+                        ref={mobilePreviewRef}
+                        className="w-full flex flex-col p-4"
+                      >
+                        <div className="w-full max-w-[816px] mx-auto flex items-center justify-between mb-4 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+                          <span className="text-xs font-medium text-gray-500 px-2">
+                            Preview Zoom
+                          </span>
+                          <div className="flex items-center gap-4 w-48 px-2">
+                            <span className="text-xs text-gray-400 w-8">
+                              {zoom[0]}%
+                            </span>
+                            <Slider
+                              value={zoom}
+                              onValueChange={setZoom}
+                              min={50}
+                              max={150}
+                              step={5}
+                            />
+                          </div>
+                        </div>
+                        <div className="min-w-max w-full flex justify-center">
+                          <PreviewDocument
+                            elementId="resume-preview-mobile"
+                            maxWidth={mobilePreviewSize.width}
+                          />
                         </div>
                       </div>
-                      <div className="min-w-max w-full flex justify-center">
-                        <PreviewDocument
-                          elementId="resume-preview-mobile"
-                          maxWidth={mobilePreviewSize.width}
-                        />
-                      </div>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
 
-              {/* Desktop Buttons */}
-              <div className="hidden lg:flex items-center gap-2">
-                <SharePopover />
-                {watermarkAvailable && (
+                {/* Desktop Buttons */}
+                <div className="hidden lg:flex items-center gap-2">
+                  <SharePopover />
+                  {watermarkAvailable && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleWatermarkToggle(!watermarkEnabled)}
+                      className={
+                        !watermarkEnabled
+                          ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
+                          : undefined
+                      }
+                    >
+                      Watermark {watermarkEnabled ? "On" : "Off"}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleWatermarkToggle(!watermarkEnabled)}
-                    className={
-                      !watermarkEnabled
-                        ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-300"
-                        : undefined
-                    }
+                    onClick={handleSave}
+                    disabled={isSaving}
                   >
-                    Watermark {watermarkEnabled ? "On" : "Off"}
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSaving ? "Saving..." : "Save"}
                   </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExportTxt} disabled={isExporting}>
-                  <FileText className="w-4 h-4 mr-2" />
-                  TXT
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExportImage} disabled={isExporting}>
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Image
-                </Button>
-                <Button size="sm" onClick={handleExportPDF} disabled={isExporting} className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white">
-                  <Download className="w-4 h-4 mr-2" />
-                  PDF
-                </Button>
-              </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportTxt}
+                    disabled={isExporting}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    TXT
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportImage}
+                    disabled={isExporting}
+                  >
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Image
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                    className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    PDF
+                  </Button>
+                </div>
 
-              {/* Mobile Buttons */}
-              <div className="flex lg:hidden items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
-                  <Save className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save"}</span>
-                </Button>
-                <Button size="sm" onClick={handleExportPDF} disabled={isExporting} className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white">
-                  <Download className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">PDF</span>
-                </Button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="w-4 h-4 mr-2" />
-                      More
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <div className="p-2 border-b border-gray-100 dark:border-gray-800">
-                      <SharePopover />
-                    </div>
-                    {watermarkAvailable && (
-                      <DropdownMenuItem onClick={() => handleWatermarkToggle(!watermarkEnabled)}>
-                        <CheckCircle2 className={`w-4 h-4 mr-2 ${!watermarkEnabled ? "text-purple-600" : "text-gray-400"}`} />
-                        Watermark {watermarkEnabled ? "Off" : "On"}
+                {/* Mobile Buttons */}
+                <div className="flex lg:hidden items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  >
+                    <Save className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      {isSaving ? "Saving..." : "Save"}
+                    </span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                    className="bg-gradient-to-r from-purple-600 to-cyan-500 text-white"
+                  >
+                    <Download className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">PDF</span>
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="w-4 h-4 mr-2" />
+                        More
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                        <SharePopover />
+                      </div>
+                      {watermarkAvailable && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleWatermarkToggle(!watermarkEnabled)
+                          }
+                        >
+                          <CheckCircle2
+                            className={`w-4 h-4 mr-2 ${!watermarkEnabled ? "text-purple-600" : "text-gray-400"}`}
+                          />
+                          Watermark {watermarkEnabled ? "Off" : "On"}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onClick={handleExportTxt}
+                        disabled={isExporting}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Export TXT
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={handleExportTxt} disabled={isExporting}>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Export TXT
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExportImage} disabled={isExporting}>
-                      <ImageIcon className="w-4 h-4 mr-2" />
-                      Export Image
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        onClick={handleExportImage}
+                        disabled={isExporting}
+                      >
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Export Image
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
-              <div className="flex items-center gap-2">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+                <div className="flex items-center gap-2">
                   <TabsList className="flex-1 grid grid-cols-5">
-                    {mainTabs.map(tab => (
-                      <TabsTrigger key={tab.id} value={tab.id} className="text-xs sm:text-sm">
+                    {mainTabs.map((tab) => (
+                      <TabsTrigger
+                        key={tab.id}
+                        value={tab.id}
+                        className="text-xs sm:text-sm"
+                      >
                         {tab.label}
                       </TabsTrigger>
                     ))}
                   </TabsList>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="shrink-0 h-9 w-9">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0 h-9 w-9"
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {moreTabs.map(tab => (
-                        <DropdownMenuItem 
-                          key={tab.id} 
+                      {moreTabs.map((tab) => (
+                        <DropdownMenuItem
+                          key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
                           className={activeTab === tab.id ? "bg-accent" : ""}
                         >
@@ -785,22 +921,23 @@ export function ResumeEditorPage() {
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                </div>
               </div>
-            </div>
 
-                      <ScrollArea className="flex-1 min-h-0">
-                        <div className="p-6 pb-10">
-                          <TabsContent value="basics" className="mt-0 space-y-6">                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="p-6 pb-10">
+                  <TabsContent value="basics" className="mt-0 space-y-6">
+                    {" "}
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                       Basic Information
                     </h2>
-                    
                     <div className="mb-6 flex items-center gap-6">
                       <div className="shrink-0">
                         {resumeData.basics.image ? (
                           <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-                            <img 
-                              src={resumeData.basics.image} 
-                              alt="Profile" 
+                            <img
+                              src={resumeData.basics.image}
+                              alt="Profile"
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -832,7 +969,9 @@ export function ResumeEditorPage() {
                               if (file) {
                                 const reader = new FileReader();
                                 reader.onloadend = () => {
-                                  updateBasics({ image: reader.result as string });
+                                  updateBasics({
+                                    image: reader.result as string,
+                                  });
                                 };
                                 reader.readAsDataURL(file);
                               }
@@ -844,7 +983,7 @@ export function ResumeEditorPage() {
                               variant="ghost"
                               size="sm"
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                              onClick={() => updateBasics({ image: '' })}
+                              onClick={() => updateBasics({ image: "" })}
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
                               Remove
@@ -856,81 +995,92 @@ export function ResumeEditorPage() {
                         </p>
                       </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Full Name</Label>
-                        <Input 
+                        <Input
                           value={resumeData.basics.name}
-                          onChange={(e) => updateBasics({ name: e.target.value })}
+                          onChange={(e) =>
+                            updateBasics({ name: e.target.value })
+                          }
                           placeholder="John Doe"
                         />
                       </div>
                       <div>
                         <Label>Professional Title</Label>
-                        <Input 
+                        <Input
                           value={resumeData.basics.title}
-                          onChange={(e) => updateBasics({ title: e.target.value })}
+                          onChange={(e) =>
+                            updateBasics({ title: e.target.value })
+                          }
                           placeholder="Software Engineer"
                         />
                       </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Email</Label>
-                        <Input 
+                        <Input
                           type="email"
                           value={resumeData.basics.email}
-                          onChange={(e) => updateBasics({ email: e.target.value })}
+                          onChange={(e) =>
+                            updateBasics({ email: e.target.value })
+                          }
                           placeholder="john@example.com"
                         />
                       </div>
                       <div>
                         <Label>Phone</Label>
-                        <Input 
+                        <Input
                           value={resumeData.basics.phone}
-                          onChange={(e) => updateBasics({ phone: e.target.value })}
+                          onChange={(e) =>
+                            updateBasics({ phone: e.target.value })
+                          }
                           placeholder="+1 (555) 000-0000"
                         />
                       </div>
                     </div>
-
                     <div>
                       <Label>Location</Label>
-                      <Input 
+                      <Input
                         value={resumeData.basics.location}
-                        onChange={(e) => updateBasics({ location: e.target.value })}
+                        onChange={(e) =>
+                          updateBasics({ location: e.target.value })
+                        }
                         placeholder="San Francisco, CA"
                       />
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>LinkedIn</Label>
-                        <Input 
-                          value={resumeData.basics.linkedin || ''}
-                          onChange={(e) => updateBasics({ linkedin: e.target.value })}
+                        <Input
+                          value={resumeData.basics.linkedin || ""}
+                          onChange={(e) =>
+                            updateBasics({ linkedin: e.target.value })
+                          }
                           placeholder="linkedin.com/in/johndoe"
                         />
                       </div>
                       <div>
                         <Label>GitHub</Label>
-                        <Input 
-                          value={resumeData.basics.github || ''}
-                          onChange={(e) => updateBasics({ github: e.target.value })}
+                        <Input
+                          value={resumeData.basics.github || ""}
+                          onChange={(e) =>
+                            updateBasics({ github: e.target.value })
+                          }
                           placeholder="github.com/johndoe"
                         />
                       </div>
                     </div>
-
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <Label>Professional Summary</Label>
                       </div>
                       <RichTextarea
                         value={resumeData.basics.summary}
-                        onValueChange={(value) => updateBasics({ summary: value })}
+                        onValueChange={(value) =>
+                          updateBasics({ summary: value })
+                        }
                         placeholder="Write a brief summary about your professional background and career goals..."
                         rows={4}
                         enableFormatting
@@ -956,115 +1106,131 @@ export function ResumeEditorPage() {
                           <div className="space-y-2">
                             {availableSummarySuggestions.length === 0 ? (
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Suggestions are generating based on your latest edits.
+                                Suggestions are generating based on your latest
+                                edits.
                               </p>
                             ) : (
-                              availableSummarySuggestions.map((suggestion, idx) => (
-                                <div
-                                  key={`${suggestion}-${idx}`}
-                                  className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2"
-                                >
-                                  <Button
-                                    variant="outline"
-                                    size="icon-sm"
-                                    type="button"
-                                    onClick={() => {
-                                      updateBasics({ summary: suggestion });
-                                      setUsedSummarySuggestions((prev) => [...prev, suggestion]);
-                                    }}
-                                    className="shrink-0"
+                              availableSummarySuggestions.map(
+                                (suggestion, idx) => (
+                                  <div
+                                    key={`${suggestion}-${idx}`}
+                                    className="flex items-start gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2"
                                   >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                  <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
-                                    {suggestion}
-                                  </p>
-                                </div>
-                              ))
+                                    <Button
+                                      variant="outline"
+                                      size="icon-sm"
+                                      type="button"
+                                      onClick={() => {
+                                        updateBasics({ summary: suggestion });
+                                        setUsedSummarySuggestions((prev) => [
+                                          ...prev,
+                                          suggestion,
+                                        ]);
+                                      }}
+                                      className="shrink-0"
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                    <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+                                      {suggestion}
+                                    </p>
+                                  </div>
+                                ),
+                              )
                             )}
                           </div>
                         )}
                       </div>
                     </div>
-                </TabsContent>
+                  </TabsContent>
 
-                <TabsContent value="experience" className="mt-0">
-                  <ExperienceSection
-                    onDraftChange={setDraftExperience}
-                    isActive={activeTab === "experience"}
-                  />
-                </TabsContent>
+                  <TabsContent value="experience" className="mt-0">
+                    <ExperienceSection
+                      onDraftChange={setDraftExperience}
+                      isActive={activeTab === "experience"}
+                    />
+                  </TabsContent>
 
-                <TabsContent value="education" className="mt-0">
-                  <EducationSection />
-                </TabsContent>
+                  <TabsContent value="education" className="mt-0">
+                    <EducationSection />
+                  </TabsContent>
 
-                <TabsContent value="skills" className="mt-0">
-                  <SkillsSection
-                    onDraftChange={setDraftSkillGroup}
-                    experienceSource={previewData.experiences}
-                    isActive={activeTab === "skills"}
-                  />
-                </TabsContent>
+                  <TabsContent value="skills" className="mt-0">
+                    <SkillsSection
+                      onDraftChange={setDraftSkillGroup}
+                      experienceSource={previewData.experiences}
+                      isActive={activeTab === "skills"}
+                    />
+                  </TabsContent>
 
-                <TabsContent value="design" className="mt-0">
-                <DesignSection
-                  templateId={activeTemplateId}
-                  templateConfig={templateConfig}
-                  advancedFormatting={advancedFormatting}
-                  onAdvancedFormattingChange={setAdvancedFormatting}
-                  watermarkEnabled={watermarkAvailable ? watermarkEnabled : undefined}
-                  onWatermarkToggle={handleWatermarkToggle}
-                  watermarkLocked={!canUsePaid || !watermarkAvailable}
+                  <TabsContent value="design" className="mt-0">
+                    <DesignSection
+                      templateId={activeTemplateId}
+                      templateConfig={templateConfig}
+                      advancedFormatting={advancedFormatting}
+                      onAdvancedFormattingChange={setAdvancedFormatting}
+                      watermarkEnabled={
+                        watermarkAvailable ? watermarkEnabled : undefined
+                      }
+                      onWatermarkToggle={handleWatermarkToggle}
+                      watermarkLocked={!canUsePaid || !watermarkAvailable}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="projects" className="mt-0">
+                    <ProjectsSection advancedFormatting={advancedFormatting} />
+                  </TabsContent>
+
+                  <TabsContent value="certifications" className="mt-0">
+                    <CertificationsSection />
+                  </TabsContent>
+
+                  <TabsContent value="structure" className="mt-0">
+                    <SectionManager />
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
+          </div>
+
+          {/* Preview Side (Right) */}
+          <div className="hidden lg:flex w-1/2 bg-gray-100 dark:bg-gray-950 flex-col">
+            <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                Preview
+              </span>
+              <div className="flex items-center gap-4 w-48">
+                <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
+                <Slider
+                  value={zoom}
+                  onValueChange={setZoom}
+                  min={50}
+                  max={150}
+                  step={5}
                 />
-                </TabsContent>
-
-                <TabsContent value="projects" className="mt-0">
-                  <ProjectsSection advancedFormatting={advancedFormatting} />
-                </TabsContent>
-
-                <TabsContent value="certifications" className="mt-0">
-                  <CertificationsSection />
-                </TabsContent>
-
-                <TabsContent value="structure" className="mt-0">
-                  <SectionManager />
-                </TabsContent>
               </div>
-            </ScrollArea>
-          </Tabs>
-        </div>
-
-        {/* Preview Side (Right) */}
-        <div className="hidden lg:flex w-1/2 bg-gray-100 dark:bg-gray-950 flex-col">
-          <div className="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-gray-900/50 shrink-0">
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Preview</span>
-            <div className="flex items-center gap-4 w-48">
-              <span className="text-xs text-gray-400 w-8">{zoom[0]}%</span>
-              <Slider value={zoom} onValueChange={setZoom} min={50} max={150} step={5} />
+            </div>
+            <div className="flex-1 w-full overflow-y-auto overflow-x-auto p-8">
+              <div ref={previewContainerRef} className="w-full">
+                <div className="min-w-max w-full flex justify-center">
+                  <PreviewDocument
+                    elementId="resume-preview-view"
+                    maxWidth={previewContainerSize.width}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex-1 w-full overflow-y-auto overflow-x-auto p-8">
-            <div ref={previewContainerRef} className="w-full">
-              <div className="min-w-max w-full flex justify-center">
-                <PreviewDocument
-                  elementId="resume-preview-view"
-                  maxWidth={previewContainerSize.width}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Offscreen preview for mobile export */}
-        <div 
-          className="fixed top-0 left-0 w-0 h-0 overflow-hidden opacity-0 pointer-events-none -z-50"
-          aria-hidden="true"
-        >
-          <PreviewDocument elementId={exportElementId} withScale={false} />
+          {/* Offscreen preview for mobile export */}
+          <div
+            className="fixed top-0 left-0 w-0 h-0 overflow-hidden opacity-0 pointer-events-none -z-50"
+            aria-hidden="true"
+          >
+            <PreviewDocument elementId={exportElementId} withScale={false} />
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
@@ -1086,28 +1252,36 @@ function ExperienceSection({
   } = useResume();
   const [isAdding, setIsAdding] = useState(false);
   const [newExperience, setNewExperience] = useState<Partial<Experience>>({
-    company: '',
-    role: '',
-    location: '',
-    startDate: '',
-    endDate: '',
+    company: "",
+    role: "",
+    location: "",
+    startDate: "",
+    endDate: "",
     current: false,
-    bullets: []
+    bullets: [],
   });
   const [startMonth, setStartMonth] = useState("");
   const [startYear, setStartYear] = useState("");
-    const [endMonth, setEndMonth] = useState("");
-    const [endYear, setEndYear] = useState("");
-    const [usedSuggestions, setUsedSuggestions] = useState<string[]>([]);
-    const [aiSuggestedBullets, setAiSuggestedBullets] = useState<string[]>([]);
-    const [isNewSuggestionsLoading, setIsNewSuggestionsLoading] = useState(false);
-    const [editingExperiences, setEditingExperiences] = useState<Record<string, boolean>>({});
-    const [existingSuggestionState, setExistingSuggestionState] = useState<
-      Record<string, { role: string; used: string[] }>
-    >({});
-    const [existingAiSuggestions, setExistingAiSuggestions] = useState<Record<string, string[]>>({});
-    const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>({});
-  const [existingSuggestionsLoading, setExistingSuggestionsLoading] = useState<Record<string, boolean>>({});
+  const [endMonth, setEndMonth] = useState("");
+  const [endYear, setEndYear] = useState("");
+  const [usedSuggestions, setUsedSuggestions] = useState<string[]>([]);
+  const [aiSuggestedBullets, setAiSuggestedBullets] = useState<string[]>([]);
+  const [isNewSuggestionsLoading, setIsNewSuggestionsLoading] = useState(false);
+  const [editingExperiences, setEditingExperiences] = useState<
+    Record<string, boolean>
+  >({});
+  const [existingSuggestionState, setExistingSuggestionState] = useState<
+    Record<string, { role: string; used: string[] }>
+  >({});
+  const [existingAiSuggestions, setExistingAiSuggestions] = useState<
+    Record<string, string[]>
+  >({});
+  const [existingAiKeys, setExistingAiKeys] = useState<Record<string, string>>(
+    {},
+  );
+  const [existingSuggestionsLoading, setExistingSuggestionsLoading] = useState<
+    Record<string, boolean>
+  >({});
   const skipNextNewSuggestRef = useRef(false);
   const skipNextExistingSuggestRef = useRef<Record<string, boolean>>({});
   const activeBulletRef = useRef<HTMLTextAreaElement | null>(null);
@@ -1118,11 +1292,15 @@ function ExperienceSection({
   } | null>(null);
 
   const applyToActiveBullet = (
-    updater: (value: string, start: number, end: number) => {
+    updater: (
+      value: string,
+      start: number,
+      end: number,
+    ) => {
       value: string;
       selectionStart?: number;
       selectionEnd?: number;
-    }
+    },
   ) => {
     if (!activeBulletContext || !activeBulletRef.current) return;
     const input = activeBulletRef.current;
@@ -1134,8 +1312,13 @@ function ExperienceSection({
       const nextBullets = [...(newExperience.bullets || [])];
       nextBullets[activeBulletContext.index] = result.value;
       setNewExperience({ ...newExperience, bullets: nextBullets });
-    } else if (activeBulletContext.scope === "existing" && activeBulletContext.expId) {
-      const exp = resumeData.experiences.find((item) => item.id === activeBulletContext.expId);
+    } else if (
+      activeBulletContext.scope === "existing" &&
+      activeBulletContext.expId
+    ) {
+      const exp = resumeData.experiences.find(
+        (item) => item.id === activeBulletContext.expId,
+      );
       if (!exp) return;
       const nextBullets = [...exp.bullets];
       nextBullets[activeBulletContext.index] = result.value;
@@ -1149,7 +1332,10 @@ function ExperienceSection({
         typeof result.selectionStart === "number" &&
         typeof result.selectionEnd === "number"
       ) {
-        activeBulletRef.current.setSelectionRange(result.selectionStart, result.selectionEnd);
+        activeBulletRef.current.setSelectionRange(
+          result.selectionStart,
+          result.selectionEnd,
+        );
       }
     });
   };
@@ -1176,7 +1362,9 @@ function ExperienceSection({
       const lines = selection ? selection.split(/\r?\n/) : [""];
       const updatedLines = lines.map((line) => {
         if (!line.trim()) return line;
-        return line.startsWith("- ") || line.startsWith("* ") ? line : `- ${line}`;
+        return line.startsWith("- ") || line.startsWith("* ")
+          ? line
+          : `- ${line}`;
       });
       const updated = updatedLines.join("\n");
       return {
@@ -1189,15 +1377,15 @@ function ExperienceSection({
 
   const yearOptions = useMemo(
     () => buildYearOptions(1970, new Date().getFullYear() + 1),
-    []
+    [],
   );
   const jobTitleOptions = useMemo(
     () => JOB_TITLE_SUGGESTIONS.map((title) => ({ value: title })),
-    []
+    [],
   );
   const companyOptions = useMemo(
     () => COMPANY_SUGGESTIONS.map((company) => ({ value: company })),
-    []
+    [],
   );
 
   const normalizeSuggestion = (value: string) => value.trim().toLowerCase();
@@ -1205,7 +1393,9 @@ function ExperienceSection({
     const used = new Set(usedSuggestions.map(normalizeSuggestion));
     const unique = aiSuggestedBullets.filter(
       (bullet, index) =>
-        aiSuggestedBullets.findIndex((item) => normalizeSuggestion(item) === normalizeSuggestion(bullet)) === index
+        aiSuggestedBullets.findIndex(
+          (item) => normalizeSuggestion(item) === normalizeSuggestion(bullet),
+        ) === index,
     );
     return unique.filter((bullet) => !used.has(normalizeSuggestion(bullet)));
   }, [usedSuggestions, aiSuggestedBullets]);
@@ -1222,7 +1412,7 @@ function ExperienceSection({
 
   const getExistingSuggestions = (exp: Experience) => {
     const unique = (existingAiSuggestions[exp.id] || []).filter(
-      (item, index, arr) => arr.indexOf(item) === index
+      (item, index, arr) => arr.indexOf(item) === index,
     );
     const state = existingSuggestionState[exp.id];
     const used = state && state.role === exp.role ? state.used : [];
@@ -1259,90 +1449,108 @@ function ExperienceSection({
     updateExperience(exp.id, { bullets: nextBullets });
   };
 
-    useEffect(() => {
-      setUsedSuggestions([]);
+  useEffect(() => {
+    setUsedSuggestions([]);
+    setAiSuggestedBullets([]);
+    setIsNewSuggestionsLoading(false);
+  }, [newExperience.role]);
+
+  useEffect(() => {
+    if (!isActive) {
+      setIsNewSuggestionsLoading(false);
+      return;
+    }
+    if (!isAdding || !newExperience.role) {
       setAiSuggestedBullets([]);
       setIsNewSuggestionsLoading(false);
-    }, [newExperience.role]);
+      return;
+    }
+    if (skipNextNewSuggestRef.current) {
+      skipNextNewSuggestRef.current = false;
+      setIsNewSuggestionsLoading(false);
+      return;
+    }
+    const description = (newExperience.bullets || []).join(" ").trim();
+    const role = newExperience.role.trim();
+    let isMounted = true;
+    setIsNewSuggestionsLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const bullets = await suggestResponsibilitiesAI(role, description);
+        if (!isMounted) return;
+        setAiSuggestedBullets(bullets);
+      } catch (error) {
+        console.error("Auto-suggest failed", error);
+      } finally {
+        if (isMounted) setIsNewSuggestionsLoading(false);
+      }
+    }, AI_SUGGESTION_DELAY_MS);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [
+    isActive,
+    isAdding,
+    newExperience.role,
+    newExperience.bullets,
+    suggestResponsibilitiesAI,
+  ]);
 
-    useEffect(() => {
-      if (!isActive) {
-        setIsNewSuggestionsLoading(false);
+  useEffect(() => {
+    if (!isActive) return;
+    const timers: NodeJS.Timeout[] = [];
+    let isMounted = true;
+    resumeData.experiences.forEach((exp) => {
+      if (!editingExperiences[exp.id] || !exp.role) {
+        setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
         return;
       }
-      if (!isAdding || !newExperience.role) {
-        setAiSuggestedBullets([]);
-        setIsNewSuggestionsLoading(false);
+      if (skipNextExistingSuggestRef.current[exp.id]) {
+        skipNextExistingSuggestRef.current = {
+          ...skipNextExistingSuggestRef.current,
+          [exp.id]: false,
+        };
+        setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
         return;
       }
-      if (skipNextNewSuggestRef.current) {
-        skipNextNewSuggestRef.current = false;
-        setIsNewSuggestionsLoading(false);
-        return;
-      }
-      const description = (newExperience.bullets || []).join(" ").trim();
-      const role = newExperience.role.trim();
-      let isMounted = true;
-      setIsNewSuggestionsLoading(true);
+      const description = exp.bullets.join(" ").trim();
+      const key = `${exp.role}|${description}`;
+      if (existingAiKeys[exp.id] === key) return;
+      setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: true }));
       const timer = setTimeout(async () => {
         try {
-          const bullets = await suggestResponsibilitiesAI(role, description);
+          const bullets = await suggestResponsibilitiesAI(
+            exp.role,
+            description,
+          );
           if (!isMounted) return;
-          setAiSuggestedBullets(bullets);
+          setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
+          setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
         } catch (error) {
-          console.error("Auto-suggest failed", error);
+          console.error("Auto-suggest existing failed", error);
         } finally {
-          if (isMounted) setIsNewSuggestionsLoading(false);
+          if (isMounted) {
+            setExistingSuggestionsLoading((prev) => ({
+              ...prev,
+              [exp.id]: false,
+            }));
+          }
         }
       }, AI_SUGGESTION_DELAY_MS);
-      return () => {
-        isMounted = false;
-        clearTimeout(timer);
-      };
-    }, [isActive, isAdding, newExperience.role, newExperience.bullets, suggestResponsibilitiesAI]);
-
-    useEffect(() => {
-      if (!isActive) return;
-      const timers: NodeJS.Timeout[] = [];
-      let isMounted = true;
-      resumeData.experiences.forEach((exp) => {
-        if (!editingExperiences[exp.id] || !exp.role) {
-          setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
-          return;
-        }
-        if (skipNextExistingSuggestRef.current[exp.id]) {
-          skipNextExistingSuggestRef.current = {
-            ...skipNextExistingSuggestRef.current,
-            [exp.id]: false,
-          };
-          setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
-          return;
-        }
-        const description = exp.bullets.join(" ").trim();
-        const key = `${exp.role}|${description}`;
-        if (existingAiKeys[exp.id] === key) return;
-        setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: true }));
-        const timer = setTimeout(async () => {
-          try {
-            const bullets = await suggestResponsibilitiesAI(exp.role, description);
-            if (!isMounted) return;
-            setExistingAiSuggestions((prev) => ({ ...prev, [exp.id]: bullets }));
-            setExistingAiKeys((prev) => ({ ...prev, [exp.id]: key }));
-          } catch (error) {
-            console.error("Auto-suggest existing failed", error);
-          } finally {
-            if (isMounted) {
-              setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: false }));
-            }
-          }
-        }, AI_SUGGESTION_DELAY_MS);
-        timers.push(timer);
-      });
-      return () => {
-        isMounted = false;
-        timers.forEach(clearTimeout);
-      };
-    }, [isActive, editingExperiences, resumeData.experiences, suggestResponsibilitiesAI, existingAiKeys]);
+      timers.push(timer);
+    });
+    return () => {
+      isMounted = false;
+      timers.forEach(clearTimeout);
+    };
+  }, [
+    isActive,
+    editingExperiences,
+    resumeData.experiences,
+    suggestResponsibilitiesAI,
+    existingAiKeys,
+  ]);
 
   useEffect(() => {
     if (!onDraftChange) return;
@@ -1359,7 +1567,7 @@ function ExperienceSection({
         newExperience.location ||
         newExperience.startDate ||
         newExperience.endDate ||
-        cleanedBullets.length > 0
+        cleanedBullets.length > 0,
     );
     if (!hasContent) {
       onDraftChange(null);
@@ -1408,7 +1616,9 @@ function ExperienceSection({
 
   const handleRemoveBullet = (index: number) => {
     setNewExperience((prev) => {
-      const nextBullets = (prev.bullets || []).filter((_, idx) => idx !== index);
+      const nextBullets = (prev.bullets || []).filter(
+        (_, idx) => idx !== index,
+      );
       return {
         ...prev,
         bullets: nextBullets,
@@ -1422,7 +1632,11 @@ function ExperienceSection({
     skipNextNewSuggestRef.current = true;
     setNewExperience((prev) => {
       const bullets = [...(prev.bullets || [])];
-      if (bullets.some((bullet) => bullet.trim().toLowerCase() === trimmed.toLowerCase())) {
+      if (
+        bullets.some(
+          (bullet) => bullet.trim().toLowerCase() === trimmed.toLowerCase(),
+        )
+      ) {
         return prev;
       }
       const emptyIndex = bullets.findIndex((bullet) => !bullet.trim());
@@ -1500,7 +1714,7 @@ function ExperienceSection({
             Work Experience
           </h2>
         </div>
-        <Button 
+        <Button
           size="sm"
           onClick={() => setIsAdding(true)}
           className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
@@ -1519,7 +1733,9 @@ function ExperienceSection({
                 <Combobox
                   options={jobTitleOptions}
                   value={newExperience.role || ""}
-                  onChange={(value) => setNewExperience({ ...newExperience, role: value })}
+                  onChange={(value) =>
+                    setNewExperience({ ...newExperience, role: value })
+                  }
                   placeholder="Select or type a job title"
                   searchPlaceholder="Search job titles"
                   allowCustom
@@ -1538,7 +1754,9 @@ function ExperienceSection({
                 <Combobox
                   options={companyOptions}
                   value={newExperience.company || ""}
-                  onChange={(value) => setNewExperience({ ...newExperience, company: value })}
+                  onChange={(value) =>
+                    setNewExperience({ ...newExperience, company: value })
+                  }
                   placeholder="Select or type a company"
                   searchPlaceholder="Search companies"
                   allowCustom
@@ -1548,15 +1766,20 @@ function ExperienceSection({
                   contentClassName="rounded-2xl"
                   itemClassName="rounded-lg py-2"
                 />
-                </div>
               </div>
+            </div>
 
             <div className="space-y-2">
               <Label>Location</Label>
               <Input
                 placeholder="e.g. Dubai, UAE (Remote)"
                 value={newExperience.location}
-                onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
+                onChange={(e) =>
+                  setNewExperience({
+                    ...newExperience,
+                    location: e.target.value,
+                  })
+                }
               />
             </div>
 
@@ -1564,7 +1787,10 @@ function ExperienceSection({
               <div className="space-y-2">
                 <Label>Start Date</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Select value={startMonth || undefined} onValueChange={handleStartMonthChange}>
+                  <Select
+                    value={startMonth || undefined}
+                    onValueChange={handleStartMonthChange}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
@@ -1576,7 +1802,10 @@ function ExperienceSection({
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={startYear || undefined} onValueChange={handleStartYearChange}>
+                  <Select
+                    value={startYear || undefined}
+                    onValueChange={handleStartYearChange}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
@@ -1642,24 +1871,25 @@ function ExperienceSection({
             </div>
 
             <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                      Description Builder
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Suggestions update automatically based on the job title and description.
-                    </p>
-                  </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Description Builder
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Suggestions update automatically based on the job title and
+                    description.
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-6">
                 <div className="space-y-4">
-                    <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
-                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                        Recommended Points
-                      </p>
-                      <div className="mt-2 space-y-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="rounded-md border bg-white dark:bg-gray-900 p-3">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                      Recommended Points
+                    </p>
+                    <div className="mt-2 space-y-2 max-h-64 overflow-y-auto pr-1">
                       {isNewSuggestionsLoading ? (
                         <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300">
                           <Spinner className="h-3 w-3" />
@@ -1693,8 +1923,8 @@ function ExperienceSection({
                           </div>
                         ))
                       )}
-                      </div>
                     </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -1718,7 +1948,8 @@ function ExperienceSection({
                     onList={insertActiveBullets}
                   />
                   <div className="space-y-3">
-                    {newExperience.bullets && newExperience.bullets.length > 0 ? (
+                    {newExperience.bullets &&
+                    newExperience.bullets.length > 0 ? (
                       newExperience.bullets.map((bullet, idx) => (
                         <div key={idx} className="flex gap-2">
                           <div className="flex-1">
@@ -1726,13 +1957,21 @@ function ExperienceSection({
                               placeholder="Describe your achievement..."
                               value={bullet}
                               onValueChange={(value) => {
-                                const nextBullets = [...(newExperience.bullets || [])];
+                                const nextBullets = [
+                                  ...(newExperience.bullets || []),
+                                ];
                                 nextBullets[idx] = value;
-                                setNewExperience({ ...newExperience, bullets: nextBullets });
+                                setNewExperience({
+                                  ...newExperience,
+                                  bullets: nextBullets,
+                                });
                               }}
                               onFocus={(event) => {
                                 activeBulletRef.current = event.currentTarget;
-                                setActiveBulletContext({ scope: "new", index: idx });
+                                setActiveBulletContext({
+                                  scope: "new",
+                                  index: idx,
+                                });
                               }}
                               rows={2}
                               className="w-full"
@@ -1782,12 +2021,14 @@ function ExperienceSection({
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">{exp.role}</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                    {exp.role}
+                  </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {exp.company} - {exp.location}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-500">
-                    {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                    {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1816,7 +2057,9 @@ function ExperienceSection({
                       <Label>Job Title</Label>
                       <Input
                         value={exp.role}
-                        onChange={(e) => updateExperience(exp.id, { role: e.target.value })}
+                        onChange={(e) =>
+                          updateExperience(exp.id, { role: e.target.value })
+                        }
                         placeholder="Job Title"
                       />
                     </div>
@@ -1824,7 +2067,9 @@ function ExperienceSection({
                       <Label>Company</Label>
                       <Input
                         value={exp.company}
-                        onChange={(e) => updateExperience(exp.id, { company: e.target.value })}
+                        onChange={(e) =>
+                          updateExperience(exp.id, { company: e.target.value })
+                        }
                         placeholder="Company"
                       />
                     </div>
@@ -1834,7 +2079,9 @@ function ExperienceSection({
                       <Label>Location</Label>
                       <Input
                         value={exp.location}
-                        onChange={(e) => updateExperience(exp.id, { location: e.target.value })}
+                        onChange={(e) =>
+                          updateExperience(exp.id, { location: e.target.value })
+                        }
                         placeholder="Location"
                       />
                     </div>
@@ -1842,7 +2089,11 @@ function ExperienceSection({
                       <Label>Start Date</Label>
                       <Input
                         value={exp.startDate}
-                        onChange={(e) => updateExperience(exp.id, { startDate: e.target.value })}
+                        onChange={(e) =>
+                          updateExperience(exp.id, {
+                            startDate: e.target.value,
+                          })
+                        }
                         placeholder="Start Date"
                       />
                     </div>
@@ -1852,7 +2103,9 @@ function ExperienceSection({
                       <Label>End Date</Label>
                       <Input
                         value={exp.endDate}
-                        onChange={(e) => updateExperience(exp.id, { endDate: e.target.value })}
+                        onChange={(e) =>
+                          updateExperience(exp.id, { endDate: e.target.value })
+                        }
                         placeholder="End Date"
                         disabled={exp.current}
                       />
@@ -1929,7 +2182,9 @@ function ExperienceSection({
                               variant="outline"
                               size="icon-sm"
                               type="button"
-                              onClick={() => applyExistingSuggestion(exp, bullet)}
+                              onClick={() =>
+                                applyExistingSuggestion(exp, bullet)
+                              }
                               className="shrink-0"
                             >
                               <Plus className="h-4 w-4" />
@@ -1944,7 +2199,7 @@ function ExperienceSection({
                   </div>
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 {isEditing && (
                   <div className="flex items-center justify-between">
@@ -2015,27 +2270,28 @@ function ExperienceSection({
 }
 
 function EducationSection() {
-  const { resumeData, addEducation, updateEducation, removeEducation } = useResume();
+  const { resumeData, addEducation, updateEducation, removeEducation } =
+    useResume();
   const [isAdding, setIsAdding] = useState(false);
   const [newEducation, setNewEducation] = useState<Partial<Education>>({
-    institution: '',
-    degree: '',
-    field: '',
-    startDate: '',
-    endDate: '',
-    gpa: ''
+    institution: "",
+    degree: "",
+    field: "",
+    startDate: "",
+    endDate: "",
+    gpa: "",
   });
 
   const handleAdd = () => {
     if (newEducation.institution && newEducation.degree) {
-      addEducation(newEducation as Omit<Education, 'id'>);
+      addEducation(newEducation as Omit<Education, "id">);
       setNewEducation({
-        institution: '',
-        degree: '',
-        field: '',
-        startDate: '',
-        endDate: '',
-        gpa: ''
+        institution: "",
+        degree: "",
+        field: "",
+        startDate: "",
+        endDate: "",
+        gpa: "",
       });
       setIsAdding(false);
     }
@@ -2053,7 +2309,7 @@ function EducationSection() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           Education
         </h2>
-        <Button 
+        <Button
           size="sm"
           onClick={() => setIsAdding(true)}
           className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
@@ -2071,7 +2327,12 @@ function EducationSection() {
               <Input
                 placeholder="Institution Name"
                 value={newEducation.institution}
-                onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
+                onChange={(e) =>
+                  setNewEducation({
+                    ...newEducation,
+                    institution: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -2080,7 +2341,9 @@ function EducationSection() {
                 <Input
                   placeholder="e.g. Bachelor's"
                   value={newEducation.degree}
-                  onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
+                  onChange={(e) =>
+                    setNewEducation({ ...newEducation, degree: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -2088,7 +2351,9 @@ function EducationSection() {
                 <Input
                   placeholder="e.g. Computer Science"
                   value={newEducation.field}
-                  onChange={(e) => setNewEducation({ ...newEducation, field: e.target.value })}
+                  onChange={(e) =>
+                    setNewEducation({ ...newEducation, field: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -2096,16 +2361,34 @@ function EducationSection() {
               <div className="space-y-2">
                 <Label>Start Date</Label>
                 <MonthYearPicker
-                  date={newEducation.startDate ? new Date(newEducation.startDate) : undefined}
-                  onSelect={(date) => setNewEducation({ ...newEducation, startDate: format(date, "MMM yyyy") })}
+                  date={
+                    newEducation.startDate
+                      ? new Date(newEducation.startDate)
+                      : undefined
+                  }
+                  onSelect={(date) =>
+                    setNewEducation({
+                      ...newEducation,
+                      startDate: format(date, "MMM yyyy"),
+                    })
+                  }
                   placeholder="Start"
                 />
               </div>
               <div className="space-y-2">
                 <Label>End Date</Label>
                 <MonthYearPicker
-                  date={newEducation.endDate && newEducation.endDate !== 'Present' ? new Date(newEducation.endDate) : undefined}
-                  onSelect={(date) => setNewEducation({ ...newEducation, endDate: format(date, "MMM yyyy") })}
+                  date={
+                    newEducation.endDate && newEducation.endDate !== "Present"
+                      ? new Date(newEducation.endDate)
+                      : undefined
+                  }
+                  onSelect={(date) =>
+                    setNewEducation({
+                      ...newEducation,
+                      endDate: format(date, "MMM yyyy"),
+                    })
+                  }
                   placeholder="End"
                 />
               </div>
@@ -2114,13 +2397,17 @@ function EducationSection() {
                 <Input
                   placeholder="3.8"
                   value={newEducation.gpa}
-                  onChange={(e) => setNewEducation({ ...newEducation, gpa: e.target.value })}
+                  onChange={(e) =>
+                    setNewEducation({ ...newEducation, gpa: e.target.value })
+                  }
                 />
               </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Education</Button>
-              <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsAdding(false)}>
+                Cancel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -2133,35 +2420,47 @@ function EducationSection() {
               <div className="flex-1">
                 <Input
                   value={edu.institution}
-                  onChange={(e) => updateEducation(edu.id, { institution: e.target.value })}
+                  onChange={(e) =>
+                    updateEducation(edu.id, { institution: e.target.value })
+                  }
                   className="font-semibold mb-2"
                 />
                 <div className="grid grid-cols-2 gap-4 mb-2">
                   <Input
                     value={edu.degree}
-                    onChange={(e) => updateEducation(edu.id, { degree: e.target.value })}
+                    onChange={(e) =>
+                      updateEducation(edu.id, { degree: e.target.value })
+                    }
                     placeholder="Degree"
                   />
                   <Input
                     value={edu.field}
-                    onChange={(e) => updateEducation(edu.id, { field: e.target.value })}
+                    onChange={(e) =>
+                      updateEducation(edu.id, { field: e.target.value })
+                    }
                     placeholder="Field of Study"
                   />
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <Input
                     value={edu.startDate}
-                    onChange={(e) => updateEducation(edu.id, { startDate: e.target.value })}
+                    onChange={(e) =>
+                      updateEducation(edu.id, { startDate: e.target.value })
+                    }
                     placeholder="Start Year"
                   />
                   <Input
                     value={edu.endDate}
-                    onChange={(e) => updateEducation(edu.id, { endDate: e.target.value })}
+                    onChange={(e) =>
+                      updateEducation(edu.id, { endDate: e.target.value })
+                    }
                     placeholder="End Year"
                   />
                   <Input
-                    value={edu.gpa || ''}
-                    onChange={(e) => updateEducation(edu.id, { gpa: e.target.value })}
+                    value={edu.gpa || ""}
+                    onChange={(e) =>
+                      updateEducation(edu.id, { gpa: e.target.value })
+                    }
                     placeholder="GPA"
                   />
                 </div>
@@ -2191,16 +2490,30 @@ function SkillsSection({
   experienceSource?: Experience[];
   isActive?: boolean;
 }) {
-  const { resumeData, addSkillGroup, updateSkillGroup, removeSkillGroup, suggestSkillsAI } = useResume();
+  const {
+    resumeData,
+    addSkillGroup,
+    updateSkillGroup,
+    removeSkillGroup,
+    suggestSkillsAI,
+  } = useResume();
   const [isAdding, setIsAdding] = useState(false);
-  const [newGroup, setNewGroup] = useState({ name: '', skills: '' });
+  const [newGroup, setNewGroup] = useState({ name: "", skills: "" });
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
-  const [isSkillSuggestionsLoading, setIsSkillSuggestionsLoading] = useState(false);
-  const [editingSkillGroups, setEditingSkillGroups] = useState<Record<string, boolean>>({});
+  const [isSkillSuggestionsLoading, setIsSkillSuggestionsLoading] =
+    useState(false);
+  const [editingSkillGroups, setEditingSkillGroups] = useState<
+    Record<string, boolean>
+  >({});
   const [skillDrafts, setSkillDrafts] = useState<Record<string, string>>({});
-  const [existingSkillSuggestions, setExistingSkillSuggestions] = useState<Record<string, string[]>>({});
-  const [existingSkillKeys, setExistingSkillKeys] = useState<Record<string, string>>({});
-  const [existingSkillSuggestionsLoading, setExistingSkillSuggestionsLoading] = useState<Record<string, boolean>>({});
+  const [existingSkillSuggestions, setExistingSkillSuggestions] = useState<
+    Record<string, string[]>
+  >({});
+  const [existingSkillKeys, setExistingSkillKeys] = useState<
+    Record<string, string>
+  >({});
+  const [existingSkillSuggestionsLoading, setExistingSkillSuggestionsLoading] =
+    useState<Record<string, boolean>>({});
   const skipNextSkillSuggestRef = useRef(false);
 
   const experiencesForSuggestions = experienceSource || resumeData.experiences;
@@ -2208,22 +2521,25 @@ function SkillsSection({
   const parsedSkills = useMemo(
     () =>
       newGroup.skills
-        .split(',')
+        .split(",")
         .map((skill) => skill.trim())
         .filter(Boolean),
-    [newGroup.skills]
+    [newGroup.skills],
   );
 
   const availableSuggestions = useMemo(() => {
     const existingLow = parsedSkills.map((skill) => skill.toLowerCase());
     const unique = aiSuggestions.filter(
       (skill, index, arr) =>
-        arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+        arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) ===
+        index,
     );
     return unique
       .filter((skill) => {
         const sLow = skill.toLowerCase();
-        return !existingLow.some((ext) => ext.includes(sLow) || sLow.includes(ext));
+        return !existingLow.some(
+          (ext) => ext.includes(sLow) || sLow.includes(ext),
+        );
       })
       .slice(0, 24);
   }, [aiSuggestions, parsedSkills]);
@@ -2235,7 +2551,7 @@ function SkillsSection({
       return;
     }
     const skills = newGroup.skills
-      .split(',')
+      .split(",")
       .map((skill) => skill.trim())
       .filter(Boolean);
     const name = newGroup.name.trim();
@@ -2250,10 +2566,13 @@ function SkillsSection({
     if (newGroup.name && newGroup.skills) {
       addSkillGroup({
         name: newGroup.name,
-        skills: newGroup.skills.split(',').map(s => s.trim()).filter(s => s)
+        skills: newGroup.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s),
       });
       onDraftChange?.(null);
-      setNewGroup({ name: '', skills: '' });
+      setNewGroup({ name: "", skills: "" });
       setAiSuggestions([]);
       setIsAdding(false);
     }
@@ -2267,7 +2586,10 @@ function SkillsSection({
       });
       return next;
     });
-    setSkillDrafts((prev) => ({ ...prev, [group.id]: group.skills.join(", ") }));
+    setSkillDrafts((prev) => ({
+      ...prev,
+      [group.id]: group.skills.join(", "),
+    }));
   };
 
   const cancelSkillEdit = (id: string) => {
@@ -2310,10 +2632,14 @@ function SkillsSection({
       return;
     }
     const experienceText = experiencesForSuggestions
-      .map((exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`)
+      .map(
+        (exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`,
+      )
       .join(" ")
       .trim();
-    const context = [newGroup.name, newGroup.skills, experienceText].join(" ").trim();
+    const context = [newGroup.name, newGroup.skills, experienceText]
+      .join(" ")
+      .trim();
     if (!resumeData.basics.title && !context) {
       setAiSuggestions([]);
       setIsSkillSuggestionsLoading(false);
@@ -2325,12 +2651,17 @@ function SkillsSection({
       try {
         const result = await suggestSkillsAI(resumeData.basics.title, context);
         if (!isMounted) return;
-        const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
+        const combined = [
+          ...(result.hardSkills || []),
+          ...(result.softSkills || []),
+        ]
           .map((skill) => skill.trim())
           .filter(Boolean);
         const nextAi = combined.filter(
           (skill, index, arr) =>
-            arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+            arr.findIndex(
+              (item) => item.toLowerCase() === skill.toLowerCase(),
+            ) === index,
         );
         setAiSuggestions(nextAi.slice(0, 24));
       } finally {
@@ -2341,42 +2672,76 @@ function SkillsSection({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [isActive, isAdding, newGroup.name, newGroup.skills, resumeData.basics.title, experiencesForSuggestions, suggestSkillsAI]);
+  }, [
+    isActive,
+    isAdding,
+    newGroup.name,
+    newGroup.skills,
+    resumeData.basics.title,
+    experiencesForSuggestions,
+    suggestSkillsAI,
+  ]);
 
   useEffect(() => {
     if (!isActive) return;
-    const activeId = Object.keys(editingSkillGroups).find((id) => editingSkillGroups[id]);
+    const activeId = Object.keys(editingSkillGroups).find(
+      (id) => editingSkillGroups[id],
+    );
     if (!activeId) return;
     const group = resumeData.skills.find((item) => item.id === activeId);
     if (!group) return;
     const experienceText = experiencesForSuggestions
-      .map((exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`)
+      .map(
+        (exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`,
+      )
       .join(" ")
       .trim();
     const key = `${group.name}|${group.skills.join(",")}|${experienceText}`;
     if (existingSkillKeys[activeId] === key) return;
-    setExistingSkillSuggestionsLoading((prev) => ({ ...prev, [activeId]: true }));
+    setExistingSkillSuggestionsLoading((prev) => ({
+      ...prev,
+      [activeId]: true,
+    }));
     const timer = setTimeout(async () => {
       try {
         const result = await suggestSkillsAI(
           resumeData.basics.title,
-          `${group.name} ${group.skills.join(" ")} ${experienceText}`
+          `${group.name} ${group.skills.join(" ")} ${experienceText}`,
         );
-        const combined = [...(result.hardSkills || []), ...(result.softSkills || [])]
+        const combined = [
+          ...(result.hardSkills || []),
+          ...(result.softSkills || []),
+        ]
           .map((skill) => skill.trim())
           .filter(Boolean);
         const nextAi = combined.filter(
           (skill, index, arr) =>
-            arr.findIndex((item) => item.toLowerCase() === skill.toLowerCase()) === index
+            arr.findIndex(
+              (item) => item.toLowerCase() === skill.toLowerCase(),
+            ) === index,
         );
-        setExistingSkillSuggestions((prev) => ({ ...prev, [activeId]: nextAi.slice(0, 24) }));
+        setExistingSkillSuggestions((prev) => ({
+          ...prev,
+          [activeId]: nextAi.slice(0, 24),
+        }));
         setExistingSkillKeys((prev) => ({ ...prev, [activeId]: key }));
       } finally {
-        setExistingSkillSuggestionsLoading((prev) => ({ ...prev, [activeId]: false }));
+        setExistingSkillSuggestionsLoading((prev) => ({
+          ...prev,
+          [activeId]: false,
+        }));
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [isActive, editingSkillGroups, resumeData.skills, resumeData.basics.title, experiencesForSuggestions, suggestSkillsAI, existingSkillKeys]);
+  }, [
+    isActive,
+    editingSkillGroups,
+    resumeData.skills,
+    resumeData.basics.title,
+    experiencesForSuggestions,
+    suggestSkillsAI,
+    existingSkillKeys,
+  ]);
 
   const handleAddSkillSuggestion = (skill: string) => {
     const existing = new Set(parsedSkills.map((item) => item.toLowerCase()));
@@ -2398,7 +2763,7 @@ function SkillsSection({
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           Skills
         </h2>
-        <Button 
+        <Button
           size="sm"
           onClick={() => setIsAdding(true)}
           className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
@@ -2409,7 +2774,7 @@ function SkillsSection({
       </div>
 
       {isAdding && (
-          <Card className="border-purple-200 dark:border-purple-800">
+        <Card className="border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 space-y-4">
             <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/10 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2450,12 +2815,16 @@ function SkillsSection({
             <Input
               placeholder="Category Name (e.g., Programming Languages)"
               value={newGroup.name}
-              onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
+              onChange={(e) =>
+                setNewGroup({ ...newGroup, name: e.target.value })
+              }
             />
             <Textarea
               placeholder="Enter skills separated by commas (e.g., JavaScript, Python, React)"
               value={newGroup.skills}
-              onChange={(e) => setNewGroup({ ...newGroup, skills: e.target.value })}
+              onChange={(e) =>
+                setNewGroup({ ...newGroup, skills: e.target.value })
+              }
               rows={3}
             />
             <div className="flex gap-2">
@@ -2481,7 +2850,9 @@ function SkillsSection({
             <div className="flex items-start justify-between mb-4">
               <Input
                 value={group.name}
-                onChange={(e) => updateSkillGroup(group.id, { name: e.target.value })}
+                onChange={(e) =>
+                  updateSkillGroup(group.id, { name: e.target.value })
+                }
                 className="font-semibold max-w-xs"
                 placeholder="Category Name"
               />
@@ -2512,7 +2883,10 @@ function SkillsSection({
                 <Textarea
                   value={skillDrafts[group.id] ?? group.skills.join(", ")}
                   onChange={(e) =>
-                    setSkillDrafts((prev) => ({ ...prev, [group.id]: e.target.value }))
+                    setSkillDrafts((prev) => ({
+                      ...prev,
+                      [group.id]: e.target.value,
+                    }))
                   }
                   rows={3}
                   placeholder="Enter skills separated by commas"
@@ -2528,50 +2902,69 @@ function SkillsSection({
                         <Sparkles className="h-3 w-3 animate-pulse" />
                         <span>Generating skills...</span>
                       </div>
-                    ) : (() => {
-                      const currentSkills = (skillDrafts[group.id] ?? group.skills.join(", "))
-                        .split(",")
-                        .map((item) => item.trim().toLowerCase())
-                        .filter(Boolean);
-                      const filteredSuggestions = (existingSkillSuggestions[group.id] || []).filter(
-                        (skill) => {
+                    ) : (
+                      (() => {
+                        const currentSkills = (
+                          skillDrafts[group.id] ?? group.skills.join(", ")
+                        )
+                          .split(",")
+                          .map((item) => item.trim().toLowerCase())
+                          .filter(Boolean);
+                        const filteredSuggestions = (
+                          existingSkillSuggestions[group.id] || []
+                        ).filter((skill) => {
                           const sLow = skill.toLowerCase();
-                          return !currentSkills.some((ext) => ext.includes(sLow) || sLow.includes(ext));
+                          return !currentSkills.some(
+                            (ext) => ext.includes(sLow) || sLow.includes(ext),
+                          );
+                        });
+                        if (filteredSuggestions.length === 0) {
+                          return (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Add details to see suggestions.
+                            </p>
+                          );
                         }
-                      );
-                      if (filteredSuggestions.length === 0) {
-                        return (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Add details to see suggestions.
-                          </p>
-                        );
-                      }
-                      return filteredSuggestions.map((skill) => (
-                        <button
-                          key={`${group.id}-${skill}`}
-                          type="button"
-                          onClick={() => {
-                            const current = (skillDrafts[group.id] ?? group.skills.join(", "))
-                              .split(",")
-                              .map((item) => item.trim())
-                              .filter(Boolean);
-                            if (current.some((item) => item.toLowerCase() === skill.toLowerCase())) {
-                              return;
-                            }
-                            const next = [...current, skill].join(", ");
-                            setSkillDrafts((prev) => ({ ...prev, [group.id]: next }));
-                          }}
-                          className="rounded-full border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition"
-                        >
-                          {skill}
-                        </button>
-                      ));
-                    })()}
+                        return filteredSuggestions.map((skill) => (
+                          <button
+                            key={`${group.id}-${skill}`}
+                            type="button"
+                            onClick={() => {
+                              const current = (
+                                skillDrafts[group.id] ?? group.skills.join(", ")
+                              )
+                                .split(",")
+                                .map((item) => item.trim())
+                                .filter(Boolean);
+                              if (
+                                current.some(
+                                  (item) =>
+                                    item.toLowerCase() === skill.toLowerCase(),
+                                )
+                              ) {
+                                return;
+                              }
+                              const next = [...current, skill].join(", ");
+                              setSkillDrafts((prev) => ({
+                                ...prev,
+                                [group.id]: next,
+                              }));
+                            }}
+                            className="rounded-full border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition"
+                          >
+                            {skill}
+                          </button>
+                        ));
+                      })()
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={() => saveSkillEdit(group.id)}>Save</Button>
-                  <Button variant="outline" onClick={() => cancelSkillEdit(group.id)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => cancelSkillEdit(group.id)}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -2595,26 +2988,30 @@ function SkillsSection({
   );
 }
 
-function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }) {
+function ProjectsSection({
+  advancedFormatting,
+}: {
+  advancedFormatting: boolean;
+}) {
   const { resumeData, addProject, updateProject, removeProject } = useResume();
   const [isAdding, setIsAdding] = useState(false);
   const [newProject, setNewProject] = useState<Partial<Project>>({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     technologies: [],
-    link: '',
-    github: ''
+    link: "",
+    github: "",
   });
 
   const handleAdd = () => {
     if (newProject.name) {
-      addProject(newProject as Omit<Project, 'id'>);
+      addProject(newProject as Omit<Project, "id">);
       setNewProject({
-        name: '',
-        description: '',
+        name: "",
+        description: "",
         technologies: [],
-        link: '',
-        github: ''
+        link: "",
+        github: "",
       });
       setIsAdding(false);
     }
@@ -2632,7 +3029,7 @@ function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           Projects
         </h2>
-        <Button 
+        <Button
           size="sm"
           onClick={() => setIsAdding(true)}
           className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
@@ -2648,38 +3045,53 @@ function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }
             <Input
               placeholder="Project Name"
               value={newProject.name}
-              onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+              onChange={(e) =>
+                setNewProject({ ...newProject, name: e.target.value })
+              }
             />
             <RichTextarea
               placeholder="Project Description"
               value={newProject.description || ""}
-              onValueChange={(value) => setNewProject({ ...newProject, description: value })}
+              onValueChange={(value) =>
+                setNewProject({ ...newProject, description: value })
+              }
               rows={3}
               enableFormatting={advancedFormatting}
             />
             <Input
               placeholder="Technologies (comma separated)"
-              value={newProject.technologies?.join(', ') || ''}
-              onChange={(e) => setNewProject({ 
-                ...newProject, 
-                technologies: e.target.value.split(',').map(t => t.trim()).filter(t => t)
-              })}
+              value={newProject.technologies?.join(", ") || ""}
+              onChange={(e) =>
+                setNewProject({
+                  ...newProject,
+                  technologies: e.target.value
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter((t) => t),
+                })
+              }
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
                 placeholder="Project Link"
-                value={newProject.link || ''}
-                onChange={(e) => setNewProject({ ...newProject, link: e.target.value })}
+                value={newProject.link || ""}
+                onChange={(e) =>
+                  setNewProject({ ...newProject, link: e.target.value })
+                }
               />
               <Input
                 placeholder="GitHub Link"
-                value={newProject.github || ''}
-                onChange={(e) => setNewProject({ ...newProject, github: e.target.value })}
+                value={newProject.github || ""}
+                onChange={(e) =>
+                  setNewProject({ ...newProject, github: e.target.value })
+                }
               />
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Project</Button>
-              <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsAdding(false)}>
+                Cancel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -2692,12 +3104,16 @@ function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }
               <div className="flex-1">
                 <Input
                   value={project.name}
-                  onChange={(e) => updateProject(project.id, { name: e.target.value })}
+                  onChange={(e) =>
+                    updateProject(project.id, { name: e.target.value })
+                  }
                   className="font-semibold mb-2"
                 />
                 <RichTextarea
                   value={project.description}
-                  onValueChange={(value) => updateProject(project.id, { description: value })}
+                  onValueChange={(value) =>
+                    updateProject(project.id, { description: value })
+                  }
                   placeholder="Project description"
                   rows={3}
                   className="mb-4"
@@ -2705,22 +3121,31 @@ function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }
                 />
                 <Input
                   placeholder="Technologies (comma separated)"
-                  value={project.technologies.join(', ')}
-                  onChange={(e) => updateProject(project.id, { 
-                    technologies: e.target.value.split(',').map(t => t.trim()).filter(t => t)
-                  })}
+                  value={project.technologies.join(", ")}
+                  onChange={(e) =>
+                    updateProject(project.id, {
+                      technologies: e.target.value
+                        .split(",")
+                        .map((t) => t.trim())
+                        .filter((t) => t),
+                    })
+                  }
                   className="mb-4"
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <Input
                     placeholder="Project Link"
-                    value={project.link || ''}
-                    onChange={(e) => updateProject(project.id, { link: e.target.value })}
+                    value={project.link || ""}
+                    onChange={(e) =>
+                      updateProject(project.id, { link: e.target.value })
+                    }
                   />
                   <Input
                     placeholder="GitHub Link"
-                    value={project.github || ''}
-                    onChange={(e) => updateProject(project.id, { github: e.target.value })}
+                    value={project.github || ""}
+                    onChange={(e) =>
+                      updateProject(project.id, { github: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -2743,12 +3168,17 @@ function ProjectsSection({ advancedFormatting }: { advancedFormatting: boolean }
 function CertificationsSection() {
   const { resumeData, addCertification, removeCertification } = useResume();
   const [isAdding, setIsAdding] = useState(false);
-  const [newCert, setNewCert] = useState({ name: '', issuer: '', date: '', link: '' });
+  const [newCert, setNewCert] = useState({
+    name: "",
+    issuer: "",
+    date: "",
+    link: "",
+  });
 
   const handleAdd = () => {
     if (newCert.name && newCert.issuer) {
       addCertification(newCert);
-      setNewCert({ name: '', issuer: '', date: '', link: '' });
+      setNewCert({ name: "", issuer: "", date: "", link: "" });
       setIsAdding(false);
     }
   };
@@ -2765,7 +3195,7 @@ function CertificationsSection() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           Certifications
         </h2>
-        <Button 
+        <Button
           size="sm"
           onClick={() => setIsAdding(true)}
           className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
@@ -2782,12 +3212,16 @@ function CertificationsSection() {
               <Input
                 placeholder="Certification Name"
                 value={newCert.name}
-                onChange={(e) => setNewCert({ ...newCert, name: e.target.value })}
+                onChange={(e) =>
+                  setNewCert({ ...newCert, name: e.target.value })
+                }
               />
               <Input
                 placeholder="Issuing Organization"
                 value={newCert.issuer}
-                onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
+                onChange={(e) =>
+                  setNewCert({ ...newCert, issuer: e.target.value })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -2795,22 +3229,28 @@ function CertificationsSection() {
                 <Label>Date Earned</Label>
                 <MonthYearPicker
                   date={newCert.date ? new Date(newCert.date) : undefined}
-                  onSelect={(date) => setNewCert({ ...newCert, date: format(date, "MMM yyyy") })}
+                  onSelect={(date) =>
+                    setNewCert({ ...newCert, date: format(date, "MMM yyyy") })
+                  }
                   placeholder="Date"
                 />
               </div>
               <div className="space-y-2">
-                 <Label>Link (Optional)</Label>
-                 <Input
-                    placeholder="Certificate Link"
-                    value={newCert.link}
-                    onChange={(e) => setNewCert({ ...newCert, link: e.target.value })}
-                 />
+                <Label>Link (Optional)</Label>
+                <Input
+                  placeholder="Certificate Link"
+                  value={newCert.link}
+                  onChange={(e) =>
+                    setNewCert({ ...newCert, link: e.target.value })
+                  }
+                />
               </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAdd}>Add Certification</Button>
-              <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsAdding(false)}>
+                Cancel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -2877,7 +3317,9 @@ function DesignSection({
 }) {
   const { resumeData, updateMetadata } = useResume();
   const defaultFont =
-    templateConfig?.bodyFont || RESUME_TEMPLATE_DEFAULT_FONTS[templateId] || "Inter";
+    templateConfig?.bodyFont ||
+    RESUME_TEMPLATE_DEFAULT_FONTS[templateId] ||
+    "Inter";
 
   return (
     <motion.div
@@ -2913,9 +3355,10 @@ function SharePopover() {
 
   if (!currentResume) return null;
 
-  const url = typeof window !== 'undefined' 
-    ? `${window.location.origin}/shared/${currentResume.shortId || currentResume.id}`
-    : '';
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/shared/${currentResume.shortId || currentResume.id}`
+      : "";
 
   const handleCopy = () => {
     navigator.clipboard.writeText(url);
@@ -2943,8 +3386,17 @@ function SharePopover() {
 
           <div className="flex items-center space-x-2">
             <Input value={url} readOnly className="h-8 text-xs" />
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </Button>
             <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
               <a href={url} target="_blank" rel="noopener noreferrer">
@@ -2957,11 +3409,3 @@ function SharePopover() {
     </Popover>
   );
 }
-
-
-
-
-
-
-
-

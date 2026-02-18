@@ -36,13 +36,13 @@ export function SectionManager() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-        activationConstraint: {
-            distance: 8,
-        },
+      activationConstraint: {
+        distance: 8,
+      },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
@@ -51,11 +51,13 @@ export function SectionManager() {
     if (over && active.id !== over.id) {
       const oldIndex = sections.findIndex((s) => s.id === active.id);
       const newIndex = sections.findIndex((s) => s.id === over.id);
-      
-      const newSections = arrayMove(sections, oldIndex, newIndex).map((s, idx) => ({
+
+      const newSections = arrayMove(sections, oldIndex, newIndex).map(
+        (s, idx) => ({
           ...s,
-          order: idx
-      }));
+          order: idx,
+        }),
+      );
 
       updateStructure(newSections);
     }
@@ -63,7 +65,7 @@ export function SectionManager() {
 
   const toggleVisibility = (id: string) => {
     const updatedSections = sections.map((s) =>
-      s.id === id ? { ...s, isVisible: !s.isVisible } : s
+      s.id === id ? { ...s, isVisible: !s.isVisible } : s,
     );
     updateStructure(updatedSections);
   };
@@ -71,14 +73,14 @@ export function SectionManager() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-          <Layout className="w-4 h-4 text-purple-600" />
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-            Rearrange Sections
-          </h3>
+        <Layout className="w-4 h-4 text-purple-600" />
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          Rearrange Sections
+        </h3>
       </div>
-      
+
       <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-          Drag to reorder. Click eye to toggle visibility.
+        Drag to reorder. Click eye to toggle visibility.
       </div>
 
       <DndContext
@@ -86,7 +88,10 @@ export function SectionManager() {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={sections.map((s) => s.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="space-y-2">
             {sections.map((section) => (
               <SortableItem
@@ -103,14 +108,13 @@ export function SectionManager() {
   );
 }
 
-function SortableItem(props: { id: string; section: any; onToggle: () => void }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: props.id });
+function SortableItem(props: {
+  id: string;
+  section: any;
+  onToggle: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: props.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -131,7 +135,9 @@ function SortableItem(props: { id: string; section: any; onToggle: () => void })
         >
           <GripVertical className="w-4 h-4" />
         </button>
-        <span className={`font-medium text-sm transition-colors ${props.section.isVisible ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 line-through'}`}>
+        <span
+          className={`font-medium text-sm transition-colors ${props.section.isVisible ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500 line-through"}`}
+        >
           {props.section.title}
         </span>
       </div>

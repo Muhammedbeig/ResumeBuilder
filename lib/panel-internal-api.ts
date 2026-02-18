@@ -54,7 +54,12 @@ function parseStatusFromPayload(payload: unknown, fallback: number): number {
   if (!payload || typeof payload !== "object") return fallback;
   const code = (payload as { code?: unknown }).code;
   const asNumber = typeof code === "string" ? Number.parseInt(code, 10) : code;
-  if (typeof asNumber === "number" && Number.isFinite(asNumber) && asNumber >= 100 && asNumber <= 599) {
+  if (
+    typeof asNumber === "number" &&
+    Number.isFinite(asNumber) &&
+    asNumber >= 100 &&
+    asNumber <= 599
+  ) {
     return asNumber;
   }
   return fallback;
@@ -76,7 +81,7 @@ export async function panelInternalRequest<T>(
     body?: unknown;
     headers?: HeadersInit;
     timeoutMs?: number;
-  }
+  },
 ): Promise<T> {
   const url = resolveInternalUrl(path);
   const timeoutMs = options?.timeoutMs ?? 30_000;
@@ -126,7 +131,7 @@ export async function panelInternalRequest<T>(
         throw new PanelInternalApiError(
           `Invalid JSON response from Panel internal API (${method} ${path})`,
           fallbackStatus,
-          payload
+          payload,
         );
       }
 
@@ -145,14 +150,19 @@ export async function panelInternalRequest<T>(
         error instanceof PanelInternalApiError
           ? error
           : error instanceof Error && error.name === "AbortError"
-          ? new PanelInternalApiError(`Panel internal API timeout (${method} ${path})`, 504, null)
-          : new PanelInternalApiError(
-              `Panel internal API request failed (${method} ${path})`,
-              502,
-              error instanceof Error ? error.message : error
-            );
+            ? new PanelInternalApiError(
+                `Panel internal API timeout (${method} ${path})`,
+                504,
+                null,
+              )
+            : new PanelInternalApiError(
+                `Panel internal API request failed (${method} ${path})`,
+                502,
+                error instanceof Error ? error.message : error,
+              );
 
-      const canRetry = attempt < maxAttempts && isRetryableStatus(normalizedError.status);
+      const canRetry =
+        attempt < maxAttempts && isRetryableStatus(normalizedError.status);
       if (!canRetry) {
         throw normalizedError;
       }
@@ -163,37 +173,64 @@ export async function panelInternalRequest<T>(
     }
   }
 
-  throw new PanelInternalApiError(`Panel internal API request failed (${method} ${path})`, 502, null);
+  throw new PanelInternalApiError(
+    `Panel internal API request failed (${method} ${path})`,
+    502,
+    null,
+  );
 }
 
-export function panelInternalGet<T>(path: string, options?: { userId?: string | null; timeoutMs?: number }) {
+export function panelInternalGet<T>(
+  path: string,
+  options?: { userId?: string | null; timeoutMs?: number },
+) {
   return panelInternalRequest<T>("GET", path, options);
 }
 
 export function panelInternalPost<T>(
   path: string,
-  options?: { userId?: string | null; body?: unknown; headers?: HeadersInit; timeoutMs?: number }
+  options?: {
+    userId?: string | null;
+    body?: unknown;
+    headers?: HeadersInit;
+    timeoutMs?: number;
+  },
 ) {
   return panelInternalRequest<T>("POST", path, options);
 }
 
 export function panelInternalPut<T>(
   path: string,
-  options?: { userId?: string | null; body?: unknown; headers?: HeadersInit; timeoutMs?: number }
+  options?: {
+    userId?: string | null;
+    body?: unknown;
+    headers?: HeadersInit;
+    timeoutMs?: number;
+  },
 ) {
   return panelInternalRequest<T>("PUT", path, options);
 }
 
 export function panelInternalPatch<T>(
   path: string,
-  options?: { userId?: string | null; body?: unknown; headers?: HeadersInit; timeoutMs?: number }
+  options?: {
+    userId?: string | null;
+    body?: unknown;
+    headers?: HeadersInit;
+    timeoutMs?: number;
+  },
 ) {
   return panelInternalRequest<T>("PATCH", path, options);
 }
 
 export function panelInternalDelete<T>(
   path: string,
-  options?: { userId?: string | null; body?: unknown; headers?: HeadersInit; timeoutMs?: number }
+  options?: {
+    userId?: string | null;
+    body?: unknown;
+    headers?: HeadersInit;
+    timeoutMs?: number;
+  },
 ) {
   return panelInternalRequest<T>("DELETE", path, options);
 }

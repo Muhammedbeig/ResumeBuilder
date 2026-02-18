@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // Extract text from PDF
     const buffer = Buffer.from(await file.arrayBuffer());
     let text = "";
-    
+
     if (file.type === "application/pdf") {
       text = await extractPdfText(buffer, 1);
     } else {
@@ -41,13 +41,17 @@ export async function POST(req: NextRequest) {
     text = truncateText(text, resourceSettings.limits.aiText);
 
     if (!text || !text.trim()) {
-       // If empty, try to see if JSON content has text
-       // But for now return error
-       if (!text) return NextResponse.json({ error: "Could not extract text from file (empty)" }, { status: 400 });
+      // If empty, try to see if JSON content has text
+      // But for now return error
+      if (!text)
+        return NextResponse.json(
+          { error: "Could not extract text from file (empty)" },
+          { status: 400 },
+        );
     }
 
     const model = await getGeminiModel();
-    
+
     const prompt = `
       You are an expert ATS (Applicant Tracking System) scanner and professional resume reviewer. 
       Analyze the following resume text extracted from a document. 
@@ -80,7 +84,9 @@ export async function POST(req: NextRequest) {
     const textResponse = response.text();
 
     // Extract JSON from the response
-    const jsonMatch = textResponse.match(/```json([\s\S]*?)```/) || textResponse.match(/```([\s\S]*?)```/);
+    const jsonMatch =
+      textResponse.match(/```json([\s\S]*?)```/) ||
+      textResponse.match(/```([\s\S]*?)```/);
     let jsonData;
     if (jsonMatch) {
       jsonData = JSON.parse(jsonMatch[1]);
@@ -90,15 +96,19 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         // Fallback if strict JSON parsing fails
         console.error("Failed to parse JSON", e);
-        return NextResponse.json({ error: "Failed to analyze resume" }, { status: 500 });
+        return NextResponse.json(
+          { error: "Failed to analyze resume" },
+          { status: 500 },
+        );
       }
     }
 
     return NextResponse.json(jsonData);
-
   } catch (error) {
     console.error("Error in ATS check:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
-

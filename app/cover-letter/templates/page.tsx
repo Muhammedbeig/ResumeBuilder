@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useRef, useState, useEffect, type ComponentType } from 'react';
+import React, { useRef, useState, useEffect, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { coverLetterTemplates } from '@/lib/cover-letter-templates';
-import { fetchTemplates } from '@/lib/template-client';
-import { resolveCoverLetterTemplateComponent } from '@/lib/template-resolvers';
-import type { CoverLetterTemplateConfig } from '@/lib/panel-templates';
+import { motion } from "framer-motion";
+import { Sparkles, ArrowRight, CheckCircle2, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { coverLetterTemplates } from "@/lib/cover-letter-templates";
+import { fetchTemplates } from "@/lib/template-client";
+import { resolveCoverLetterTemplateComponent } from "@/lib/template-resolvers";
+import type { CoverLetterTemplateConfig } from "@/lib/panel-templates";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { useSession } from "next-auth/react";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
@@ -42,9 +42,11 @@ const previewData = {
   content: {
     subject: "Application for Senior Developer Position",
     greeting: "Dear Ms. Connor,",
-    opening: "I am writing to express my strong interest in the Senior Developer position at TechCorp Inc.",
+    opening:
+      "I am writing to express my strong interest in the Senior Developer position at TechCorp Inc.",
     body: "With over 5 years of experience in full-stack development, I have a proven track record of delivering scalable web applications. I was particularly impressed by TechCorp's recent work on AI-driven analytics, and I believe my background in machine learning integration would be a valuable asset to your team.",
-    closing: "Thank you for considering my application. I look forward to the possibility of discussing how I can contribute to your team's success.",
+    closing:
+      "Thank you for considering my application. I look forward to the possibility of discussing how I can contribute to your team's success.",
     signature: "Alex Morgan",
   },
 };
@@ -71,15 +73,15 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="relative w-full aspect-[210/297] bg-gray-100 dark:bg-gray-800 rounded-t-xl overflow-hidden"
     >
-      <div 
+      <div
         className="absolute top-0 left-0 origin-top-left shadow-2xl bg-white"
         style={{
-          width: '800px',
-          height: '1131px', 
+          width: "800px",
+          height: "1131px",
           transform: `scale(${scale})`,
         }}
       >
@@ -96,7 +98,8 @@ export default function CoverLetterTemplatesPage() {
   const isAuthenticated = !!session?.user;
   const router = useRouter();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-  const [templates, setTemplates] = useState<TemplateOption[]>(coverLetterTemplates);
+  const [templates, setTemplates] =
+    useState<TemplateOption[]>(coverLetterTemplates);
   const openPlanModal = () => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
@@ -115,7 +118,9 @@ export default function CoverLetterTemplatesPage() {
     let isActive = true;
 
     const loadTemplates = async () => {
-      const panelTemplates = await fetchTemplates("cover_letter", { active: true });
+      const panelTemplates = await fetchTemplates("cover_letter", {
+        active: true,
+      });
       if (!panelTemplates.length || !isActive) return;
 
       const mapped: TemplateOption[] = panelTemplates.map((template) => ({
@@ -125,7 +130,7 @@ export default function CoverLetterTemplatesPage() {
         premium: template.is_premium,
         component: resolveCoverLetterTemplateComponent(
           template.template_id,
-          template.config as CoverLetterTemplateConfig
+          template.config as CoverLetterTemplateConfig,
         ),
       }));
 
@@ -140,7 +145,10 @@ export default function CoverLetterTemplatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
         <motion.div
@@ -152,10 +160,14 @@ export default function CoverLetterTemplatesPage() {
           <span>Professional Cover Letter Templates</span>
         </motion.div>
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-          Make a Great <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-500">First Impression</span>
+          Make a Great{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-500">
+            First Impression
+          </span>
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Choose from our collection of professionally designed cover letter templates.
+          Choose from our collection of professionally designed cover letter
+          templates.
         </p>
       </div>
 
@@ -177,7 +189,7 @@ export default function CoverLetterTemplatesPage() {
                   <RescaleContainer>
                     <TemplateComponent data={previewData} />
                   </RescaleContainer>
-                  
+
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl z-10">
                     <Button
@@ -185,7 +197,9 @@ export default function CoverLetterTemplatesPage() {
                       className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-xl scale-105"
                       onClick={() => {
                         if (!ensurePlanChosen()) return;
-                        router.push(`/cover-letter/new?template=${template.id}`);
+                        router.push(
+                          `/cover-letter/new?template=${template.id}`,
+                        );
                       }}
                     >
                       Use This Template
@@ -200,14 +214,14 @@ export default function CoverLetterTemplatesPage() {
                       {template.name}
                     </h3>
                     {template.premium ? (
-                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                         <Crown className="w-3 h-3" />
-                         Premium
-                       </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        <Crown className="w-3 h-3" />
+                        Premium
+                      </span>
                     ) : (
-                       <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                         Free
-                       </span>
+                      <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        Free
+                      </span>
                     )}
                   </div>
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">

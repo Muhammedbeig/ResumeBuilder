@@ -2,7 +2,10 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { json } from "@/lib/json";
-import { panelInternalGet, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 
 interface RouteContext {
@@ -19,7 +22,9 @@ export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const data = await panelInternalGet<{ report: any }>(`market-value/${id}`, { userId });
+    const data = await panelInternalGet<{ report: any }>(`market-value/${id}`, {
+      userId,
+    });
     return json({ report: data.report });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {

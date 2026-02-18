@@ -31,19 +31,25 @@ async function readGatewayConfig(): Promise<InternalGatewayResponse> {
   return panelInternalGet<InternalGatewayResponse>("payment/gateways");
 }
 
-function normalizeStripeGatewayConfig(stripe: StripeGatewayConfig | null | undefined): StripeGatewayConfig | null {
+function normalizeStripeGatewayConfig(
+  stripe: StripeGatewayConfig | null | undefined,
+): StripeGatewayConfig | null {
   if (!stripe) return null;
   const secretKey = String(stripe.secretKey ?? "").trim();
   if (!secretKey) return null;
   return {
-    currencyCode: String(stripe.currencyCode ?? "usd").trim().toLowerCase(),
+    currencyCode: String(stripe.currencyCode ?? "usd")
+      .trim()
+      .toLowerCase(),
     publishableKey: String(stripe.publishableKey ?? "").trim(),
     secretKey,
     webhookSecretKey: String(stripe.webhookSecretKey ?? "").trim(),
   };
 }
 
-function normalizePayPalGatewayConfig(paypal: PayPalGatewayConfig | null | undefined): PayPalGatewayConfig | null {
+function normalizePayPalGatewayConfig(
+  paypal: PayPalGatewayConfig | null | undefined,
+): PayPalGatewayConfig | null {
   if (!paypal) return null;
 
   const clientId = String(paypal.clientId ?? "").trim();
@@ -56,7 +62,9 @@ function normalizePayPalGatewayConfig(paypal: PayPalGatewayConfig | null | undef
   const mode: "live" | "sandbox" = modeRaw === "live" ? "live" : "sandbox";
 
   return {
-    currencyCode: String(paypal.currencyCode ?? "USD").trim().toUpperCase(),
+    currencyCode: String(paypal.currencyCode ?? "USD")
+      .trim()
+      .toUpperCase(),
     clientId,
     secretKey,
     webhookId: String(paypal.webhookId ?? "").trim() || null,
@@ -69,8 +77,13 @@ function readStripeGatewayConfigFromEnv(): StripeGatewayConfig | null {
   if (!secretKey) return null;
 
   return {
-    currencyCode: normalizeText(process.env.STRIPE_CURRENCY || process.env.STRIPE_CURRENCY_CODE || "usd").toLowerCase(),
-    publishableKey: normalizeText(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY),
+    currencyCode: normalizeText(
+      process.env.STRIPE_CURRENCY || process.env.STRIPE_CURRENCY_CODE || "usd",
+    ).toLowerCase(),
+    publishableKey: normalizeText(
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+        process.env.STRIPE_PUBLISHABLE_KEY,
+    ),
     secretKey,
     webhookSecretKey: normalizeText(process.env.STRIPE_WEBHOOK_SECRET),
   };
@@ -78,14 +91,20 @@ function readStripeGatewayConfigFromEnv(): StripeGatewayConfig | null {
 
 function readPayPalGatewayConfigFromEnv(): PayPalGatewayConfig | null {
   const clientId = normalizeText(process.env.PAYPAL_CLIENT_ID);
-  const secretKey = normalizeText(process.env.PAYPAL_SECRET_KEY || process.env.PAYPAL_SECRET);
+  const secretKey = normalizeText(
+    process.env.PAYPAL_SECRET_KEY || process.env.PAYPAL_SECRET,
+  );
   if (!clientId || !secretKey) return null;
 
-  const modeRaw = normalizeText(process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "sandbox").toLowerCase();
+  const modeRaw = normalizeText(
+    process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "sandbox",
+  ).toLowerCase();
   const mode: "live" | "sandbox" = modeRaw === "live" ? "live" : "sandbox";
 
   return {
-    currencyCode: normalizeText(process.env.PAYPAL_CURRENCY || process.env.PAYPAL_CURRENCY_CODE || "USD").toUpperCase(),
+    currencyCode: normalizeText(
+      process.env.PAYPAL_CURRENCY || process.env.PAYPAL_CURRENCY_CODE || "USD",
+    ).toUpperCase(),
     clientId,
     secretKey,
     webhookId: normalizeText(process.env.PAYPAL_WEBHOOK_ID) || null,

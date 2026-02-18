@@ -4,7 +4,13 @@ import { useRef, useState } from "react";
 import { MOCK_RESUME } from "@/lib/mock-resume";
 import { resumeTemplateMap } from "@/lib/resume-templates";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 export default function ResumePreviewPage() {
@@ -13,7 +19,8 @@ export default function ResumePreviewPage() {
   const exportRef = useRef<HTMLDivElement>(null);
 
   // Get the component for the selected template
-  const TemplateComponent = resumeTemplateMap[templateId as keyof typeof resumeTemplateMap];
+  const TemplateComponent =
+    resumeTemplateMap[templateId as keyof typeof resumeTemplateMap];
 
   const handleDownload = async () => {
     try {
@@ -58,7 +65,9 @@ export default function ResumePreviewPage() {
     <div className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100 p-8 pt-24">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Resume Preview (No DB)</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Resume Preview (No DB)
+          </h1>
           <div className="flex gap-4 items-center">
             <Select value={templateId} onValueChange={setTemplateId}>
               <SelectTrigger className="w-[180px]">
@@ -96,7 +105,9 @@ export default function ResumePreviewPage() {
               <TemplateComponent data={MOCK_RESUME.data} />
             </div>
           ) : (
-            <div className="p-8 text-center text-red-500">Template not found</div>
+            <div className="p-8 text-center text-red-500">
+              Template not found
+            </div>
           )}
         </div>
       </div>

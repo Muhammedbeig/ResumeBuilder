@@ -9,38 +9,40 @@ import { ArrowRight, Sparkles } from "lucide-react";
 export function CTA() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
+
   // Ripple effect on mouse move
   useEffect(() => {
     const section = ref.current;
     if (!section) return;
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       const rect = section.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
-      section.style.setProperty('--mouse-x', `${x}px`);
-      section.style.setProperty('--mouse-y', `${y}px`);
+
+      section.style.setProperty("--mouse-x", `${x}px`);
+      section.style.setProperty("--mouse-y", `${y}px`);
     };
-    
-    section.addEventListener('mousemove', handleMouseMove);
-    return () => section.removeEventListener('mousemove', handleMouseMove);
+
+    section.addEventListener("mousemove", handleMouseMove);
+    return () => section.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
-    <section 
-      ref={ref} 
+    <section
+      ref={ref}
       className="py-24 relative overflow-hidden"
-      style={{
-        '--mouse-x': '50%',
-        '--mouse-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          "--mouse-x": "50%",
+          "--mouse-y": "50%",
+        } as React.CSSProperties
+      }
     >
       {/* Background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white via-purple-50 to-white dark:from-gray-950 dark:via-purple-900/20 dark:to-gray-950">
         {/* Animated gradient orbs */}
-        <motion.div 
+        <motion.div
           className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl"
           animate={{
             x: [0, 50, 0],
@@ -49,10 +51,10 @@ export function CTA() {
           transition={{
             duration: 20,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/20 rounded-full blur-3xl"
           animate={{
             x: [0, -40, 0],
@@ -61,18 +63,18 @@ export function CTA() {
           transition={{
             duration: 15,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
-        
+
         {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px]" />
-        
+
         {/* Radial gradient following mouse */}
-        <div 
+        <div
           className="absolute inset-0 opacity-30 pointer-events-none transition-opacity duration-300"
           style={{
-            background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(120, 119, 198, 0.3), transparent 40%)`
+            background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(120, 119, 198, 0.3), transparent 40%)`,
           }}
         />
       </div>
@@ -104,9 +106,10 @@ export function CTA() {
             transition={{ delay: 0.3 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6"
           >
-            Ready to Build 
+            Ready to Build
             <span className="bg-gradient-to-r from-purple-600 to-cyan-500 dark:from-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
-              {' '}Your Future?
+              {" "}
+              Your Future?
             </span>
           </motion.h2>
 
@@ -117,8 +120,8 @@ export function CTA() {
             transition={{ delay: 0.4 }}
             className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto"
           >
-            Join 50,000+ job seekers who have landed their dream jobs with AI-powered resumes.
-            Start building in minutes.
+            Join 50,000+ job seekers who have landed their dream jobs with
+            AI-powered resumes. Start building in minutes.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -129,7 +132,7 @@ export function CTA() {
             className="flex flex-wrap justify-center gap-4"
           >
             <Link href="/choose-builder">
-              <Button 
+              <Button
                 size="lg"
                 className="bg-purple-600 text-white hover:bg-purple-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-full px-8 py-6 text-lg font-semibold group shadow-xl shadow-purple-500/20 dark:shadow-white/10"
               >
@@ -138,7 +141,7 @@ export function CTA() {
               </Button>
             </Link>
             <a href="#features">
-              <Button 
+              <Button
                 size="lg"
                 variant="outline"
                 className="rounded-full px-8 py-6 text-lg font-semibold border-gray-300 dark:border-white/30 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/10"

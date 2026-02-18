@@ -1,7 +1,7 @@
 import { RESUME_TEMPLATE_CATALOG } from "./resume-template-catalog";
 
 const CATALOG_DEFAULT_FONTS = Object.fromEntries(
-  RESUME_TEMPLATE_CATALOG.map((template) => [template.id, template.bodyFont])
+  RESUME_TEMPLATE_CATALOG.map((template) => [template.id, template.bodyFont]),
 );
 
 export const RESUME_TEMPLATE_DEFAULT_FONTS: Record<string, string> = {

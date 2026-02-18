@@ -22,27 +22,35 @@ export default function PressPage() {
           <Link href="/about" className="text-sm font-semibold text-purple-600">
             Back to About
           </Link>
-          <p className="mt-3 text-sm font-semibold text-purple-600 uppercase tracking-widest">Press</p>
+          <p className="mt-3 text-sm font-semibold text-purple-600 uppercase tracking-widest">
+            Press
+          </p>
           <h1 className="mt-3 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
             Press kit and media resources
           </h1>
           <p className="mt-4 text-gray-600 dark:text-gray-300">
-            Find quick facts, brand guidelines, and contact details for press inquiries.
+            Find quick facts, brand guidelines, and contact details for press
+            inquiries.
           </p>
         </div>
 
         <div className="mt-14 grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Company boilerplate</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Company boilerplate
+            </h2>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-              ResuPro is an AI assisted resume builder that helps job seekers create polished, ATS
-              ready resumes, CVs, and cover letters. Our guided editor and expert prompts make it
-              easy to translate experience into clear, achievement focused content.
+              ResuPro is an AI assisted resume builder that helps job seekers
+              create polished, ATS ready resumes, CVs, and cover letters. Our
+              guided editor and expert prompts make it easy to translate
+              experience into clear, achievement focused content.
             </p>
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Quick facts</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Quick facts
+            </h2>
             <ul className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
               {quickFacts.map((fact) => (
                 <li key={fact} className="flex gap-2">
@@ -55,7 +63,9 @@ export default function PressPage() {
         </div>
 
         <div className="mt-16 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Brand guidelines</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Brand guidelines
+          </h2>
           <ul className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
             {brandGuidelines.map((item) => (
               <li key={item} className="flex gap-2">
@@ -65,16 +75,23 @@ export default function PressPage() {
             ))}
           </ul>
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            Need a logo pack or product screenshots? Contact our press team and we will share assets.
+            Need a logo pack or product screenshots? Contact our press team and
+            we will share assets.
           </p>
         </div>
 
         <div className="mt-16 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Press contact</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Press contact
+          </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            For media inquiries, interviews, or brand assets, use the contact page.
+            For media inquiries, interviews, or brand assets, use the contact
+            page.
           </p>
-          <Link href="/contact" className="mt-4 inline-flex text-sm font-semibold text-purple-600 hover:text-purple-500">
+          <Link
+            href="/contact"
+            className="mt-4 inline-flex text-sm font-semibold text-purple-600 hover:text-purple-500"
+          >
             Contact the team
           </Link>
         </div>

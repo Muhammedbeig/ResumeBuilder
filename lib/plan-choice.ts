@@ -18,7 +18,9 @@ export function getPlanChoiceStorageKey(userId?: string | null): string {
 
 export function getPlanChoiceCookieKey(userId?: string | null): string {
   const normalized = normalizeUserId(userId);
-  return normalized ? `${USER_STORAGE_PREFIX}${normalized}` : LEGACY_PLAN_CHOICE_KEY;
+  return normalized
+    ? `${USER_STORAGE_PREFIX}${normalized}`
+    : LEGACY_PLAN_CHOICE_KEY;
 }
 
 export function parsePlanChoice(value: unknown): PlanChoice | null {

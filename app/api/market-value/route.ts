@@ -4,7 +4,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { json } from "@/lib/json";
 import { getGeminiModel } from "@/lib/gemini";
-import { panelInternalGet, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  panelInternalPost,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 import { requireAnnualAccess } from "@/lib/ai-access";
 
@@ -27,7 +31,9 @@ function normalizeJsonString(raw: string) {
 }
 
 function extractJson(textResponse: string) {
-  const fenced = textResponse.match(/```json([\s\S]*?)```/) || textResponse.match(/```([\s\S]*?)```/);
+  const fenced =
+    textResponse.match(/```json([\s\S]*?)```/) ||
+    textResponse.match(/```([\s\S]*?)```/);
   const candidate = fenced ? fenced[1] : textResponse;
 
   try {
@@ -58,7 +64,9 @@ export async function GET() {
   }
 
   try {
-    const data = await panelInternalGet<{ reports: any[] }>("market-value", { userId });
+    const data = await panelInternalGet<{ reports: any[] }>("market-value", {
+      userId,
+    });
     return json({ reports: data.reports ?? [] });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
@@ -82,7 +90,8 @@ export async function POST(request: Request) {
   const resumeJson = body?.resumeJson;
   const resumeId = typeof body?.resumeId === "string" ? body.resumeId : null;
   const source = body?.source === "upload" ? "upload" : "resume";
-  const targetRole = typeof body?.targetRole === "string" ? body.targetRole : "";
+  const targetRole =
+    typeof body?.targetRole === "string" ? body.targetRole : "";
   const location = typeof body?.location === "string" ? body.location : "";
 
   if (!resumeJson || typeof resumeJson !== "object") {
@@ -146,7 +155,10 @@ ${JSON.stringify(resumeJson)}
     return json({ report: stored.report });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
     console.error("Market value report error:", error);
     return json({ error: "Failed to generate report" }, { status: 500 });

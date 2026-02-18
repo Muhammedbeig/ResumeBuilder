@@ -54,7 +54,7 @@ export const CertificationSchema = z.object({
 export const LanguageSchema = z.object({
   id: z.string().uuid().or(z.string()),
   name: z.string(),
-  proficiency: z.enum(['Beginner', 'Intermediate', 'Advanced', 'Native']),
+  proficiency: z.enum(["Beginner", "Intermediate", "Advanced", "Native"]),
 });
 
 export const ResumeDataSchema = z.object({
@@ -76,11 +76,13 @@ export const ResumeDataSchema = z.object({
   projects: z.array(ProjectSchema).default([]),
   certifications: z.array(CertificationSchema).default([]),
   languages: z.array(LanguageSchema).default([]),
-  metadata: z.object({
-    themeColor: z.string().optional(),
-    fontFamily: z.string().optional(),
-    fontSize: z.string().optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      themeColor: z.string().optional(),
+      fontFamily: z.string().optional(),
+      fontSize: z.string().optional(),
+    })
+    .optional(),
 });
 
 // Metadata schema for styling and configuration

@@ -1,8 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { format, addMonths, subMonths, setMonth, setYear, getYear, getMonth } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  format,
+  addMonths,
+  subMonths,
+  setMonth,
+  setYear,
+  getYear,
+  getMonth,
+} from "date-fns";
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,7 +39,9 @@ export function MonthYearPicker({
   placeholder = "Pick a date",
   disabled = false,
 }: MonthYearPickerProps) {
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(date);
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
+    date,
+  );
   const [viewDate, setViewDate] = React.useState<Date>(date || new Date());
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -49,8 +63,18 @@ export function MonthYearPicker({
   const prevYear = () => setViewDate(subMonths(viewDate, 12));
 
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
 
   const currentYear = getYear(viewDate);
@@ -63,7 +87,7 @@ export function MonthYearPicker({
           className={cn(
             "w-full justify-start text-left font-normal",
             !date && "text-muted-foreground",
-            className
+            className,
           )}
           disabled={disabled}
         >
@@ -74,11 +98,21 @@ export function MonthYearPicker({
       <PopoverContent className="w-64 p-0" align="start">
         <div className="p-3">
           <div className="flex items-center justify-between mb-2">
-            <Button variant="ghost" size="icon" onClick={prevYear} className="h-7 w-7">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={prevYear}
+              className="h-7 w-7"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="font-semibold">{currentYear}</div>
-            <Button variant="ghost" size="icon" onClick={nextYear} className="h-7 w-7">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={nextYear}
+              className="h-7 w-7"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -95,7 +129,10 @@ export function MonthYearPicker({
                 }
                 className="h-9 text-sm"
                 onClick={() => {
-                  const newDate = setMonth(setYear(viewDate, currentYear), index);
+                  const newDate = setMonth(
+                    setYear(viewDate, currentYear),
+                    index,
+                  );
                   handleSelect(newDate);
                 }}
               >

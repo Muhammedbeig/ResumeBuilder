@@ -26,7 +26,9 @@ interface PlanChoiceContextType {
   clearPlanChoice: () => void;
 }
 
-const PlanChoiceContext = createContext<PlanChoiceContextType | undefined>(undefined);
+const PlanChoiceContext = createContext<PlanChoiceContextType | undefined>(
+  undefined,
+);
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -53,12 +55,18 @@ function clearCookieValue(name: string) {
 
 export function PlanChoiceProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const [planChoiceState, setPlanChoiceState] = useState<PlanChoice | null>(null);
+  const [planChoiceState, setPlanChoiceState] = useState<PlanChoice | null>(
+    null,
+  );
   const [isLoaded, setIsLoaded] = useState(false);
-  const userId = status === "authenticated" ? session?.user?.id ?? null : null;
+  const userId =
+    status === "authenticated" ? (session?.user?.id ?? null) : null;
   const hasSubscription =
-    session?.user?.subscription === "pro" || session?.user?.subscription === "business";
-  const resolvedPlanChoice: PlanChoice | null = hasSubscription ? "paid" : planChoiceState;
+    session?.user?.subscription === "pro" ||
+    session?.user?.subscription === "business";
+  const resolvedPlanChoice: PlanChoice | null = hasSubscription
+    ? "paid"
+    : planChoiceState;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -82,15 +90,18 @@ export function PlanChoiceProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, [status, userId]);
 
-  const setPlanChoice = useCallback((choice: PlanChoice) => {
-    setPlanChoiceState(choice);
-    if (typeof window !== "undefined") {
-      const storageKey = getPlanChoiceStorageKey(userId);
-      const cookieKey = getPlanChoiceCookieKey(userId);
-      localStorage.setItem(storageKey, choice);
-      writeCookieValue(cookieKey, choice);
-    }
-  }, [userId]);
+  const setPlanChoice = useCallback(
+    (choice: PlanChoice) => {
+      setPlanChoiceState(choice);
+      if (typeof window !== "undefined") {
+        const storageKey = getPlanChoiceStorageKey(userId);
+        const cookieKey = getPlanChoiceCookieKey(userId);
+        localStorage.setItem(storageKey, choice);
+        writeCookieValue(cookieKey, choice);
+      }
+    },
+    [userId],
+  );
 
   const clearPlanChoice = useCallback(() => {
     setPlanChoiceState(null);
@@ -109,10 +120,14 @@ export function PlanChoiceProvider({ children }: { children: ReactNode }) {
       setPlanChoice,
       clearPlanChoice,
     }),
-    [resolvedPlanChoice, isLoaded, setPlanChoice, clearPlanChoice]
+    [resolvedPlanChoice, isLoaded, setPlanChoice, clearPlanChoice],
   );
 
-  return <PlanChoiceContext.Provider value={value}>{children}</PlanChoiceContext.Provider>;
+  return (
+    <PlanChoiceContext.Provider value={value}>
+      {children}
+    </PlanChoiceContext.Provider>
+  );
 }
 
 export function usePlanChoice() {

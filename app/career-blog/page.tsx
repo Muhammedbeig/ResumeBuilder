@@ -24,7 +24,10 @@ type PanelBlog = {
 };
 
 function stripHtml(raw: string) {
-  return raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return raw
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function excerptFromHtml(raw: string, maxLen = 160) {
@@ -52,7 +55,9 @@ function slugifyCategory(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function getCategoryMeta(post: PanelBlog): { label: string; slug: string } | null {
+function getCategoryMeta(
+  post: PanelBlog,
+): { label: string; slug: string } | null {
   const label = (post.category ?? "").trim();
   if (!label) return null;
   const rawSlug = (post.category_slug ?? "").trim();
@@ -62,9 +67,15 @@ function getCategoryMeta(post: PanelBlog): { label: string; slug: string } | nul
 }
 
 const resourceLinks = [
-  { name: "BLS Occupational Outlook Handbook", href: "https://www.bls.gov/ooh/" },
+  {
+    name: "BLS Occupational Outlook Handbook",
+    href: "https://www.bls.gov/ooh/",
+  },
   { name: "O*NET Online Skills Database", href: "https://www.onetonline.org/" },
-  { name: "CareerOneStop Career Explorer", href: "https://www.careeronestop.org/" },
+  {
+    name: "CareerOneStop Career Explorer",
+    href: "https://www.careeronestop.org/",
+  },
   {
     name: "World Economic Forum Future of Jobs Report",
     href: "https://www.weforum.org/reports/the-future-of-jobs-report-2023/",
@@ -79,7 +90,9 @@ export default async function CareerBlogPage() {
   let blogs: PanelBlog[] = [];
 
   try {
-    const blogsRes = await panelGet<PanelPaginator<PanelBlog>>("blogs", { sort_by: "new-to-old" });
+    const blogsRes = await panelGet<PanelPaginator<PanelBlog>>("blogs", {
+      sort_by: "new-to-old",
+    });
     blogs = Array.isArray(blogsRes.data?.data) ? blogsRes.data.data : [];
   } catch {
     blogs = [];
@@ -108,8 +121,8 @@ export default async function CareerBlogPage() {
             Practical guidance for every career stage
           </h1>
           <p className="mt-4 text-gray-600 dark:text-gray-300">
-            Explore actionable playbooks, proven frameworks, and real world career advice written for
-            modern job seekers.
+            Explore actionable playbooks, proven frameworks, and real world
+            career advice written for modern job seekers.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
@@ -142,7 +155,9 @@ export default async function CareerBlogPage() {
 
         <div className="mt-16">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Latest guides</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+              Latest guides
+            </h2>
             <Link
               href="/career-blog"
               className="text-sm font-semibold text-purple-600 hover:text-purple-700"
@@ -161,7 +176,8 @@ export default async function CareerBlogPage() {
                 >
                   {(() => {
                     const imageUrl = resolvePanelAssetUrl(post.image);
-                    const title = post.translated_title ?? post.title ?? "Untitled";
+                    const title =
+                      post.translated_title ?? post.title ?? "Untitled";
                     return imageUrl ? (
                       <div className="mb-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
                         <img
@@ -180,7 +196,9 @@ export default async function CareerBlogPage() {
                         <span className="rounded-full bg-purple-100 px-2 py-1 font-semibold text-purple-700 dark:bg-purple-500/20 dark:text-purple-200">
                           {category.label}
                         </span>
-                      ) : <span />;
+                      ) : (
+                        <span />
+                      );
                     })()}
                     <span>{formatDate(post.created_at)}</span>
                   </div>
@@ -188,7 +206,9 @@ export default async function CareerBlogPage() {
                     {post.translated_title ?? post.title ?? "Untitled"}
                   </h3>
                   <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-                    {excerptFromHtml(post.translated_description ?? post.description ?? "")}
+                    {excerptFromHtml(
+                      post.translated_description ?? post.description ?? "",
+                    )}
                   </p>
                 </Link>
               ))}
@@ -201,7 +221,9 @@ export default async function CareerBlogPage() {
         </div>
 
         <div className="mt-16">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">All articles</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            All articles
+          </h2>
           <div className="mt-6 grid gap-4">
             {blogs.map((post) => (
               <Link
@@ -212,7 +234,8 @@ export default async function CareerBlogPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   {(() => {
                     const imageUrl = resolvePanelAssetUrl(post.image);
-                    const title = post.translated_title ?? post.title ?? "Untitled";
+                    const title =
+                      post.translated_title ?? post.title ?? "Untitled";
                     return imageUrl ? (
                       <div className="w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 sm:w-44">
                         <img
@@ -229,7 +252,9 @@ export default async function CareerBlogPage() {
                       {post.translated_title ?? post.title ?? "Untitled"}
                     </h3>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                      {excerptFromHtml(post.translated_description ?? post.description ?? "")}
+                      {excerptFromHtml(
+                        post.translated_description ?? post.description ?? "",
+                      )}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                       {(() => {
@@ -246,7 +271,9 @@ export default async function CareerBlogPage() {
                       <span>{formatDate(post.created_at)}</span>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-purple-600">Read guide</span>
+                  <span className="text-sm font-semibold text-purple-600">
+                    Read guide
+                  </span>
                 </div>
               </Link>
             ))}
@@ -258,8 +285,8 @@ export default async function CareerBlogPage() {
             Trusted sources we follow
           </h3>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            We keep our guidance aligned with reliable labor market and workforce research so you can
-            make informed decisions.
+            We keep our guidance aligned with reliable labor market and
+            workforce research so you can make informed decisions.
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {resourceLinks.map((resource) => (

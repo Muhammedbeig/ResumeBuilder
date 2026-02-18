@@ -27,7 +27,11 @@ export function RichTextarea({
   const ref = useRef<HTMLTextAreaElement>(null);
   const safeValue = Array.isArray(value) ? value.join("\n") : value;
 
-  const applySelection = (nextValue: string, cursorStart?: number, cursorEnd?: number) => {
+  const applySelection = (
+    nextValue: string,
+    cursorStart?: number,
+    cursorEnd?: number,
+  ) => {
     onValueChange(nextValue);
     requestAnimationFrame(() => {
       if (!ref.current) return;
@@ -63,7 +67,9 @@ export function RichTextarea({
     const lines = selection ? selection.split(/\r?\n/) : [""];
     const updatedLines = lines.map((line) => {
       if (!line.trim()) return line;
-      return line.startsWith("- ") || line.startsWith("* ") ? line : `- ${line}`;
+      return line.startsWith("- ") || line.startsWith("* ")
+        ? line
+        : `- ${line}`;
     });
     const updated = updatedLines.join("\n");
     const nextValue = `${before}${updated}${after}`;

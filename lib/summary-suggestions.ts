@@ -61,7 +61,9 @@ export function extractSummarySuggestions(input: unknown): string[] {
   if (input && typeof input === "object") {
     const maybeSummaries = (input as { summaries?: unknown }).summaries;
     if (Array.isArray(maybeSummaries)) {
-      return normalizeSummarySuggestions(maybeSummaries.map((item) => String(item)));
+      return normalizeSummarySuggestions(
+        maybeSummaries.map((item) => String(item)),
+      );
     }
 
     const maybeSummary = (input as { summary?: unknown }).summary;

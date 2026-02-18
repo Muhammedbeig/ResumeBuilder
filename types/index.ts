@@ -5,7 +5,7 @@ export interface User {
   email: string;
   name?: string;
   image?: string;
-  subscription?: 'free' | 'pro' | 'business';
+  subscription?: "free" | "pro" | "business";
 }
 
 export interface Resume {
@@ -25,7 +25,7 @@ export interface ResumeVersion {
   id: string;
   resumeId: string;
   jsonData: ResumeData;
-  source: 'upload' | 'manual' | 'ai';
+  source: "upload" | "manual" | "ai";
   createdAt: Date;
 }
 
@@ -48,7 +48,7 @@ export interface ResumeData {
   projects: Project[];
   certifications: Certification[];
   languages: Language[];
-  
+
   // Section Ordering & Visibility
   structure?: SectionConfig[];
 
@@ -63,7 +63,15 @@ export interface ResumeData {
 
 export interface SectionConfig {
   id: string;
-  type: 'basics' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'summary' | 'custom';
+  type:
+    | "basics"
+    | "experience"
+    | "education"
+    | "skills"
+    | "projects"
+    | "certifications"
+    | "summary"
+    | "custom";
   title: string;
   isVisible: boolean;
   order: number;
@@ -116,14 +124,14 @@ export interface Certification {
 export interface Language {
   id: string;
   name: string;
-  proficiency: 'Beginner' | 'Intermediate' | 'Advanced' | 'Native';
+  proficiency: "Beginner" | "Intermediate" | "Advanced" | "Native";
 }
 
 export interface Template {
   id: string;
   name: string;
   preview: string;
-  category: 'ats' | 'modern' | 'creative';
+  category: "ats" | "modern" | "creative";
   colors: string[];
 }
 
@@ -152,7 +160,7 @@ export interface ExportJob {
   resumeId: string;
   resumeVersionId: string;
   fileUrl?: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   createdAt: Date;
   completedAt?: Date;
 }
@@ -161,7 +169,7 @@ export interface MarketValueReport {
   id: string;
   userId: string;
   resumeId?: string | null;
-  source: 'upload' | 'resume';
+  source: "upload" | "resume";
   periodLabel: string;
   reportJson: Record<string, unknown>;
   resumeJson?: Record<string, unknown> | null;

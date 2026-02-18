@@ -4,7 +4,12 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { getStripeGatewayConfig } from "@/lib/panel-payment-gateways";
-import { panelInternalGet, panelInternalPatch, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  panelInternalPatch,
+  panelInternalPost,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 
 export const runtime = "nodejs";
@@ -18,19 +23,28 @@ const resolveHeaderValue = (value: string | null) => {
 const resolveRequestOrigin = (request: Request) => {
   try {
     const reqUrl = new URL(request.url);
-    const forwardedHost = resolveHeaderValue(request.headers.get("x-forwarded-host"));
-    const host = forwardedHost || resolveHeaderValue(request.headers.get("host")) || reqUrl.host;
+    const forwardedHost = resolveHeaderValue(
+      request.headers.get("x-forwarded-host"),
+    );
+    const host =
+      forwardedHost ||
+      resolveHeaderValue(request.headers.get("host")) ||
+      reqUrl.host;
     if (!host) return null;
 
-    const forwardedProto = resolveHeaderValue(request.headers.get("x-forwarded-proto")).toLowerCase();
+    const forwardedProto = resolveHeaderValue(
+      request.headers.get("x-forwarded-proto"),
+    ).toLowerCase();
     const isLocalHost =
-      host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+      host.startsWith("localhost") ||
+      host.startsWith("127.0.0.1") ||
+      host.startsWith("[::1]");
     const protocol =
       forwardedProto === "http" || forwardedProto === "https"
         ? forwardedProto
         : isLocalHost
-        ? "http"
-        : "https";
+          ? "http"
+          : "https";
 
     return `${protocol}://${host}`;
   } catch {
@@ -90,49 +104,68 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as { packageId?: string; returnUrl?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    packageId?: string;
+    returnUrl?: string;
+  };
   const packageId = parsePackageId(body.packageId);
   if (!packageId) {
-    return NextResponse.json({ error: "Missing or invalid packageId" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing or invalid packageId" },
+      { status: 400 },
+    );
   }
 
   let paymentTransactionId: string | null = null;
 
   try {
-    const packageRes = await panelInternalGet<{ package: InternalPackage }>(`packages/${packageId}`);
+    const packageRes = await panelInternalGet<{ package: InternalPackage }>(
+      `packages/${packageId}`,
+    );
     const pkg = packageRes.package;
 
     if (!pkg || pkg.status !== 1 || pkg.type !== "item_listing") {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });
     }
     if (!(pkg.finalPrice > 0)) {
-      return NextResponse.json({ error: "This package does not require payment" }, { status: 400 });
+      return NextResponse.json(
+        { error: "This package does not require payment" },
+        { status: 400 },
+      );
     }
 
     const stripeCfg = await getStripeGatewayConfig();
     if (!stripeCfg) {
       return NextResponse.json(
-        { error: "Stripe is not enabled or not configured in the Admin Panel." },
-        { status: 503 }
+        {
+          error: "Stripe is not enabled or not configured in the Admin Panel.",
+        },
+        { status: 503 },
       );
     }
 
     const stripe = new Stripe(stripeCfg.secretKey, { typescript: true });
 
-    const profile = await panelInternalGet<UserPaymentProfile>("user/payment-profile", { userId });
+    const profile = await panelInternalGet<UserPaymentProfile>(
+      "user/payment-profile",
+      { userId },
+    );
     if (!profile?.id) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const txRes = await panelInternalPost<{ transaction: { id: string } }>("payment/transactions", {
-      userId,
-      body: {
-        packageId: pkg.id,
-        amount: pkg.finalPrice,
-        gateway: "Stripe",
-        status: "pending",
+    const txRes = await panelInternalPost<{ transaction: { id: string } }>(
+      "payment/transactions",
+      {
+        userId,
+        body: {
+          packageId: pkg.id,
+          amount: pkg.finalPrice,
+          gateway: "Stripe",
+          status: "pending",
+        },
       },
-    });
+    );
     paymentTransactionId = txRes.transaction.id;
 
     let customerId = profile.stripeCustomerId;
@@ -154,7 +187,10 @@ export async function POST(request: Request) {
 
     const callbackBase = new URL("/api/stripe/return", baseUrl);
     callbackBase.searchParams.set("return_url", resolvedReturnUrl);
-    callbackBase.searchParams.set("payment_transaction_id", paymentTransactionId);
+    callbackBase.searchParams.set(
+      "payment_transaction_id",
+      paymentTransactionId,
+    );
 
     const successUrl = new URL(callbackBase);
     successUrl.searchParams.set("stripe", "success");
@@ -221,19 +257,28 @@ export async function POST(request: Request) {
   } catch (error) {
     if (paymentTransactionId) {
       try {
-        await panelInternalPatch(`payment/transactions/${paymentTransactionId}`, {
-          userId,
-          body: { status: "failed" },
-        });
+        await panelInternalPatch(
+          `payment/transactions/${paymentTransactionId}`,
+          {
+            userId,
+            body: { status: "failed" },
+          },
+        );
       } catch {
         // ignore cleanup errors
       }
     }
 
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 },
+      );
     }
     console.error("Stripe checkout error:", error);
-    return NextResponse.json({ error: "Unable to start Stripe checkout. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to start Stripe checkout. Please try again." },
+      { status: 500 },
+    );
   }
 }

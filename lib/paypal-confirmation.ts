@@ -69,7 +69,8 @@ function amountsMatch(expected: number, actual: number | null) {
 
 export function parsePayPalCustomId(raw: string | undefined | null) {
   const value = String(raw ?? "").trim();
-  if (!value) return { txId: null as string | null, userId: null as string | null };
+  if (!value)
+    return { txId: null as string | null, userId: null as string | null };
 
   if (value.includes(":")) {
     const [txIdRaw, userIdRaw] = value.split(":", 2);
@@ -87,12 +88,19 @@ export function parsePayPalCustomId(raw: string | undefined | null) {
 export async function fetchPayPalOrder(orderId: string) {
   const paypalCfg = await getPayPalGatewayConfig();
   if (!paypalCfg) {
-    throw new PayPalConfirmationError("PayPal is not enabled or not configured in the Admin Panel.", 503);
+    throw new PayPalConfirmationError(
+      "PayPal is not enabled or not configured in the Admin Panel.",
+      503,
+    );
   }
 
-  const order = await paypalRequest<PayPalOrder>(paypalCfg, `/v2/checkout/orders/${orderId}`, {
-    method: "GET",
-  });
+  const order = await paypalRequest<PayPalOrder>(
+    paypalCfg,
+    `/v2/checkout/orders/${orderId}`,
+    {
+      method: "GET",
+    },
+  );
 
   return { order, paypalCfg };
 }
@@ -108,9 +116,12 @@ export async function confirmPayPalPaymentTransaction({
   paymentTransactionId,
   orderId,
 }: ConfirmPayPalPaymentInput) {
-  const txRes = await panelInternalGet<{ transaction: InternalTransaction }>(`payment/transactions/${paymentTransactionId}`, {
-    userId,
-  });
+  const txRes = await panelInternalGet<{ transaction: InternalTransaction }>(
+    `payment/transactions/${paymentTransactionId}`,
+    {
+      userId,
+    },
+  );
   const tx = txRes.transaction;
   if (!tx) {
     throw new PayPalConfirmationError("Transaction not found", 404);
@@ -135,7 +146,9 @@ export async function confirmPayPalPaymentTransaction({
     throw new PayPalConfirmationError("Transaction missing packageId", 400);
   }
 
-  const packageRes = await panelInternalGet<{ package: InternalPackage }>(`packages/${tx.packageId}`);
+  const packageRes = await panelInternalGet<{ package: InternalPackage }>(
+    `packages/${tx.packageId}`,
+  );
   const pkg = packageRes.package;
   if (!pkg || pkg.status !== 1 || pkg.type !== "item_listing") {
     throw new PayPalConfirmationError("Package not found", 404);
@@ -155,9 +168,13 @@ export async function confirmPayPalPaymentTransaction({
 
   let finalOrder = order;
   if (order.status === "APPROVED") {
-    finalOrder = await paypalRequest<PayPalOrder>(paypalCfg, `/v2/checkout/orders/${effectiveOrderId}/capture`, {
-      method: "POST",
-    });
+    finalOrder = await paypalRequest<PayPalOrder>(
+      paypalCfg,
+      `/v2/checkout/orders/${effectiveOrderId}/capture`,
+      {
+        method: "POST",
+      },
+    );
   }
 
   if (finalOrder.status !== "COMPLETED") {
@@ -175,7 +192,8 @@ export async function confirmPayPalPaymentTransaction({
   }
 
   const currency =
-    finalOrder.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.currency_code ??
+    finalOrder.purchase_units?.[0]?.payments?.captures?.[0]?.amount
+      ?.currency_code ??
     finalOrder.purchase_units?.[0]?.amount?.currency_code ??
     order.purchase_units?.[0]?.amount?.currency_code;
   if (currency && currency.toUpperCase() !== paypalCfg.currencyCode) {

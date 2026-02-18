@@ -8,7 +8,10 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");
   if (!type) {
-    return NextResponse.json({ error: true, message: "type is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: true, message: "type is required" },
+      { status: 400 },
+    );
   }
 
   const params: Record<string, string> = { type };
@@ -23,6 +26,9 @@ export async function GET(req: NextRequest) {
     const res = await panelGet<PanelTemplate[]>("templates", params);
     return NextResponse.json(res);
   } catch (error) {
-    return NextResponse.json({ error: true, message: "Failed to fetch templates" }, { status: 500 });
+    return NextResponse.json(
+      { error: true, message: "Failed to fetch templates" },
+      { status: 500 },
+    );
   }
 }

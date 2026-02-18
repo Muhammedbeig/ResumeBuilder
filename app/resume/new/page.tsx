@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, Suspense, useCallback, type ComponentType } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Suspense,
+  useCallback,
+  type ComponentType,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crown } from "lucide-react";
@@ -34,10 +42,12 @@ function NewResumeContent() {
   const { planChoice, isLoaded } = usePlanChoice();
   const [title, setTitle] = useState("Untitled Resume");
   const [templates, setTemplates] = useState<TemplateOption[]>(resumeTemplates);
-  const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
+  const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(
+    null,
+  );
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const autoCreateRef = useRef<string | null>(null);
-  
+
   const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
 
@@ -57,11 +67,11 @@ function NewResumeContent() {
       const mapped: TemplateOption[] = panelTemplates.map((template) => {
         const config = normalizeResumeConfig(
           template.config as any,
-          template.template_id
+          template.template_id,
         );
         const component = resolveResumeTemplateComponent(
           template.template_id,
-          config ?? undefined
+          config ?? undefined,
         );
 
         return {
@@ -86,12 +96,14 @@ function NewResumeContent() {
   }, []);
 
   const hasSubscription = useMemo(
-    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
-    [session?.user?.subscription]
+    () =>
+      session?.user?.subscription === "pro" ||
+      session?.user?.subscription === "business",
+    [session?.user?.subscription],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
-    [planChoice, hasSubscription]
+    [planChoice, hasSubscription],
   );
 
   useEffect(() => {
@@ -122,32 +134,43 @@ function NewResumeContent() {
     return true;
   }, [isAuthenticated, planChoice, openPlanModal]);
 
-  const handleSelectTemplate = useCallback(async (templateId: string, premium: boolean) => {
-    if (!ensurePlanChosen()) return;
-    if (premium && !canUsePaid) {
-      if (!isAuthenticated) {
-        toast.error("Please sign in to unlock premium templates");
-        router.push(`/login?callbackUrl=${window.location.pathname}`);
+  const handleSelectTemplate = useCallback(
+    async (templateId: string, premium: boolean) => {
+      if (!ensurePlanChosen()) return;
+      if (premium && !canUsePaid) {
+        if (!isAuthenticated) {
+          toast.error("Please sign in to unlock premium templates");
+          router.push(`/login?callbackUrl=${window.location.pathname}`);
+          return;
+        }
+        toast.info("Premium templates are available in the Paid plan.");
+        openPlanModal();
         return;
       }
-      toast.info("Premium templates are available in the Paid plan.");
-      openPlanModal();
-      return;
-    }
-    setCreatingTemplateId(templateId);
-    try {
-      const resume = await createResume(
-        title.trim() || "Untitled Resume",
-        templateId,
-        importedData || placeholderResumeData
-      );
-      router.push(`/resume/${resume.id}`);
-    } catch {
-      toast.error("Failed to create resume");
-    } finally {
-      setCreatingTemplateId(null);
-    }
-  }, [canUsePaid, isAuthenticated, router, title, createResume, importedData, openPlanModal]);
+      setCreatingTemplateId(templateId);
+      try {
+        const resume = await createResume(
+          title.trim() || "Untitled Resume",
+          templateId,
+          importedData || placeholderResumeData,
+        );
+        router.push(`/resume/${resume.id}`);
+      } catch {
+        toast.error("Failed to create resume");
+      } finally {
+        setCreatingTemplateId(null);
+      }
+    },
+    [
+      canUsePaid,
+      isAuthenticated,
+      router,
+      title,
+      createResume,
+      importedData,
+      openPlanModal,
+    ],
+  );
 
   // Auto-select template if query param is present
   useEffect(() => {
@@ -158,7 +181,16 @@ function NewResumeContent() {
     if (autoCreateRef.current === templateIdFromQuery) return;
     autoCreateRef.current = templateIdFromQuery;
     handleSelectTemplate(template.id, template.premium);
-  }, [templateIdFromQuery, isLoaded, status, creatingTemplateId, handleSelectTemplate, templates, isAuthenticated, planChoice]);
+  }, [
+    templateIdFromQuery,
+    isLoaded,
+    status,
+    creatingTemplateId,
+    handleSelectTemplate,
+    templates,
+    isAuthenticated,
+    planChoice,
+  ]);
 
   if (status === "loading") {
     return (
@@ -170,14 +202,18 @@ function NewResumeContent() {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Choose a Resume Template
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Pick a template to start editing. Premium templates are marked with Pro.
+            Pick a template to start editing. Premium templates are marked with
+            Pro.
           </p>
         </div>
 
@@ -197,7 +233,10 @@ function NewResumeContent() {
             const Preview = template.component;
             const isLocked = template.premium && !canUsePaid;
             return (
-              <Card key={template.id} className="overflow-hidden border-gray-200 dark:border-gray-800">
+              <Card
+                key={template.id}
+                className="overflow-hidden border-gray-200 dark:border-gray-800"
+              >
                 <div className="relative bg-gray-50 dark:bg-gray-900/50 p-4">
                   <div className="absolute right-4 top-4 flex items-center gap-2">
                     {template.premium && (
@@ -223,9 +262,13 @@ function NewResumeContent() {
                   <Button
                     className="w-full"
                     disabled={creatingTemplateId !== null || isLocked}
-                    onClick={() => handleSelectTemplate(template.id, template.premium)}
+                    onClick={() =>
+                      handleSelectTemplate(template.id, template.premium)
+                    }
                   >
-                    {creatingTemplateId === template.id ? "Creating..." : "Use this template"}
+                    {creatingTemplateId === template.id
+                      ? "Creating..."
+                      : "Use this template"}
                   </Button>
                 </CardContent>
               </Card>
@@ -239,7 +282,13 @@ function NewResumeContent() {
 
 export default function NewResumePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Spinner />
+        </div>
+      }
+    >
       <NewResumeContent />
     </Suspense>
   );

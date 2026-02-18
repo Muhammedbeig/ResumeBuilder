@@ -1,6 +1,12 @@
 "use client";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { usePlanChoice, type PlanChoice } from "@/contexts/PlanChoiceContext";
 import { Check, ChevronLeft, ChevronRight, Crown } from "lucide-react";
@@ -25,7 +31,8 @@ export function PlanChoiceModal({
   const { data: session } = useSession();
   const { setPlanChoice } = usePlanChoice();
   const hasSubscription =
-    session?.user?.subscription === "pro" || session?.user?.subscription === "business";
+    session?.user?.subscription === "pro" ||
+    session?.user?.subscription === "business";
   const plans = useMemo(
     () => [
       {
@@ -89,7 +96,7 @@ export function PlanChoiceModal({
         paid: true,
       },
     ],
-    []
+    [],
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const activePlan = plans[activeIndex];
@@ -122,8 +129,12 @@ export function PlanChoiceModal({
       >
         <div className="w-full">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
-            <DialogDescription className="text-slate-300">{description}</DialogDescription>
+            <DialogTitle className="text-2xl font-semibold">
+              {title}
+            </DialogTitle>
+            <DialogDescription className="text-slate-300">
+              {description}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 shadow-2xl">
@@ -132,8 +143,12 @@ export function PlanChoiceModal({
                 <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
                   {activePlan.label}
                 </span>
-                <span className="mt-2 text-2xl font-semibold text-white">{activePlan.headline}</span>
-                <span className="mt-2 text-sm text-slate-300">{activePlan.description}</span>
+                <span className="mt-2 text-2xl font-semibold text-white">
+                  {activePlan.headline}
+                </span>
+                <span className="mt-2 text-sm text-slate-300">
+                  {activePlan.description}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -148,7 +163,9 @@ export function PlanChoiceModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setActiveIndex((idx) => Math.min(plans.length - 1, idx + 1))}
+                  onClick={() =>
+                    setActiveIndex((idx) => Math.min(plans.length - 1, idx + 1))
+                  }
                   disabled={activeIndex === plans.length - 1}
                   className="h-9 w-9 rounded-full border border-slate-700 text-slate-200 hover:bg-slate-800"
                 >
@@ -169,7 +186,9 @@ export function PlanChoiceModal({
                 </span>
               )}
               {activePlan.priceLabel && (
-                <span className="text-lg font-semibold text-white">{activePlan.priceLabel}</span>
+                <span className="text-lg font-semibold text-white">
+                  {activePlan.priceLabel}
+                </span>
               )}
             </div>
 

@@ -32,7 +32,11 @@ interface ResumeContextType {
   currentResume: Resume | null;
   resumeData: ResumeData;
   isLoading: boolean;
-  createResume: (title: string, template: string, initialData?: ResumeData) => Promise<Resume>;
+  createResume: (
+    title: string,
+    template: string,
+    initialData?: ResumeData,
+  ) => Promise<Resume>;
   loadResume: (resumeId: string) => Promise<void>;
   deleteResume: (id: string) => Promise<void>;
   selectResume: (resume: Resume) => void;
@@ -41,7 +45,9 @@ interface ResumeContextType {
   updateTemplate: (template: string) => void;
   togglePublic: () => Promise<boolean>;
   updateResumeData: (data: Partial<ResumeData>) => void;
-  updateMetadata: (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => void;
+  updateMetadata: (
+    metadata: Partial<NonNullable<ResumeData["metadata"]>>,
+  ) => void;
   updateBasics: (basics: Partial<ResumeData["basics"]>) => void;
   addExperience: (experience: Omit<Experience, "id">) => void;
   updateExperience: (id: string, experience: Partial<Experience>) => void;
@@ -61,15 +67,26 @@ interface ResumeContextType {
   updateStructure: (structure: import("@/types").SectionConfig[]) => void;
   rewriteBulletAI: (experienceId: string, bulletIndex: number) => Promise<void>;
   generateSummaryAI: (targetRole?: string) => Promise<void>;
-  suggestSkillsAI: (jobTitle: string, description?: string) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
-  suggestResponsibilitiesAI: (jobTitle: string, description?: string) => Promise<string[]>;
-  suggestSummaryAI: (resumeData: ResumeData, targetRole?: string) => Promise<string[]>;
+  suggestSkillsAI: (
+    jobTitle: string,
+    description?: string,
+  ) => Promise<{ hardSkills: string[]; softSkills: string[] }>;
+  suggestResponsibilitiesAI: (
+    jobTitle: string,
+    description?: string,
+  ) => Promise<string[]>;
+  suggestSummaryAI: (
+    resumeData: ResumeData,
+    targetRole?: string,
+  ) => Promise<string[]>;
   generatePDF?: (templateId: string) => Promise<void>;
   importedData: ResumeData | null;
   setImportedData: (data: ResumeData | null) => void;
 }
 
-export const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
+export const ResumeContext = createContext<ResumeContextType | undefined>(
+  undefined,
+);
 
 const LOCAL_STORAGE_PREFIX = "resupra_guest_resume_";
 
@@ -99,12 +116,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const aiInFlightRef = useRef(new Map<string, Promise<unknown>>());
   const hasSubscription = useMemo(
-    () => session?.user?.subscription === "pro" || session?.user?.subscription === "business",
-    [session?.user?.subscription]
+    () =>
+      session?.user?.subscription === "pro" ||
+      session?.user?.subscription === "business",
+    [session?.user?.subscription],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
-    [planChoice, hasSubscription]
+    [planChoice, hasSubscription],
   );
 
   const getLocalResumes = useCallback(() => {
@@ -125,9 +144,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const refreshResumes = useCallback(async () => {
     const localResumes = getLocalResumes();
-    
+
     if (!session?.user) {
-      setResumes(localResumes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setResumes(
+        localResumes.sort(
+          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+        ),
+      );
       return;
     }
 
@@ -136,18 +159,30 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/resumes");
       if (!response.ok) {
         console.error("Failed to load resumes", response.status);
-        setResumes(localResumes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+        setResumes(
+          localResumes.sort(
+            (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+          ),
+        );
         return;
       }
       const data = await response.json();
       const remoteResumes = normalizeResumeList(data.resumes || []);
-      
+
       // Combine remote and local (local will be synced soon)
       // Filter out local resumes that might have already been synced (redundant but safe)
-      setResumes([...remoteResumes, ...localResumes].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setResumes(
+        [...remoteResumes, ...localResumes].sort(
+          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+        ),
+      );
     } catch (error) {
       console.error("Failed to load resumes", error);
-      setResumes(localResumes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
+      setResumes(
+        localResumes.sort(
+          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +194,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const syncGuestData = useCallback(async () => {
     if (!session?.user) return;
-    
+
     const localKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -181,29 +216,29 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/resumes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            title: localData.resume.title, 
-            template: localData.resume.template, 
-            data: localData.data 
+          body: JSON.stringify({
+            title: localData.resume.title,
+            template: localData.resume.template,
+            data: localData.data,
           }),
         });
-        
+
         if (response.ok) {
           const result = await response.json();
           localStorage.removeItem(key);
-          
+
           if (oldId === currentPathId) {
             syncedCurrentId = result.resume.id;
           }
         }
       }
-      
+
       await refreshResumes();
-      
+
       if (syncedCurrentId) {
         router.replace(`/resume/${syncedCurrentId}`);
       }
-      
+
       toast.success("Syncing your guest data...");
     } catch (error) {
       console.error("Failed to sync guest data", error);
@@ -222,7 +257,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const createResume = useCallback(
     async (title: string, template: string, initialData?: ResumeData) => {
       const dataToUse = normalizeResumeData(initialData || emptyResumeData);
-      
+
       if (!session?.user) {
         const guestId = `local-${Date.now()}`;
         const newResume: Resume = {
@@ -234,12 +269,15 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
-        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${guestId}`, JSON.stringify({
-          resume: newResume,
-          data: dataToUse
-        }));
-        
+
+        localStorage.setItem(
+          `${LOCAL_STORAGE_PREFIX}${guestId}`,
+          JSON.stringify({
+            resume: newResume,
+            data: dataToUse,
+          }),
+        );
+
         setResumes((prev) => [newResume, ...prev]);
         setCurrentResume(newResume);
         setResumeData(dataToUse);
@@ -268,18 +306,20 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [session?.user]
+    [session?.user],
   );
 
   const loadResume = useCallback(
     async (resumeId: string) => {
       if (!resumeId) return;
-      
+
       // If we are already loading this resume, skip
       if (currentResume?.id === resumeId) return;
 
       if (resumeId.startsWith("local-")) {
-        const local = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}${resumeId}`);
+        const local = localStorage.getItem(
+          `${LOCAL_STORAGE_PREFIX}${resumeId}`,
+        );
         if (local) {
           const parsed = JSON.parse(local);
           setCurrentResume(parseResumeDates(parsed.resume));
@@ -304,7 +344,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [session?.user, currentResume?.id]
+    [session?.user, currentResume?.id],
   );
 
   const deleteResume = useCallback(
@@ -341,7 +381,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [session?.user, currentResume?.id]
+    [session?.user, currentResume?.id],
   );
 
   const selectResume = useCallback(
@@ -349,60 +389,68 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setCurrentResume(resume);
       void loadResume(resume.id);
     },
-    [loadResume]
+    [loadResume],
   );
 
-  const saveResume = useCallback(async (isAutoSave = false) => {
-    if (!currentResume) return;
+  const saveResume = useCallback(
+    async (isAutoSave = false) => {
+      if (!currentResume) return;
 
-    if (currentResume.id.startsWith("local-")) {
-      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${currentResume.id}`, JSON.stringify({
-        resume: { ...currentResume, updatedAt: new Date() },
-        data: resumeData
-      }));
-      if (!isAutoSave) toast.success("Progress saved locally");
-      return;
-    }
-
-    if (!session?.user) return;
-    
-    if (!isAutoSave) setIsLoading(true);
-    try {
-      const response = await fetch(`/api/resumes/${currentResume.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: currentResume.title,
-          template: currentResume.template,
-          isPublic: currentResume.isPublic,
-          data: resumeData,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to save resume");
+      if (currentResume.id.startsWith("local-")) {
+        localStorage.setItem(
+          `${LOCAL_STORAGE_PREFIX}${currentResume.id}`,
+          JSON.stringify({
+            resume: { ...currentResume, updatedAt: new Date() },
+            data: resumeData,
+          }),
+        );
+        if (!isAutoSave) toast.success("Progress saved locally");
+        return;
       }
-      const data = await response.json();
-      const updatedResume = parseResumeDates(data.resume);
-      // Only update currentResume if it's not an auto-save to prevent re-renders or focus loss
-      // Actually we should update timestamps but maybe silently
-      if (!isAutoSave) {
+
+      if (!session?.user) return;
+
+      if (!isAutoSave) setIsLoading(true);
+      try {
+        const response = await fetch(`/api/resumes/${currentResume.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: currentResume.title,
+            template: currentResume.template,
+            isPublic: currentResume.isPublic,
+            data: resumeData,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to save resume");
+        }
+        const data = await response.json();
+        const updatedResume = parseResumeDates(data.resume);
+        // Only update currentResume if it's not an auto-save to prevent re-renders or focus loss
+        // Actually we should update timestamps but maybe silently
+        if (!isAutoSave) {
           setCurrentResume(updatedResume);
           setResumes((prev) =>
-            prev.map((resume) => (resume.id === updatedResume.id ? updatedResume : resume))
+            prev.map((resume) =>
+              resume.id === updatedResume.id ? updatedResume : resume,
+            ),
           );
+        }
+        // We don't need to update resumeData from server on auto-save as local is more recent
+        if (!isAutoSave) {
+          setResumeData(normalizeResumeData(data.data || resumeData));
+          toast.success("Resume saved");
+        }
+      } catch (error) {
+        console.error("Auto-save error:", error);
+        if (!isAutoSave) toast.error("Failed to save resume");
+      } finally {
+        if (!isAutoSave) setIsLoading(false);
       }
-      // We don't need to update resumeData from server on auto-save as local is more recent
-      if (!isAutoSave) {
-        setResumeData(normalizeResumeData(data.data || resumeData));
-        toast.success("Resume saved");
-      }
-    } catch (error) {
-       console.error("Auto-save error:", error);
-       if (!isAutoSave) toast.error("Failed to save resume");
-    } finally {
-      if (!isAutoSave) setIsLoading(false);
-    }
-  }, [session?.user, currentResume, resumeData]);
+    },
+    [session?.user, currentResume, resumeData],
+  );
 
   // Auto-save effect
   useEffect(() => {
@@ -422,28 +470,34 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const togglePublic = useCallback(async () => {
     if (!currentResume || !session?.user) return false;
     const newStatus = !currentResume.isPublic;
-    
+
     // Optimistic update
-    setCurrentResume(prev => prev ? { ...prev, isPublic: newStatus } : prev);
-    
+    setCurrentResume((prev) =>
+      prev ? { ...prev, isPublic: newStatus } : prev,
+    );
+
     try {
-        await fetch(`/api/resumes/${currentResume.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                title: currentResume.title,
-                template: currentResume.template,
-                isPublic: newStatus,
-                data: resumeData
-            })
-        });
-        toast.success(newStatus ? "Resume is now public" : "Resume is now private");
-        return newStatus;
+      await fetch(`/api/resumes/${currentResume.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: currentResume.title,
+          template: currentResume.template,
+          isPublic: newStatus,
+          data: resumeData,
+        }),
+      });
+      toast.success(
+        newStatus ? "Resume is now public" : "Resume is now private",
+      );
+      return newStatus;
     } catch (error) {
-        // Revert
-        setCurrentResume(prev => prev ? { ...prev, isPublic: !newStatus } : prev);
-        toast.error("Failed to update visibility");
-        return !newStatus;
+      // Revert
+      setCurrentResume((prev) =>
+        prev ? { ...prev, isPublic: !newStatus } : prev,
+      );
+      toast.error("Failed to update visibility");
+      return !newStatus;
     }
   }, [currentResume, session?.user, resumeData]);
 
@@ -451,12 +505,15 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResumeData((prev) => ({ ...prev, ...data }));
   }, []);
 
-  const updateMetadata = useCallback((metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      metadata: { ...(prev.metadata || {}), ...metadata },
-    }));
-  }, []);
+  const updateMetadata = useCallback(
+    (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        metadata: { ...(prev.metadata || {}), ...metadata },
+      }));
+    },
+    [],
+  );
 
   const updateBasics = useCallback((basics: Partial<ResumeData["basics"]>) => {
     setResumeData((prev) => ({
@@ -473,14 +530,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateExperience = useCallback((id: string, experience: Partial<Experience>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      experiences: prev.experiences.map((exp) =>
-        exp.id === id ? { ...exp, ...experience } : exp
-      ),
-    }));
-  }, []);
+  const updateExperience = useCallback(
+    (id: string, experience: Partial<Experience>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        experiences: prev.experiences.map((exp) =>
+          exp.id === id ? { ...exp, ...experience } : exp,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeExperience = useCallback((id: string) => {
     setResumeData((prev) => ({
@@ -497,12 +557,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateEducation = useCallback((id: string, education: Partial<Education>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu) => (edu.id === id ? { ...edu, ...education } : edu)),
-    }));
-  }, []);
+  const updateEducation = useCallback(
+    (id: string, education: Partial<Education>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        education: prev.education.map((edu) =>
+          edu.id === id ? { ...edu, ...education } : edu,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeEducation = useCallback((id: string) => {
     setResumeData((prev) => ({
@@ -522,7 +587,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const updateProject = useCallback((id: string, project: Partial<Project>) => {
     setResumeData((prev) => ({
       ...prev,
-      projects: prev.projects.map((proj) => (proj.id === id ? { ...proj, ...project } : proj)),
+      projects: prev.projects.map((proj) =>
+        proj.id === id ? { ...proj, ...project } : proj,
+      ),
     }));
   }, []);
 
@@ -541,12 +608,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateSkillGroup = useCallback((id: string, group: Partial<SkillGroup>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      skills: prev.skills.map((skill) => (skill.id === id ? { ...skill, ...group } : skill)),
-    }));
-  }, []);
+  const updateSkillGroup = useCallback(
+    (id: string, group: Partial<SkillGroup>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        skills: prev.skills.map((skill) =>
+          skill.id === id ? { ...skill, ...group } : skill,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeSkillGroup = useCallback((id: string) => {
     setResumeData((prev) => ({
@@ -570,54 +642,64 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateStructure = useCallback((structure: import("@/types").SectionConfig[]) => {
-    setResumeData((prev) => ({
-      ...prev,
-      structure,
-    }));
-  }, []);
+  const updateStructure = useCallback(
+    (structure: import("@/types").SectionConfig[]) => {
+      setResumeData((prev) => ({
+        ...prev,
+        structure,
+      }));
+    },
+    [],
+  );
 
   const notifyAiLimit = useCallback(() => {
     toast.error("AI limit has done.");
   }, []);
 
-  const callAI = useCallback(async (path: string, payload: Record<string, unknown>) => {
-    const key = `${path}:${JSON.stringify(payload)}`;
-    const inFlight = aiInFlightRef.current;
-    const existing = inFlight.get(key);
-    if (existing) return existing;
+  const callAI = useCallback(
+    async (path: string, payload: Record<string, unknown>) => {
+      const key = `${path}:${JSON.stringify(payload)}`;
+      const inFlight = aiInFlightRef.current;
+      const existing = inFlight.get(key);
+      if (existing) return existing;
 
-    const request = (async () => {
-      const response = await fetch(`/api/ai/${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const contentType = response.headers.get("content-type") || "";
-      const data = contentType.includes("application/json")
-        ? await response.json().catch(() => null)
-        : await response.text().catch(() => "");
-      if (!response.ok) {
-        const message =
-          data && typeof data === "object" && "error" in data && typeof data.error === "string"
-            ? data.error
-            : "AI request failed";
-        const isLimit = /quota|limit|resource exhausted|billing|payment/i.test(message);
-        if (response.status === 429 || (response.status === 402 && isLimit)) {
-          notifyAiLimit();
+      const request = (async () => {
+        const response = await fetch(`/api/ai/${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const contentType = response.headers.get("content-type") || "";
+        const data = contentType.includes("application/json")
+          ? await response.json().catch(() => null)
+          : await response.text().catch(() => "");
+        if (!response.ok) {
+          const message =
+            data &&
+            typeof data === "object" &&
+            "error" in data &&
+            typeof data.error === "string"
+              ? data.error
+              : "AI request failed";
+          const isLimit =
+            /quota|limit|resource exhausted|billing|payment/i.test(message);
+          if (response.status === 429 || (response.status === 402 && isLimit)) {
+            notifyAiLimit();
+          }
+          throw new Error(message);
         }
-        throw new Error(message);
-      }
-      return data;
-    })();
+        return data;
+      })();
 
-    inFlight.set(key, request);
-    try {
-      return await request;
-    } finally {
-      inFlight.delete(key);
-    }
-  }, [notifyAiLimit]);
+      inFlight.set(key, request);
+      try {
+        return await request;
+      } finally {
+        inFlight.delete(key);
+      }
+    },
+    [notifyAiLimit],
+  );
 
   const rewriteBulletAI = useCallback(
     async (experienceId: string, bulletIndex: number) => {
@@ -626,7 +708,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const experience = resumeData.experiences.find((exp) => exp.id === experienceId);
+        const experience = resumeData.experiences.find(
+          (exp) => exp.id === experienceId,
+        );
         if (!experience) return;
         const bullet = (experience.bullets[bulletIndex] || "").trim();
         if (!bullet) {
@@ -643,20 +727,23 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
             exp.id === experienceId
               ? {
                   ...exp,
-                  bullets: exp.bullets.map((b, i) => (i === bulletIndex ? rewritten : b)),
+                  bullets: exp.bullets.map((b, i) =>
+                    i === bulletIndex ? rewritten : b,
+                  ),
                 }
-              : exp
+              : exp,
           ),
         }));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
+        const message =
+          error instanceof Error ? error.message : "AI request failed";
         toast.error(message);
         console.error("Error rewriting bullet:", error);
       } finally {
         setIsLoading(false);
       }
     },
-    [resumeData.experiences, callAI, canUsePaid]
+    [resumeData.experiences, callAI, canUsePaid],
   );
 
   const generateSummaryAI = useCallback(
@@ -675,14 +762,15 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           basics: { ...prev.basics, summary },
         }));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI request failed";
+        const message =
+          error instanceof Error ? error.message : "AI request failed";
         toast.error(message);
         console.error("Error generating summary:", error);
       } finally {
         setIsLoading(false);
       }
     },
-    [resumeData, callAI, canUsePaid]
+    [resumeData, callAI, canUsePaid],
   );
 
   const suggestSkillsAI = useCallback(
@@ -692,7 +780,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result: any = await callAI("suggestions/skills", { jobTitle, description });
+        const result: any = await callAI("suggestions/skills", {
+          jobTitle,
+          description,
+        });
         return result || { hardSkills: [], softSkills: [] };
       } catch (error) {
         console.error("Error suggesting skills:", error);
@@ -701,7 +792,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI, canUsePaid]
+    [callAI, canUsePaid],
   );
 
   const suggestResponsibilitiesAI = useCallback(
@@ -711,7 +802,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result: any = await callAI("suggestions/responsibilities", { jobTitle, description });
+        const result: any = await callAI("suggestions/responsibilities", {
+          jobTitle,
+          description,
+        });
         return (result.responsibilities as string[]) || [];
       } catch (error) {
         console.error("Error suggesting responsibilities:", error);
@@ -720,7 +814,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI, canUsePaid]
+    [callAI, canUsePaid],
   );
 
   const suggestSummaryAI = useCallback(
@@ -730,7 +824,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(true);
       try {
-        const result: any = await callAI("summary", { resumeData: data, targetRole });
+        const result: any = await callAI("summary", {
+          resumeData: data,
+          targetRole,
+        });
         return extractSummarySuggestions(result).slice(0, 3);
       } catch (error) {
         console.error("Error suggesting summary:", error);
@@ -739,7 +836,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [callAI, canUsePaid]
+    [callAI, canUsePaid],
   );
 
   const value = useMemo(
@@ -818,10 +915,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       suggestResponsibilitiesAI,
       setImportedData,
       syncGuestData,
-    ]
+    ],
   );
 
-  return <ResumeContext.Provider value={value}>{children}</ResumeContext.Provider>;
+  return (
+    <ResumeContext.Provider value={value}>{children}</ResumeContext.Provider>
+  );
 }
 
 export function useResume() {

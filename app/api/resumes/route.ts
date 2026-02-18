@@ -2,7 +2,11 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { json } from "@/lib/json";
-import { panelInternalGet, panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  panelInternalPost,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { normalizeResumeData } from "@/lib/resume-data";
 import { getSessionUserId } from "@/lib/session-user";
 
@@ -14,7 +18,9 @@ export async function GET() {
   }
 
   try {
-    const data = await panelInternalGet<{ resumes: any[] }>("resumes", { userId });
+    const data = await panelInternalGet<{ resumes: any[] }>("resumes", {
+      userId,
+    });
     return json({ resumes: data.resumes ?? [] });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
@@ -32,13 +38,18 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const title = typeof body?.title === "string" ? body.title : "Untitled Resume";
-  const template = typeof body?.template === "string" ? body.template : "modern";
+  const title =
+    typeof body?.title === "string" ? body.title : "Untitled Resume";
+  const template =
+    typeof body?.template === "string" ? body.template : "modern";
   const data = normalizeResumeData(body?.data);
   const source = typeof body?.source === "string" ? body.source : "manual";
 
   try {
-    const result = await panelInternalPost<{ resume: any; data: Record<string, unknown> }>("resumes", {
+    const result = await panelInternalPost<{
+      resume: any;
+      data: Record<string, unknown>;
+    }>("resumes", {
       userId,
       body: {
         title,

@@ -29,10 +29,13 @@ export function getPasswordPolicyError(password: string): string | null {
   if (length < 8) return "Password must be at least 8 characters long.";
 
   const bytes = new TextEncoder().encode(password).length;
-  if (bytes > 72) return "Password is too long. Maximum supported length is 72 characters.";
+  if (bytes > 72)
+    return "Password is too long. Maximum supported length is 72 characters.";
 
-  if (!/[a-z]/.test(password)) return "Password must include at least one lowercase letter.";
-  if (!/[A-Z]/.test(password)) return "Password must include at least one uppercase letter.";
+  if (!/[a-z]/.test(password))
+    return "Password must include at least one lowercase letter.";
+  if (!/[A-Z]/.test(password))
+    return "Password must include at least one uppercase letter.";
   if (!/\d/.test(password)) return "Password must include at least one number.";
   if (!/[^\p{L}\p{N}]/u.test(password)) {
     return "Password must include at least one special character.";

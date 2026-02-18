@@ -12,7 +12,9 @@ const KEY_CACHE_TTL_MS = 60_000;
 
 async function getKeyFromSettings(): Promise<string | null> {
   try {
-    const data = await panelInternalPost<{ settings: Record<string, string | null> }>("settings/batch", {
+    const data = await panelInternalPost<{
+      settings: Record<string, string | null>;
+    }>("settings/batch", {
       body: { keys: ["gemini_api_key"] },
     });
     const value = data.settings?.gemini_api_key ?? null;
@@ -33,7 +35,9 @@ async function resolveApiKey(): Promise<string> {
   const apiKey = dbKey || envKey;
 
   if (!apiKey) {
-    throw new Error("Missing GEMINI_API_KEY (panel setting or environment variable)");
+    throw new Error(
+      "Missing GEMINI_API_KEY (panel setting or environment variable)",
+    );
   }
 
   cachedResolvedKey = apiKey;

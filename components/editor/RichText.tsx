@@ -26,7 +26,7 @@ export function RichText({ text, inline = false, className }: RichTextProps) {
     <div
       className={cn(
         "space-y-2 whitespace-pre-wrap [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1",
-        className
+        className,
       )}
       dangerouslySetInnerHTML={{ __html: html }}
     />

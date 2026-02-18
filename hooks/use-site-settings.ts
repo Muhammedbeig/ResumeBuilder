@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_SITE_SETTINGS, type SiteSettings } from "@/lib/site-settings-shared";
+import {
+  DEFAULT_SITE_SETTINGS,
+  type SiteSettings,
+} from "@/lib/site-settings-shared";
 
 const CACHE_TTL_MS = 60_000;
 
@@ -38,7 +41,7 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
 
 export function useSiteSettings() {
   const [settings, setSettings] = useState<SiteSettings>(
-    cachedSettings ?? DEFAULT_SITE_SETTINGS
+    cachedSettings ?? DEFAULT_SITE_SETTINGS,
   );
   const [loaded, setLoaded] = useState(Boolean(cachedSettings));
 

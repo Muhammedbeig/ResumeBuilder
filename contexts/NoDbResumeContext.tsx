@@ -36,13 +36,20 @@ const INITIAL_RESUME: Resume = {
 
 // Map to store resume data locally
 const localResumeData = new Map<string, ResumeData>();
-localResumeData.set(INITIAL_RESUME.id, normalizeResumeData(MOCK_RESUME.data as unknown as ResumeData));
+localResumeData.set(
+  INITIAL_RESUME.id,
+  normalizeResumeData(MOCK_RESUME.data as unknown as ResumeData),
+);
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   // Initialize with INITIAL_RESUME as the default state
   const [resumes, setResumes] = useState<Resume[]>([INITIAL_RESUME]);
-  const [currentResume, setCurrentResume] = useState<Resume | null>(INITIAL_RESUME);
-  const [resumeData, setResumeData] = useState<ResumeData>(localResumeData.get(INITIAL_RESUME.id)!);
+  const [currentResume, setCurrentResume] = useState<Resume | null>(
+    INITIAL_RESUME,
+  );
+  const [resumeData, setResumeData] = useState<ResumeData>(
+    localResumeData.get(INITIAL_RESUME.id)!,
+  );
   const [importedData, setImportedData] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -57,22 +64,24 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
-      const newData = normalizeResumeData(initialData || (MOCK_RESUME.data as unknown as ResumeData));
+
+      const newData = normalizeResumeData(
+        initialData || (MOCK_RESUME.data as unknown as ResumeData),
+      );
       localResumeData.set(newResume.id, newData);
-      
+
       setResumes((prev) => [newResume, ...prev]);
       setCurrentResume(newResume);
       setResumeData(newData);
       return newResume;
     },
-    []
+    [],
   );
 
   // Mock implementation of loadResume - simply sets state from local array
   const loadResume = useCallback(
     async (resumeId: string) => {
-      const found = resumes.find(r => r.id === resumeId);
+      const found = resumes.find((r) => r.id === resumeId);
       if (found) {
         setCurrentResume(found);
         // Load data from our local map
@@ -82,7 +91,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [resumes]
+    [resumes],
   );
 
   const deleteResume = useCallback(
@@ -95,19 +104,16 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       }
       toast.success("Resume deleted locally");
     },
-    [currentResume?.id]
+    [currentResume?.id],
   );
 
-  const selectResume = useCallback(
-    (resume: Resume) => {
-      setCurrentResume(resume);
-      const data = localResumeData.get(resume.id);
-      if (data) {
-        setResumeData(data);
-      }
-    },
-    []
-  );
+  const selectResume = useCallback((resume: Resume) => {
+    setCurrentResume(resume);
+    const data = localResumeData.get(resume.id);
+    if (data) {
+      setResumeData(data);
+    }
+  }, []);
 
   const syncGuestData = useCallback(async () => {
     // No-op for NoDb version
@@ -117,14 +123,21 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const saveResume = useCallback(async () => {
     setIsLoading(true);
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     // In a file-based system, this would write to JSON file
-    console.log("Saving Resume JSON:", JSON.stringify({
-      ...currentResume,
-      data: resumeData
-    }, null, 2));
-    
+    console.log(
+      "Saving Resume JSON:",
+      JSON.stringify(
+        {
+          ...currentResume,
+          data: resumeData,
+        },
+        null,
+        2,
+      ),
+    );
+
     toast.success("Resume saved locally (check console)");
     setIsLoading(false);
   }, [currentResume, resumeData]);
@@ -134,7 +147,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const togglePublic = useCallback(async () => {
-    setCurrentResume(prev => prev ? { ...prev, isPublic: !prev.isPublic } : prev);
+    setCurrentResume((prev) =>
+      prev ? { ...prev, isPublic: !prev.isPublic } : prev,
+    );
     toast.info("Visibility toggled locally");
     return true;
   }, []);
@@ -143,12 +158,15 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResumeData((prev) => ({ ...prev, ...data }));
   }, []);
 
-  const updateMetadata = useCallback((metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      metadata: { ...(prev.metadata || {}), ...metadata },
-    }));
-  }, []);
+  const updateMetadata = useCallback(
+    (metadata: Partial<NonNullable<ResumeData["metadata"]>>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        metadata: { ...(prev.metadata || {}), ...metadata },
+      }));
+    },
+    [],
+  );
 
   const updateBasics = useCallback((basics: Partial<ResumeData["basics"]>) => {
     setResumeData((prev) => ({
@@ -165,14 +183,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateExperience = useCallback((id: string, experience: Partial<Experience>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      experiences: prev.experiences.map((exp) =>
-        exp.id === id ? { ...exp, ...experience } : exp
-      ),
-    }));
-  }, []);
+  const updateExperience = useCallback(
+    (id: string, experience: Partial<Experience>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        experiences: prev.experiences.map((exp) =>
+          exp.id === id ? { ...exp, ...experience } : exp,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeExperience = useCallback((id: string) => {
     setResumeData((prev) => ({
@@ -189,12 +210,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateEducation = useCallback((id: string, education: Partial<Education>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu) => (edu.id === id ? { ...edu, ...education } : edu)),
-    }));
-  }, []);
+  const updateEducation = useCallback(
+    (id: string, education: Partial<Education>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        education: prev.education.map((edu) =>
+          edu.id === id ? { ...edu, ...education } : edu,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeEducation = useCallback((id: string) => {
     setResumeData((prev) => ({
@@ -214,7 +240,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const updateProject = useCallback((id: string, project: Partial<Project>) => {
     setResumeData((prev) => ({
       ...prev,
-      projects: prev.projects.map((proj) => (proj.id === id ? { ...proj, ...project } : proj)),
+      projects: prev.projects.map((proj) =>
+        proj.id === id ? { ...proj, ...project } : proj,
+      ),
     }));
   }, []);
 
@@ -233,12 +261,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateSkillGroup = useCallback((id: string, group: Partial<SkillGroup>) => {
-    setResumeData((prev) => ({
-      ...prev,
-      skills: prev.skills.map((skill) => (skill.id === id ? { ...skill, ...group } : skill)),
-    }));
-  }, []);
+  const updateSkillGroup = useCallback(
+    (id: string, group: Partial<SkillGroup>) => {
+      setResumeData((prev) => ({
+        ...prev,
+        skills: prev.skills.map((skill) =>
+          skill.id === id ? { ...skill, ...group } : skill,
+        ),
+      }));
+    },
+    [],
+  );
 
   const removeSkillGroup = useCallback((id: string) => {
     setResumeData((prev) => ({
@@ -262,52 +295,68 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateStructure = useCallback((structure: import("@/types").SectionConfig[]) => {
-    setResumeData((prev) => ({
-      ...prev,
-      structure,
-    }));
-  }, []);
+  const updateStructure = useCallback(
+    (structure: import("@/types").SectionConfig[]) => {
+      setResumeData((prev) => ({
+        ...prev,
+        structure,
+      }));
+    },
+    [],
+  );
 
   // AI Placeholders (disabled/mocked for no-db phase if backend is not ready)
   // But if the backend routes exist, we can keep them.
   // Assuming we want to minimize backend dependency for now:
 
-  const rewriteBulletAI = useCallback(async (experienceId: string, bulletIndex: number) => {
-    toast.info("AI features are disabled in this phase.");
-  }, []);
+  const rewriteBulletAI = useCallback(
+    async (experienceId: string, bulletIndex: number) => {
+      toast.info("AI features are disabled in this phase.");
+    },
+    [],
+  );
 
   const generateSummaryAI = useCallback(async (targetRole?: string) => {
     toast.info("AI features are disabled in this phase.");
   }, []);
 
-  const suggestSkillsAI = useCallback(async (jobTitle: string, description?: string) => {
-    toast.info("AI features are disabled in this phase.");
-    return { hardSkills: [], softSkills: [] };
-  }, []);
+  const suggestSkillsAI = useCallback(
+    async (jobTitle: string, description?: string) => {
+      toast.info("AI features are disabled in this phase.");
+      return { hardSkills: [], softSkills: [] };
+    },
+    [],
+  );
 
-  const suggestResponsibilitiesAI = useCallback(async (jobTitle: string, description?: string) => {
-    return getSuggestedBullets(jobTitle, 8);
-  }, []);
+  const suggestResponsibilitiesAI = useCallback(
+    async (jobTitle: string, description?: string) => {
+      return getSuggestedBullets(jobTitle, 8);
+    },
+    [],
+  );
 
-  const suggestSummaryAI = useCallback(async (data: ResumeData, targetRole?: string) => {
-    toast.info("AI features are disabled in this phase.");
-    return [];
-  }, []);
+  const suggestSummaryAI = useCallback(
+    async (data: ResumeData, targetRole?: string) => {
+      toast.info("AI features are disabled in this phase.");
+      return [];
+    },
+    [],
+  );
 
   // New PDF Generation using our HTML-to-PDF service
-  const generatePDF = useCallback(async (templateId: string) => {
+  const generatePDF = useCallback(
+    async (templateId: string) => {
       setIsLoading(true);
       try {
         const response = await fetch("/api/generate-pdf", {
-            method: "POST",
-            headers: {
+          method: "POST",
+          headers: {
             "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
+          },
+          body: JSON.stringify({
             data: resumeData,
             templateId: templateId || currentResume?.template || "modern",
-            }),
+          }),
         });
 
         if (!response.ok) throw new Error("Failed to generate PDF");
@@ -328,7 +377,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       } finally {
         setIsLoading(false);
       }
-  }, [resumeData, currentResume]);
+    },
+    [resumeData, currentResume],
+  );
 
   const value = useMemo(
     () => ({
@@ -367,7 +418,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       suggestSummaryAI,
       suggestSkillsAI,
       suggestResponsibilitiesAI,
-      generatePDF, 
+      generatePDF,
       importedData,
       setImportedData,
     }),
@@ -407,8 +458,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       suggestResponsibilitiesAI,
       generatePDF,
       setImportedData,
-    ]
+    ],
   );
 
-  return <ResumeContext.Provider value={value}>{children}</ResumeContext.Provider>;
+  return (
+    <ResumeContext.Provider value={value}>{children}</ResumeContext.Provider>
+  );
 }

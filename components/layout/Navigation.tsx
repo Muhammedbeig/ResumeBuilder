@@ -4,7 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon, Sparkles, FileText, File, LayoutTemplate, FileCode, CheckSquare, Eye } from "lucide-react";
+import {
+  Menu,
+  X,
+  Sun,
+  Moon,
+  Sparkles,
+  FileText,
+  File,
+  LayoutTemplate,
+  FileCode,
+  CheckSquare,
+  Eye,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import { RESUME_TEMPLATE_CATEGORIES } from "@/lib/resume-template-catalog";
@@ -55,17 +67,19 @@ export function Navigation() {
     "/ats-checker",
     "/editor",
     "/ai-resume-optimizer",
-    "/career-management"
+    "/career-management",
   ];
 
-  const isSimplified = simplifiedPaths.some(path => pathname?.startsWith(path));
+  const isSimplified = simplifiedPaths.some((path) =>
+    pathname?.startsWith(path),
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -74,13 +88,19 @@ export function Navigation() {
       if (!navElement) return;
 
       const navRect = navElement.getBoundingClientRect();
-      document.documentElement.style.setProperty("--app-header-height", `${navRect.height}px`);
+      document.documentElement.style.setProperty(
+        "--app-header-height",
+        `${navRect.height}px`,
+      );
 
       const navContent = navContentRef.current;
       if (navContent) {
         const contentRect = navContent.getBoundingClientRect();
         const offset = contentRect.bottom - navRect.top;
-        document.documentElement.style.setProperty("--app-header-offset", `${offset}px`);
+        document.documentElement.style.setProperty(
+          "--app-header-offset",
+          `${offset}px`,
+        );
       }
     };
 
@@ -128,7 +148,8 @@ export function Navigation() {
   }, []);
 
   const logoSrc = siteSettings.headerLogoUrl || siteSettings.companyLogoUrl;
-  const brandName = siteSettings.companyName || DEFAULT_SITE_SETTINGS.companyName;
+  const brandName =
+    siteSettings.companyName || DEFAULT_SITE_SETTINGS.companyName;
 
   const navDropdowns = [
     {
@@ -173,9 +194,7 @@ export function Navigation() {
     },
     {
       label: "Career Blog",
-      items: [
-        { label: "All Articles", href: "/career-blog" },
-      ],
+      items: [{ label: "All Articles", href: "/career-blog" }],
     },
     {
       label: "About",
@@ -200,12 +219,12 @@ export function Navigation() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div 
+        <div
           ref={navContentRef}
           className={`flex items-center justify-between px-6 py-3 rounded-full transition-all duration-500 ${
-            isScrolled 
-              ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50' 
-              : 'bg-transparent'
+            isScrolled
+              ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50"
+              : "bg-transparent"
           }`}
         >
           {/* Logo */}
@@ -287,11 +306,11 @@ export function Navigation() {
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle theme"
             >
-            {theme === "light" ? (
-              <Moon className="w-5 h-5 text-gray-700" />
-            ) : (
-              <Sun className="w-5 h-5 text-gray-300" />
-            )}
+              {theme === "light" ? (
+                <Moon className="w-5 h-5 text-gray-700" />
+              ) : (
+                <Sun className="w-5 h-5 text-gray-300" />
+              )}
             </button>
 
             {/* Desktop Menu */}
@@ -314,7 +333,10 @@ export function Navigation() {
                 !isSimplified && (
                   <>
                     <Link href="/login">
-                      <Button variant="ghost" className="text-gray-700 dark:text-gray-300">
+                      <Button
+                        variant="ghost"
+                        className="text-gray-700 dark:text-gray-300"
+                      >
                         Sign In
                       </Button>
                     </Link>
@@ -361,94 +383,174 @@ export function Navigation() {
               {pathname === "/dashboard" ? (
                 <div className="space-y-6 py-2">
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">Resume</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+                      Resume
+                    </h3>
                     <div className="space-y-1">
-                      <Link href="/resume/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><FileText className="w-4 h-4" /> Resume Builder</Link>
-                      <Link href="/resume/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><File className="w-4 h-4" /> Import Resume</Link>
-                      <Link href="/templates" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><LayoutTemplate className="w-4 h-4" /> Templates</Link>
+                      <Link
+                        href="/resume/start"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <FileText className="w-4 h-4" /> Resume Builder
+                      </Link>
+                      <Link
+                        href="/resume/start"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <File className="w-4 h-4" /> Import Resume
+                      </Link>
+                      <Link
+                        href="/templates"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <LayoutTemplate className="w-4 h-4" /> Templates
+                      </Link>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">CV</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+                      CV
+                    </h3>
                     <div className="space-y-1">
-                      <Link href="/cv/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><FileCode className="w-4 h-4" /> CV Builder</Link>
-                      <Link href="/cv/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><File className="w-4 h-4" /> Import CV</Link>
-                      <Link href="/cv/new" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><LayoutTemplate className="w-4 h-4" /> Templates</Link>
+                      <Link
+                        href="/cv/start"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <FileCode className="w-4 h-4" /> CV Builder
+                      </Link>
+                      <Link
+                        href="/cv/start"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <File className="w-4 h-4" /> Import CV
+                      </Link>
+                      <Link
+                        href="/cv/new"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <LayoutTemplate className="w-4 h-4" /> Templates
+                      </Link>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">Cover Letter</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+                      Cover Letter
+                    </h3>
                     <div className="space-y-1">
-                      <Link href="/cover-letter/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><FileText className="w-4 h-4" /> Cover Letter Builder</Link>
-                      <Link href="/cover-letter/start" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><File className="w-4 h-4" /> Import Document</Link>
-                      <Link href="/cover-letter/templates" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><LayoutTemplate className="w-4 h-4" /> Templates</Link>
+                      <Link
+                        href="/cover-letter/start"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <FileText className="w-4 h-4" /> Cover Letter Builder
+                      </Link>
+                      <Link
+                        href="/cover-letter/start"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <File className="w-4 h-4" /> Import Document
+                      </Link>
+                      <Link
+                        href="/cover-letter/templates"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <LayoutTemplate className="w-4 h-4" /> Templates
+                      </Link>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">Tools</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+                      Tools
+                    </h3>
                     <div className="space-y-1">
-                      <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><CheckSquare className="w-4 h-4" /> ATS Checker</Link>
-                      <Link href="/ai-resume-optimizer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Sparkles className="w-4 h-4" /> AI Resume Optimizer</Link>
-                      <Link href="/career-management" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Eye className="w-4 h-4" /> Career Management</Link>
+                      <Link
+                        href="/ats-checker"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <CheckSquare className="w-4 h-4" /> ATS Checker
+                      </Link>
+                      <Link
+                        href="/ai-resume-optimizer"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <Sparkles className="w-4 h-4" /> AI Resume Optimizer
+                      </Link>
+                      <Link
+                        href="/career-management"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                      >
+                        <Eye className="w-4 h-4" /> Career Management
+                      </Link>
                     </div>
                   </div>
                 </div>
               ) : !isSimplified ? (
                 <>
-              <Accordion type="multiple" className="space-y-1">
-                {navDropdowns.map((group) => (
-                  <AccordionItem
-                    key={group.label}
-                    value={group.label}
-                    className="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-                  >
-                    <AccordionTrigger className="px-4 py-3 text-sm font-medium text-gray-700 hover:no-underline dark:text-gray-300">
-                      {group.label}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-2">
-                      <div className="space-y-1">
-                        {group.items.map((item) => (
-                          <Link
-                            key={item.label}
-                            href={item.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="block rounded-lg px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-purple-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-purple-400"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-              <hr className="border-gray-200 dark:border-gray-700 my-2" />
-              {user ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-purple-600 dark:text-purple-400 font-medium"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <div className="space-y-2">
-                  <Link
-                    href="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/signup"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 bg-gradient-to-r from-purple-600 to-cyan-500 text-white text-center rounded-lg font-medium"
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              )}
+                  <Accordion type="multiple" className="space-y-1">
+                    {navDropdowns.map((group) => (
+                      <AccordionItem
+                        key={group.label}
+                        value={group.label}
+                        className="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                      >
+                        <AccordionTrigger className="px-4 py-3 text-sm font-medium text-gray-700 hover:no-underline dark:text-gray-300">
+                          {group.label}
+                        </AccordionTrigger>
+                        <AccordionContent className="px-2">
+                          <div className="space-y-1">
+                            {group.items.map((item) => (
+                              <Link
+                                key={item.label}
+                                href={item.href}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="block rounded-lg px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-purple-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-purple-400"
+                              >
+                                {item.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                  <hr className="border-gray-200 dark:border-gray-700 my-2" />
+                  {user ? (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-4 py-3 text-purple-600 dark:text-purple-400 font-medium"
+                    >
+                      Dashboard
+                    </Link>
+                  ) : (
+                    <div className="space-y-2">
+                      <Link
+                        href="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/signup"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block px-4 py-3 bg-gradient-to-r from-purple-600 to-cyan-500 text-white text-center rounded-lg font-medium"
+                      >
+                        Get Started
+                      </Link>
+                    </div>
+                  )}
                 </>
               ) : null}
             </div>

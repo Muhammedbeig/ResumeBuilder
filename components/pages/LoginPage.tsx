@@ -5,10 +5,24 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getProviders, signIn, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Sparkles, Chrome, Eye, EyeOff } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  Sparkles,
+  Chrome,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { isValidEmail, normalizeEmail } from "@/lib/auth-validation";
 import { toast } from "sonner";
 
@@ -16,25 +30,27 @@ export function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
-  
+
   // If the callbackUrl is just the login page itself, default to dashboard
   const rawCallback = searchParams.get("callbackUrl") || "/dashboard";
-  const callbackUrl = rawCallback.includes("/login") || rawCallback.includes("/signup") 
-    ? "/dashboard" 
-    : rawCallback;
+  const callbackUrl =
+    rawCallback.includes("/login") || rawCallback.includes("/signup")
+      ? "/dashboard"
+      : rawCallback;
 
   const [isLoading, setIsLoading] = useState(false);
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const [credentialsAvailable, setCredentialsAvailable] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
-  
-  const isFromEditor = callbackUrl.includes("/resume/") || 
-                       callbackUrl.includes("/cv/") || 
-                       callbackUrl.includes("/cover-letter/");
+
+  const isFromEditor =
+    callbackUrl.includes("/resume/") ||
+    callbackUrl.includes("/cv/") ||
+    callbackUrl.includes("/cover-letter/");
   useEffect(() => {
     if (status === "authenticated") {
       router.replace(callbackUrl);
@@ -172,7 +188,9 @@ export function LoginPage() {
                     type="email"
                     placeholder="Email address"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="pl-10"
                     autoComplete="email"
                     required
@@ -186,7 +204,9 @@ export function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
                     className="pl-10 pr-10"
                     autoComplete="current-password"
                     required
@@ -196,19 +216,25 @@ export function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading ? "Signing in..." : "Sign In"}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </form>

@@ -2,8 +2,17 @@
 
 import { Suspense, useMemo, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { resolveCoverLetterTemplateComponent, resolveCvTemplateComponent, resolveResumeTemplateComponent } from "@/lib/template-resolvers";
-import type { CoverLetterTemplateConfig, CvTemplateConfig, ResumeTemplateConfig, TemplateType } from "@/lib/panel-templates";
+import {
+  resolveCoverLetterTemplateComponent,
+  resolveCvTemplateComponent,
+  resolveResumeTemplateComponent,
+} from "@/lib/template-resolvers";
+import type {
+  CoverLetterTemplateConfig,
+  CvTemplateConfig,
+  ResumeTemplateConfig,
+  TemplateType,
+} from "@/lib/panel-templates";
 import { previewResumeData } from "@/lib/resume-samples";
 import { previewCoverLetterData } from "@/lib/template-preview-samples";
 
@@ -22,7 +31,9 @@ function parseConfig(raw: string | null): Record<string, unknown> | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : null;
   } catch {
     return null;
   }
@@ -52,37 +63,58 @@ function TemplatePreviewEmbedContent() {
   )
     .trim()
     .toLowerCase();
-  const config = useMemo(() => parseConfig(searchParams.get("config")), [searchParams]);
+  const config = useMemo(
+    () => parseConfig(searchParams.get("config")),
+    [searchParams],
+  );
   const useConfig = renderEngine !== "static";
 
   if (type === "cover_letter") {
     const TemplateComponent = resolveCoverLetterTemplateComponent(
       templateId,
-      (useConfig ? config : null) as CoverLetterTemplateConfig | null
+      (useConfig ? config : null) as CoverLetterTemplateConfig | null,
     );
 
-    return <PreviewFrame><TemplateComponent data={previewCoverLetterData} /></PreviewFrame>;
+    return (
+      <PreviewFrame>
+        <TemplateComponent data={previewCoverLetterData} />
+      </PreviewFrame>
+    );
   }
 
   if (type === "cv") {
     const TemplateComponent = resolveCvTemplateComponent(
       templateId,
-      (useConfig ? config : null) as CvTemplateConfig | null
+      (useConfig ? config : null) as CvTemplateConfig | null,
     );
 
-    return <PreviewFrame><TemplateComponent data={previewResumeData} /></PreviewFrame>;
+    return (
+      <PreviewFrame>
+        <TemplateComponent data={previewResumeData} />
+      </PreviewFrame>
+    );
   }
 
   const TemplateComponent = resolveResumeTemplateComponent(
     templateId,
-    (useConfig ? config : null) as ResumeTemplateConfig | null
+    (useConfig ? config : null) as ResumeTemplateConfig | null,
   );
-  return <PreviewFrame><TemplateComponent data={previewResumeData} /></PreviewFrame>;
+  return (
+    <PreviewFrame>
+      <TemplateComponent data={previewResumeData} />
+    </PreviewFrame>
+  );
 }
 
 export default function TemplatePreviewEmbedPage() {
   return (
-    <Suspense fallback={<PreviewFrame><div className="min-h-[320px]" /></PreviewFrame>}>
+    <Suspense
+      fallback={
+        <PreviewFrame>
+          <div className="min-h-[320px]" />
+        </PreviewFrame>
+      }
+    >
       <TemplatePreviewEmbedContent />
     </Suspense>
   );

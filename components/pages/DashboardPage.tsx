@@ -4,7 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Plus, FileText, Eye, File, FileCode, CheckSquare, LayoutTemplate, MoreVertical, Trash, Loader2, Sparkles } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Eye,
+  File,
+  FileCode,
+  CheckSquare,
+  LayoutTemplate,
+  MoreVertical,
+  Trash,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +111,15 @@ export function DashboardPage() {
     setDeleteId(null);
   };
 
-  const SidebarItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => (
+  const SidebarItem = ({
+    href,
+    icon: Icon,
+    label,
+  }: {
+    href: string;
+    icon: any;
+    label: string;
+  }) => (
     <Button
       variant="ghost"
       onClick={() => handleNavigate(href)}
@@ -110,43 +130,98 @@ export function DashboardPage() {
     </Button>
   );
 
-  const SidebarGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  const SidebarGroup = ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
     <div className="space-y-1">
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">{title}</h3>
+      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+        {title}
+      </h3>
       {children}
     </div>
   );
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="hidden lg:block space-y-8">
             <div className="space-y-6">
               <SidebarGroup title="Resume">
-                <SidebarItem href="/resume/start" icon={FileText} label="Resume Builder" />
-                <SidebarItem href="/resume/start" icon={File} label="Import Resume" />
-                <SidebarItem href="/templates" icon={LayoutTemplate} label="Templates" />
+                <SidebarItem
+                  href="/resume/start"
+                  icon={FileText}
+                  label="Resume Builder"
+                />
+                <SidebarItem
+                  href="/resume/start"
+                  icon={File}
+                  label="Import Resume"
+                />
+                <SidebarItem
+                  href="/templates"
+                  icon={LayoutTemplate}
+                  label="Templates"
+                />
               </SidebarGroup>
 
               <SidebarGroup title="CV">
-                <SidebarItem href="/cv/start" icon={FileCode} label="CV Builder" />
+                <SidebarItem
+                  href="/cv/start"
+                  icon={FileCode}
+                  label="CV Builder"
+                />
                 <SidebarItem href="/cv/start" icon={File} label="Import CV" />
-                <SidebarItem href="/cv/new" icon={LayoutTemplate} label="Templates" />
+                <SidebarItem
+                  href="/cv/new"
+                  icon={LayoutTemplate}
+                  label="Templates"
+                />
               </SidebarGroup>
 
               <SidebarGroup title="Cover Letter">
-                <SidebarItem href="/cover-letter/start" icon={FileText} label="Cover Letter Builder" />
-                <SidebarItem href="/cover-letter/start" icon={File} label="Import Document" />
-                <SidebarItem href="/cover-letter/templates" icon={LayoutTemplate} label="Templates" />
+                <SidebarItem
+                  href="/cover-letter/start"
+                  icon={FileText}
+                  label="Cover Letter Builder"
+                />
+                <SidebarItem
+                  href="/cover-letter/start"
+                  icon={File}
+                  label="Import Document"
+                />
+                <SidebarItem
+                  href="/cover-letter/templates"
+                  icon={LayoutTemplate}
+                  label="Templates"
+                />
               </SidebarGroup>
 
               <SidebarGroup title="Tools">
-                <SidebarItem href="/ats-checker" icon={CheckSquare} label="ATS Checker" />
-                <SidebarItem href="/ai-resume-optimizer" icon={Sparkles} label="AI Resume Optimizer" />
-                <SidebarItem href="/career-management" icon={Eye} label="Career Management" />
+                <SidebarItem
+                  href="/ats-checker"
+                  icon={CheckSquare}
+                  label="ATS Checker"
+                />
+                <SidebarItem
+                  href="/ai-resume-optimizer"
+                  icon={Sparkles}
+                  label="AI Resume Optimizer"
+                />
+                <SidebarItem
+                  href="/career-management"
+                  icon={Eye}
+                  label="Career Management"
+                />
               </SidebarGroup>
             </div>
           </div>
@@ -179,7 +254,7 @@ export function DashboardPage() {
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                       My Resumes
                     </h2>
-                    <Button 
+                    <Button
                       onClick={handleCreateResume}
                       disabled={isCreating}
                       className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
@@ -198,7 +273,7 @@ export function DashboardPage() {
                         <p className="text-gray-600 dark:text-gray-400 mb-4">
                           You haven't created any resumes yet.
                         </p>
-                        <Button 
+                        <Button
                           onClick={handleCreateResume}
                           disabled={isCreating}
                           className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
@@ -211,7 +286,10 @@ export function DashboardPage() {
                   ) : (
                     <div className="grid gap-4">
                       {resumes.map((resume) => (
-                        <Card key={resume.id} className="hover:shadow-lg transition-shadow">
+                        <Card
+                          key={resume.id}
+                          className="hover:shadow-lg transition-shadow"
+                        >
                           <CardContent className="flex items-center justify-between p-6">
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
@@ -222,12 +300,19 @@ export function DashboardPage() {
                                   {resume.title}
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Template: {resume.template} - Updated {resume.updatedAt.toLocaleDateString()}
+                                  Template: {resume.template} - Updated{" "}
+                                  {resume.updatedAt.toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button size="sm" variant="outline" onClick={() => handleNavigate(`/resume/${resume.id}`)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleNavigate(`/resume/${resume.id}`)
+                                }
+                              >
                                 Edit
                               </Button>
                               <DropdownMenu>
@@ -237,7 +322,7 @@ export function DashboardPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="text-red-600 focus:text-red-600 cursor-pointer"
                                     onClick={() => setDeleteId(resume.id)}
                                   >
@@ -258,7 +343,9 @@ export function DashboardPage() {
               <TabsContent value="analytics" className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Reports</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      Reports
+                    </h2>
                     <p className="text-gray-600 dark:text-gray-400">
                       Quarterly Market Value insights and history.
                     </p>
@@ -273,26 +360,36 @@ export function DashboardPage() {
 
                 {reportsLoading ? (
                   <Card>
-                    <CardContent className="py-10 text-center text-gray-500">Loading reports...</CardContent>
+                    <CardContent className="py-10 text-center text-gray-500">
+                      Loading reports...
+                    </CardContent>
                   </Card>
                 ) : reports.length === 0 ? (
                   <Card className="border-dashed">
                     <CardContent className="py-12 text-center text-gray-500">
-                      No reports yet. Generate your first Quarterly Market Value report.
+                      No reports yet. Generate your first Quarterly Market Value
+                      report.
                     </CardContent>
                   </Card>
                 ) : (
                   <div className="grid gap-4">
                     {reports.map((report) => {
                       const data = report.reportJson || {};
-                      const salaryRange = data?.salaryBenchmark?.range || "Not available";
-                      const market = data?.trendIdentification?.market || "neutral";
+                      const salaryRange =
+                        data?.salaryBenchmark?.range || "Not available";
+                      const market =
+                        data?.trendIdentification?.market || "neutral";
                       return (
-                        <Card key={report.id} className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
+                        <Card
+                          key={report.id}
+                          className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur"
+                        >
                           <CardContent className="p-6 space-y-4">
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <p className="text-xs uppercase tracking-wider text-gray-400">Quarter</p>
+                                <p className="text-xs uppercase tracking-wider text-gray-400">
+                                  Quarter
+                                </p>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                   {report.periodLabel}
                                 </h3>
@@ -313,10 +410,17 @@ export function DashboardPage() {
                               </p>
                             )}
                             <div className="flex items-center justify-between text-xs text-gray-400">
-                              <span>Created {new Date(report.createdAt).toLocaleDateString()}</span>
+                              <span>
+                                Created{" "}
+                                {new Date(
+                                  report.createdAt,
+                                ).toLocaleDateString()}
+                              </span>
                               <button
                                 type="button"
-                                onClick={() => handleNavigate(`/reports/${report.id}`)}
+                                onClick={() =>
+                                  handleNavigate(`/reports/${report.id}`)
+                                }
                                 className="text-purple-600 dark:text-purple-400 hover:underline"
                               >
                                 View details
@@ -334,22 +438,30 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your resume.
+              This action cannot be undone. This will permanently delete your
+              resume.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteConfirm} 
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
               disabled={isDeleting}
             >
-              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

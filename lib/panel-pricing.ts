@@ -32,7 +32,9 @@ export type PricingCard = {
 };
 
 function durationToIntervalSuffix(durationRaw: string): string {
-  const duration = String(durationRaw ?? "").trim().toLowerCase();
+  const duration = String(durationRaw ?? "")
+    .trim()
+    .toLowerCase();
   if (!duration) return "";
   if (duration === "unlimited") return "";
 
@@ -60,7 +62,8 @@ function packageFeatures(p: PanelPackage): string[] {
 
 function packagePriceLabel(p: PanelPackage): string {
   const rawBase =
-    typeof p.formatted_final_price === "string" && p.formatted_final_price.trim()
+    typeof p.formatted_final_price === "string" &&
+    p.formatted_final_price.trim()
       ? p.formatted_final_price.trim()
       : `$ ${Number(p.final_price ?? 0).toFixed(2)}`;
 
@@ -78,21 +81,33 @@ function classifySubtitle(p: PanelPackage): string {
   const price = Number(p.final_price ?? 0);
   if (price === 0) return 'The "Hook"';
 
-  const duration = String(p.duration ?? "").trim().toLowerCase();
+  const duration = String(p.duration ?? "")
+    .trim()
+    .toLowerCase();
   if (duration === "7") return "Trial/Weekly";
   if (duration === "30") return 'The "Active Seeker"';
   if (duration === "365") return 'The "Career Management"';
   return "Subscription";
 }
 
-function classifyGradient(index: number, isPopular: boolean, isFree: boolean): string {
+function classifyGradient(
+  index: number,
+  isPopular: boolean,
+  isFree: boolean,
+): string {
   if (isFree) return "from-gray-500 to-gray-600";
   if (isPopular) return "from-purple-500 to-cyan-500";
   // Keep the rest distinct but stable.
-  return index % 2 === 0 ? "from-amber-500 to-orange-600" : "from-slate-600 to-slate-800";
+  return index % 2 === 0
+    ? "from-amber-500 to-orange-600"
+    : "from-slate-600 to-slate-800";
 }
 
-function classifyIcon(index: number, isPopular: boolean, isFree: boolean): PricingCardIcon {
+function classifyIcon(
+  index: number,
+  isPopular: boolean,
+  isFree: boolean,
+): PricingCardIcon {
   if (isFree) return "sparkles";
   if (isPopular) return "zap";
   return index % 2 === 0 ? "crown" : "crown";
@@ -124,7 +139,10 @@ function planDuration(plan: PricingPlan): string {
 }
 
 function planFinalPrice(plan: PricingPlan): number {
-  if (typeof plan.amountCents === "number" && Number.isFinite(plan.amountCents)) {
+  if (
+    typeof plan.amountCents === "number" &&
+    Number.isFinite(plan.amountCents)
+  ) {
     return plan.amountCents / 100;
   }
   return priceFromText(plan.price);
@@ -139,7 +157,9 @@ function pricingPlansToPricingCards(plans: PricingPlan[]): PricingCard[] {
         const price = planFinalPrice(plan);
         if (price <= 0) return bestId;
         if (!bestId) return plan.id;
-        const bestPlan = normalized.find((candidate) => candidate.id === bestId);
+        const bestPlan = normalized.find(
+          (candidate) => candidate.id === bestId,
+        );
         if (!bestPlan) return plan.id;
         return price < planFinalPrice(bestPlan) ? plan.id : bestId;
       }, null);
@@ -148,15 +168,22 @@ function pricingPlansToPricingCards(plans: PricingPlan[]): PricingCard[] {
     const duration = planDuration(plan);
     const finalPrice = planFinalPrice(plan);
     const isPaid = plan.isPaid ?? finalPrice > 0;
-    const isPopular = hasHighlight ? Boolean(plan.highlight) : isPaid && cheapestPaidId === plan.id;
+    const isPopular = hasHighlight
+      ? Boolean(plan.highlight)
+      : isPaid && cheapestPaidId === plan.id;
     const isFree = !isPaid;
     const name = plan.name?.trim() || "Plan";
-    const subtitle = classifySubtitle({ final_price: finalPrice, duration } as PanelPackage);
+    const subtitle = classifySubtitle({
+      final_price: finalPrice,
+      duration,
+    } as PanelPackage);
     const description = plan.description?.trim() || "";
     const features = Array.isArray(plan.features) ? plan.features : [];
     const priceLabel =
-      plan.price?.trim() || packagePriceLabel({ final_price: finalPrice, duration } as PanelPackage);
-    const cta = plan.cta?.trim() || (isPaid ? `Choose ${name}` : "Get Started Free");
+      plan.price?.trim() ||
+      packagePriceLabel({ final_price: finalPrice, duration } as PanelPackage);
+    const cta =
+      plan.cta?.trim() || (isPaid ? `Choose ${name}` : "Get Started Free");
 
     return {
       packageId: plan.id,
@@ -176,23 +203,33 @@ function pricingPlansToPricingCards(plans: PricingPlan[]): PricingCard[] {
   });
 }
 
-export async function fetchPanelSubscriptionPackages(): Promise<PanelPackage[]> {
-  const res = await panelGet<PanelPackage[]>("get-package", { type: "item_listing" });
+export async function fetchPanelSubscriptionPackages(): Promise<
+  PanelPackage[]
+> {
+  const res = await panelGet<PanelPackage[]>("get-package", {
+    type: "item_listing",
+  });
   return Array.isArray(res.data) ? res.data : [];
 }
 
-export function panelPackagesToPricingCards(packages: PanelPackage[]): PricingCard[] {
+export function panelPackagesToPricingCards(
+  packages: PanelPackage[],
+): PricingCard[] {
   const cleaned = (Array.isArray(packages) ? packages : [])
     .filter((p) => p && typeof p.id === "number")
     .slice();
 
   // Sort by final price asc so the UI remains stable and predictable.
-  cleaned.sort((a, b) => (Number(a.final_price ?? 0) - Number(b.final_price ?? 0)));
+  cleaned.sort(
+    (a, b) => Number(a.final_price ?? 0) - Number(b.final_price ?? 0),
+  );
 
   const paid = cleaned.filter((p) => Number(p.final_price ?? 0) > 0);
   const cheapestPaid = paid.reduce<PanelPackage | null>((best, cur) => {
     if (!best) return cur;
-    return Number(cur.final_price ?? 0) < Number(best.final_price ?? 0) ? cur : best;
+    return Number(cur.final_price ?? 0) < Number(best.final_price ?? 0)
+      ? cur
+      : best;
   }, null);
   const popularId = cheapestPaid?.id ?? null;
 

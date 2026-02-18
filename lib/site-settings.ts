@@ -1,14 +1,18 @@
 import "server-only";
 
 import { panelGet } from "@/lib/panel-api";
-import { DEFAULT_SITE_SETTINGS, type SiteSettings } from "@/lib/site-settings-shared";
+import {
+  DEFAULT_SITE_SETTINGS,
+  type SiteSettings,
+} from "@/lib/site-settings-shared";
 
 const CACHE_TTL_MS = 60_000;
 
 let cached: SiteSettings | null = null;
 let cachedAt = 0;
 
-const asText = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+const asText = (value: unknown) =>
+  typeof value === "string" ? value.trim() : "";
 
 const asNumber = (value: unknown, fallback: number) => {
   const num = typeof value === "number" ? value : Number(value);
@@ -24,7 +28,8 @@ const asToggle = (value: unknown): boolean | null => {
   const normalized = String(value).trim().toLowerCase();
   if (!normalized) return null;
   if (["1", "true", "yes", "on", "enabled"].includes(normalized)) return true;
-  if (["0", "false", "no", "off", "disabled"].includes(normalized)) return false;
+  if (["0", "false", "no", "off", "disabled"].includes(normalized))
+    return false;
   return null;
 };
 
@@ -44,7 +49,8 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
     return DEFAULT_SITE_SETTINGS;
   }
 
-  const companyName = asText(data.company_name) || DEFAULT_SITE_SETTINGS.companyName;
+  const companyName =
+    asText(data.company_name) || DEFAULT_SITE_SETTINGS.companyName;
   const footerDescription =
     asText(data.footer_description) || DEFAULT_SITE_SETTINGS.footerDescription;
 
@@ -64,19 +70,20 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
     asToggle(data.watermark_enabled) ?? DEFAULT_SITE_SETTINGS.watermark.enabled;
   const watermarkOpacityRaw = asNumber(
     data.watermark_opacity,
-    DEFAULT_SITE_SETTINGS.watermark.opacity * 100
+    DEFAULT_SITE_SETTINGS.watermark.opacity * 100,
   );
   const watermarkOpacity = clamp(watermarkOpacityRaw / 100, 0, 1);
   const watermarkSizeRaw = asNumber(
     data.watermark_size,
-    DEFAULT_SITE_SETTINGS.watermark.size / 2.4
+    DEFAULT_SITE_SETTINGS.watermark.size / 2.4,
   );
   const watermarkSize = clamp(watermarkSizeRaw * 2.4, 12, 160);
   const watermarkRotation = asNumber(
     data.watermark_rotation,
-    DEFAULT_SITE_SETTINGS.watermark.rotation
+    DEFAULT_SITE_SETTINGS.watermark.rotation,
   );
-  const watermarkStyle = asText(data.watermark_style) || DEFAULT_SITE_SETTINGS.watermark.style;
+  const watermarkStyle =
+    asText(data.watermark_style) || DEFAULT_SITE_SETTINGS.watermark.style;
   const watermarkPosition =
     asText(data.watermark_position) || DEFAULT_SITE_SETTINGS.watermark.position;
   const watermarkImageUrl = asText(data.watermark_image);

@@ -8,4 +8,3 @@ export async function GET() {
   const cards = await fetchPricingCards();
   return json({ cards });
 }
-

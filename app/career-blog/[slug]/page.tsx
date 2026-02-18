@@ -27,7 +27,10 @@ type PanelBlog = {
 };
 
 function stripHtml(raw: string) {
-  return raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return raw
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function excerptFromHtml(raw: string, maxLen = 180) {
@@ -55,7 +58,9 @@ function slugifyCategory(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function getCategoryMeta(post: PanelBlog): { label: string; slug: string } | null {
+function getCategoryMeta(
+  post: PanelBlog,
+): { label: string; slug: string } | null {
   const label = (post.category ?? "").trim();
   if (!label) return null;
   const rawSlug = (post.category_slug ?? "").trim();
@@ -78,11 +83,13 @@ export default async function CareerBlogPostPage({
     notFound();
   }
 
-  const otherBlogs = ((res as unknown as { other_blogs?: PanelBlog[] }).other_blogs ??
-    []) as PanelBlog[];
+  const otherBlogs = ((res as unknown as { other_blogs?: PanelBlog[] })
+    .other_blogs ?? []) as PanelBlog[];
 
   const title = blog.translated_title ?? blog.title ?? "Untitled";
-  const html = normalizeRichContent(blog.translated_description ?? blog.description ?? "");
+  const html = normalizeRichContent(
+    blog.translated_description ?? blog.description ?? "",
+  );
   const imageUrl = resolvePanelAssetUrl(blog.image);
   const category = getCategoryMeta(blog);
 
@@ -98,7 +105,9 @@ export default async function CareerBlogPostPage({
         <h1 className="mt-4 text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
           {title}
         </h1>
-        <p className="mt-4 text-gray-600 dark:text-gray-300">{excerptFromHtml(html)}</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-300">
+          {excerptFromHtml(html)}
+        </p>
         <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
           {category ? (
             <Link
@@ -113,12 +122,20 @@ export default async function CareerBlogPostPage({
 
         {imageUrl ? (
           <div className="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <img src={imageUrl} alt={title} className="w-full object-cover" loading="lazy" />
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full object-cover"
+              loading="lazy"
+            />
           </div>
         ) : null}
 
         <article className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="rich-content" dangerouslySetInnerHTML={{ __html: html }} />
+          <div
+            className="rich-content"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
         </article>
 
         <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -126,7 +143,8 @@ export default async function CareerBlogPostPage({
             Ready to apply these tips?
           </h3>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Use ResuPro to turn your experience into a polished resume and cover letter in minutes.
+            Use ResuPro to turn your experience into a polished resume and cover
+            letter in minutes.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
@@ -146,7 +164,9 @@ export default async function CareerBlogPostPage({
       </section>
 
       <section className="max-w-6xl mx-auto px-6 mt-16">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Related guides</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Related guides
+        </h2>
         <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {otherBlogs.length > 0 ? (
             otherBlogs.map((item) => (
@@ -159,7 +179,9 @@ export default async function CareerBlogPostPage({
                   {item.translated_title ?? item.title ?? "Untitled"}
                 </h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  {excerptFromHtml(item.translated_description ?? item.description ?? "")}
+                  {excerptFromHtml(
+                    item.translated_description ?? item.description ?? "",
+                  )}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   {(() => {
@@ -175,7 +197,9 @@ export default async function CareerBlogPostPage({
               </Link>
             ))
           ) : (
-            <div className="text-sm text-gray-600 dark:text-gray-300">More guides coming soon.</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              More guides coming soon.
+            </div>
           )}
         </div>
       </section>

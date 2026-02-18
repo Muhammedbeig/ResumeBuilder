@@ -9,56 +9,64 @@ const testimonials = [
     id: 1,
     name: "James Henry",
     role: "Software Engineer at Google",
-    content: "ResuPro transformed my resume completely. Within 2 weeks of using the tailored resume, I got interviews at 3 FAANG companies and landed my dream job at Google.",
+    content:
+      "ResuPro transformed my resume completely. Within 2 weeks of using the tailored resume, I got interviews at 3 FAANG companies and landed my dream job at Google.",
     rating: 5,
-    avatar: "JH"
+    avatar: "JH",
   },
   {
     id: 2,
     name: "Sara Connor",
     role: "Product Manager at Microsoft",
-    content: "The AI bullet rewriting feature is incredible. It turned my boring job descriptions into achievement-focused statements that actually got noticed by recruiters.",
+    content:
+      "The AI bullet rewriting feature is incredible. It turned my boring job descriptions into achievement-focused statements that actually got noticed by recruiters.",
     rating: 5,
-    avatar: "SC"
+    avatar: "SC",
   },
   {
     id: 3,
     name: "Emily Davis",
     role: "UX Designer at Apple",
-    content: "As a designer, I loved how I could create a beautiful profile page to showcase my portfolio alongside my resume. Got hired within a month!",
+    content:
+      "As a designer, I loved how I could create a beautiful profile page to showcase my portfolio alongside my resume. Got hired within a month!",
     rating: 5,
-    avatar: "ED"
+    avatar: "ED",
   },
   {
     id: 4,
     name: "Michael Chen",
     role: "Data Scientist at Meta",
-    content: "The job tailoring feature is a game changer. I used to apply to 100+ jobs with no response. Now I apply to 10 tailored positions and get 5 callbacks.",
+    content:
+      "The job tailoring feature is a game changer. I used to apply to 100+ jobs with no response. Now I apply to 10 tailored positions and get 5 callbacks.",
     rating: 5,
-    avatar: "MC"
+    avatar: "MC",
   },
   {
     id: 5,
     name: "Amanda Wilson",
     role: "Marketing Manager at Netflix",
-    content: "Finally, a resume builder that understands ATS! My resume now passes through every system and actually reaches human recruiters.",
+    content:
+      "Finally, a resume builder that understands ATS! My resume now passes through every system and actually reaches human recruiters.",
     rating: 5,
-    avatar: "AW"
+    avatar: "AW",
   },
   {
     id: 6,
     name: "David Kim",
     role: "Senior Developer at Amazon",
-    content: "Worth every penny. The time I saved using AI to write and tailor my resume was invaluable during my job search.",
+    content:
+      "Worth every penny. The time I saved using AI to write and tailor my resume was invaluable during my job search.",
     rating: 5,
-    avatar: "DK"
-  }
+    avatar: "DK",
+  },
 ];
 
 export function Testimonials() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [selectedTestimonial, setSelectedTestimonial] = useState<typeof testimonials[0] | null>(null);
+  const [selectedTestimonial, setSelectedTestimonial] = useState<
+    (typeof testimonials)[0] | null
+  >(null);
   const [isPaused, setIsPaused] = useState(false);
 
   const row1 = testimonials.slice(0, 3);
@@ -84,18 +92,20 @@ export function Testimonials() {
             Testimonials
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-            Loved by Job Seekers 
+            Loved by Job Seekers
             <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              {' '}Worldwide
+              {" "}
+              Worldwide
             </span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Join thousands of professionals who have landed their dream jobs with ResuPro.
+            Join thousands of professionals who have landed their dream jobs
+            with ResuPro.
           </p>
         </motion.div>
 
         {/* Testimonials Marquee */}
-        <div 
+        <div
           className="space-y-6"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
@@ -104,20 +114,20 @@ export function Testimonials() {
           <div className="relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white dark:from-gray-900 to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white dark:from-gray-900 to-transparent z-10" />
-            
+
             <motion.div
-              animate={isPaused ? { x: 0 } : { x: [0, -33.33 + '%'] }}
+              animate={isPaused ? { x: 0 } : { x: [0, -33.33 + "%"] }}
               transition={{
                 duration: 30,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "linear",
               }}
               className="flex gap-6"
-              style={{ width: '150%' }}
+              style={{ width: "150%" }}
             >
               {[...row1, ...row1].map((testimonial, idx) => (
-                <TestimonialCard 
-                  key={`row1-${idx}`} 
+                <TestimonialCard
+                  key={`row1-${idx}`}
                   testimonial={testimonial}
                   onClick={() => setSelectedTestimonial(testimonial)}
                 />
@@ -129,20 +139,20 @@ export function Testimonials() {
           <div className="relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white dark:from-gray-900 to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white dark:from-gray-900 to-transparent z-10" />
-            
+
             <motion.div
-              animate={isPaused ? { x: 0 } : { x: [-33.33 + '%', 0] }}
+              animate={isPaused ? { x: 0 } : { x: [-33.33 + "%", 0] }}
               transition={{
                 duration: 25,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "linear",
               }}
               className="flex gap-6"
-              style={{ width: '150%', marginLeft: '-50%' }}
+              style={{ width: "150%", marginLeft: "-50%" }}
             >
               {[...row2, ...row2].map((testimonial, idx) => (
-                <TestimonialCard 
-                  key={`row2-${idx}`} 
+                <TestimonialCard
+                  key={`row2-${idx}`}
                   testimonial={testimonial}
                   onClick={() => setSelectedTestimonial(testimonial)}
                 />
@@ -183,10 +193,15 @@ export function Testimonials() {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   {selectedTestimonial.name}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">{selectedTestimonial.role}</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {selectedTestimonial.role}
+                </p>
                 <div className="flex items-center gap-1 mt-2">
                   {[...Array(selectedTestimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                    />
                   ))}
                 </div>
               </div>
@@ -206,7 +221,7 @@ export function Testimonials() {
 }
 
 interface TestimonialCardProps {
-  testimonial: typeof testimonials[0];
+  testimonial: (typeof testimonials)[0];
   onClick: () => void;
 }
 
@@ -222,8 +237,12 @@ function TestimonialCard({ testimonial, onClick }: TestimonialCardProps) {
           {testimonial.avatar}
         </div>
         <div>
-          <h4 className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</p>
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            {testimonial.name}
+          </h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {testimonial.role}
+          </p>
         </div>
       </div>
       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed line-clamp-3">

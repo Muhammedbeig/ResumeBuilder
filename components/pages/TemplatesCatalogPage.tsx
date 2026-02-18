@@ -12,10 +12,16 @@ import {
   RESUME_TEMPLATE_CATEGORIES,
   RESUME_TEMPLATE_CATALOG_BY_CATEGORY,
 } from "@/lib/resume-template-catalog";
-import type { ResumeTemplateCatalogEntry, ResumeTemplateCategory } from "@/lib/resume-template-catalog";
+import type {
+  ResumeTemplateCatalogEntry,
+  ResumeTemplateCategory,
+} from "@/lib/resume-template-catalog";
 import { CatalogTemplate } from "@/components/resume/templates/catalog/CatalogTemplate";
 import { fetchTemplateCategories, fetchTemplates } from "@/lib/template-client";
-import { normalizeResumeConfig, type PanelTemplate } from "@/lib/panel-templates";
+import {
+  normalizeResumeConfig,
+  type PanelTemplate,
+} from "@/lib/panel-templates";
 import { previewResumeData } from "@/lib/resume-samples";
 
 function RescaleContainer({ children }: { children: React.ReactNode }) {
@@ -59,7 +65,10 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
   );
 }
 
-const resolveInitialCategory = (value: string | null | undefined, slugs: string[]) => {
+const resolveInitialCategory = (
+  value: string | null | undefined,
+  slugs: string[],
+) => {
   if (!value) return null;
   if (value === "all") return "all";
   return slugs.includes(value) ? value : null;
@@ -87,9 +96,11 @@ const FALLBACK_TEMPLATE_BASE = {
 
 const ensureCategoryDefaults = (
   categories: ResumeTemplateCategory[],
-  groupedTemplates: Record<string, ResumeTemplateCatalogEntry[]>
+  groupedTemplates: Record<string, ResumeTemplateCatalogEntry[]>,
 ) => {
-  const merged: Record<string, ResumeTemplateCatalogEntry[]> = { ...groupedTemplates };
+  const merged: Record<string, ResumeTemplateCatalogEntry[]> = {
+    ...groupedTemplates,
+  };
 
   categories.forEach((category, index) => {
     if (merged[category.slug] && merged[category.slug].length > 0) return;
@@ -111,7 +122,11 @@ const ensureCategoryDefaults = (
   return merged;
 };
 
-export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: string | null }) {
+export function TemplatesCatalogPage({
+  initialCategory,
+}: {
+  initialCategory?: string | null;
+}) {
   const router = useRouter();
   const { data: session } = useSession();
   const { planChoice } = usePlanChoice();
@@ -131,9 +146,9 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
     return true;
   };
 
-  const [categoryOptions, setCategoryOptions] = useState<ResumeTemplateCategory[]>(
-    RESUME_TEMPLATE_CATEGORIES
-  );
+  const [categoryOptions, setCategoryOptions] = useState<
+    ResumeTemplateCategory[]
+  >(RESUME_TEMPLATE_CATEGORIES);
   const [templatesByCategory, setTemplatesByCategory] = useState<
     Record<string, ResumeTemplateCatalogEntry[]>
   >(RESUME_TEMPLATE_CATALOG_BY_CATEGORY);
@@ -141,7 +156,7 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
   const categories = useMemo(
     () => [{ slug: "all", label: "All", description: "" }, ...categoryOptions],
-    [categoryOptions]
+    [categoryOptions],
   );
 
   useEffect(() => {
@@ -166,7 +181,7 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
         .map((template: PanelTemplate) => {
           const config = normalizeResumeConfig(
             template.config as ResumeTemplateCatalogEntry,
-            template.template_id
+            template.template_id,
           );
           if (!config) return null;
           return {
@@ -181,7 +196,9 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
       const grouped: Record<string, ResumeTemplateCatalogEntry[]> = {};
       const sourceTemplates =
-        mappedTemplates.length > 0 ? mappedTemplates : Object.values(RESUME_TEMPLATE_CATALOG_BY_CATEGORY).flat();
+        mappedTemplates.length > 0
+          ? mappedTemplates
+          : Object.values(RESUME_TEMPLATE_CATALOG_BY_CATEGORY).flat();
 
       for (const template of sourceTemplates) {
         if (!grouped[template.category]) grouped[template.category] = [];
@@ -190,7 +207,9 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
       if (!isActive) return;
       setCategoryOptions(resolvedCategories);
-      setTemplatesByCategory(ensureCategoryDefaults(resolvedCategories, grouped));
+      setTemplatesByCategory(
+        ensureCategoryDefaults(resolvedCategories, grouped),
+      );
     };
 
     loadPanelTemplates();
@@ -224,7 +243,10 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-white pt-24 pb-16">
-      <PlanChoiceModal open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen} />
+      <PlanChoiceModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
         <motion.div
@@ -275,7 +297,10 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
               >
                 <div className="relative p-4 pb-0 bg-slate-50 rounded-t-2xl dark:bg-slate-900/30">
                   <RescaleContainer>
-                    <CatalogTemplate data={previewResumeData} config={template} />
+                    <CatalogTemplate
+                      data={previewResumeData}
+                      config={template}
+                    />
                   </RescaleContainer>
                   <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl dark:bg-slate-950/70">
                     <Button
@@ -315,9 +340,12 @@ export function TemplatesCatalogPage({ initialCategory }: { initialCategory?: st
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 text-center">
         <div className="bg-gradient-to-r from-purple-600 to-cyan-500 rounded-3xl p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">Ready to build your resume?</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Ready to build your resume?
+          </h2>
           <p className="text-lg opacity-90 mb-8 max-w-xl mx-auto">
-            Start with any category template and customize every detail in the editor.
+            Start with any category template and customize every detail in the
+            editor.
           </p>
           <Button
             size="lg"

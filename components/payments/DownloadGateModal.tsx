@@ -70,7 +70,9 @@ export function DownloadGateModal({
   useEffect(() => {
     let isMounted = true;
     const normalizedResourceId =
-      typeof resourceId === "string" && resourceId.trim() && !resourceId.startsWith("local-")
+      typeof resourceId === "string" &&
+      resourceId.trim() &&
+      !resourceId.startsWith("local-")
         ? resourceId.trim()
         : null;
     const hasInlinePayload = Boolean(resourcePayload);
@@ -126,12 +128,13 @@ export function DownloadGateModal({
             typeof payload?.error === "string"
               ? payload.error
               : typeof payload?.message === "string"
-              ? payload.message
-              : null;
+                ? payload.message
+                : null;
           throw new Error(apiMessage || "Unable to create a download link.");
         }
 
-        const nextUrl = typeof payload?.resolverUrl === "string" ? payload.resolverUrl : null;
+        const nextUrl =
+          typeof payload?.resolverUrl === "string" ? payload.resolverUrl : null;
         if (!nextUrl) {
           throw new Error("Invalid download link response.");
         }
@@ -151,7 +154,9 @@ export function DownloadGateModal({
         }
 
         let nextUrl = await createLink(primaryBody).catch(async (error) => {
-          const canRetryWithoutId = Boolean(normalizedResourceId && hasInlinePayload);
+          const canRetryWithoutId = Boolean(
+            normalizedResourceId && hasInlinePayload,
+          );
           if (!canRetryWithoutId) {
             throw error;
           }
@@ -169,10 +174,15 @@ export function DownloadGateModal({
         setResolverUrl(nextUrl);
         setQrDataUrl(qr);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to create a download link.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to create a download link.";
 
         if (!isMounted) return;
-        setLinkError(message === "Unable to create a download link." ? null : message);
+        setLinkError(
+          message === "Unable to create a download link." ? null : message,
+        );
 
         // Fallback: still show a QR to install the app.
         try {
@@ -189,13 +199,23 @@ export function DownloadGateModal({
     return () => {
       isMounted = false;
     };
-  }, [open, hasAccess, resourceType, resourceId, resourceTemplateId, resourcePayload, resourceTitle]);
+  }, [
+    open,
+    hasAccess,
+    resourceType,
+    resourceId,
+    resourceTemplateId,
+    resourcePayload,
+    resourceTitle,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl border-slate-800 bg-slate-950 text-white">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl">Download via Mobile App</DialogTitle>
+          <DialogTitle className="text-2xl">
+            Download via Mobile App
+          </DialogTitle>
           <DialogDescription className="text-slate-300">
             {isPaidSelected
               ? "Complete your setup to unlock watermark-free downloads and access the mobile app."
@@ -209,7 +229,8 @@ export function DownloadGateModal({
               {isActivating ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Spinner className="h-4 w-4 text-slate-300" />
-                  Confirming your payment and activating your plan... This may take up to 10-15s.
+                  Confirming your payment and activating your plan... This may
+                  take up to 10-15s.
                 </span>
               ) : (
                 "Choose a paid plan to unlock mobile app downloads."
@@ -229,7 +250,8 @@ export function DownloadGateModal({
 
                 {!isPaidSelected && (
                   <p className="text-sm text-slate-300">
-                    Downloads are delivered from the mobile app. Scan the QR or use the button to open the app.
+                    Downloads are delivered from the mobile app. Scan the QR or
+                    use the button to open the app.
                   </p>
                 )}
 
@@ -245,8 +267,15 @@ export function DownloadGateModal({
                       ? "Watermark removed. Download your file from the app."
                       : "Download your file from the app."}
                   </p>
-                  <Button asChild className="mt-4 w-full bg-white text-slate-900 hover:bg-white/90">
-                    <a href={downloadHref} target="_blank" rel="noopener noreferrer">
+                  <Button
+                    asChild
+                    className="mt-4 w-full bg-white text-slate-900 hover:bg-white/90"
+                  >
+                    <a
+                      href={downloadHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       Open in App
                     </a>
                   </Button>
@@ -262,10 +291,16 @@ export function DownloadGateModal({
                   {isQrLoading || !qrDataUrl ? (
                     <div className="h-full w-full animate-pulse rounded-xl bg-slate-200" />
                   ) : (
-                    <img src={qrDataUrl} alt="Download QR code" className="h-full w-full" />
+                    <img
+                      src={qrDataUrl}
+                      alt="Download QR code"
+                      className="h-full w-full"
+                    />
                   )}
                 </div>
-                <p className="mt-3 text-xs text-slate-300">Open your camera and scan the code.</p>
+                <p className="mt-3 text-xs text-slate-300">
+                  Open your camera and scan the code.
+                </p>
               </div>
             </div>
           )}
@@ -274,5 +309,3 @@ export function DownloadGateModal({
     </Dialog>
   );
 }
-
-

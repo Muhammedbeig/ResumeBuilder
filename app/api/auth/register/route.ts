@@ -7,7 +7,10 @@ import {
   normalizeName,
 } from "@/lib/auth-validation";
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit";
-import { panelInternalPost, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalPost,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 
 export async function POST(request: Request) {
   const limited = rateLimit(request, {
@@ -22,7 +25,10 @@ export async function POST(request: Request) {
 
   const emailAuthEnabled = await getEmailAuthEnabled();
   if (!emailAuthEnabled) {
-    return json({ error: "Email sign-up is currently disabled." }, { status: 403 });
+    return json(
+      { error: "Email sign-up is currently disabled." },
+      { status: 403 },
+    );
   }
 
   const body = await request.json().catch(() => ({}));
@@ -31,11 +37,17 @@ export async function POST(request: Request) {
   const password = String(body?.password || "");
 
   if (!name || name.length < 2 || name.length > 80) {
-    return json({ error: "Please enter your full name (2-80 characters)." }, { status: 400 });
+    return json(
+      { error: "Please enter your full name (2-80 characters)." },
+      { status: 400 },
+    );
   }
 
   if (!email || !isValidEmail(email)) {
-    return json({ error: "Please enter a valid email address." }, { status: 400 });
+    return json(
+      { error: "Please enter a valid email address." },
+      { status: 400 },
+    );
   }
 
   const passwordError = getPasswordPolicyError(password);

@@ -1,6 +1,6 @@
-import type { ResumeData, SectionConfig } from '@/types';
-import { getFontScale } from '@/lib/typography';
-import { RichText } from '@/components/editor/RichText';
+import type { ResumeData, SectionConfig } from "@/types";
+import { getFontScale } from "@/lib/typography";
+import { RichText } from "@/components/editor/RichText";
 
 interface CreativeTemplateProps {
   data: ResumeData;
@@ -8,18 +8,52 @@ interface CreativeTemplateProps {
 }
 
 const DEFAULT_STRUCTURE: SectionConfig[] = [
-  { id: 'summary', type: 'summary', title: 'Summary', isVisible: true, order: 0 },
-  { id: 'experience', type: 'experience', title: 'Experience', isVisible: true, order: 1 },
-  { id: 'education', type: 'education', title: 'Education', isVisible: true, order: 2 },
-  { id: 'skills', type: 'skills', title: 'Skills', isVisible: true, order: 3 },
-  { id: 'projects', type: 'projects', title: 'Projects', isVisible: true, order: 4 },
-  { id: 'certifications', type: 'certifications', title: 'Certifications', isVisible: true, order: 5 },
+  {
+    id: "summary",
+    type: "summary",
+    title: "Summary",
+    isVisible: true,
+    order: 0,
+  },
+  {
+    id: "experience",
+    type: "experience",
+    title: "Experience",
+    isVisible: true,
+    order: 1,
+  },
+  {
+    id: "education",
+    type: "education",
+    title: "Education",
+    isVisible: true,
+    order: 2,
+  },
+  { id: "skills", type: "skills", title: "Skills", isVisible: true, order: 3 },
+  {
+    id: "projects",
+    type: "projects",
+    title: "Projects",
+    isVisible: true,
+    order: 4,
+  },
+  {
+    id: "certifications",
+    type: "certifications",
+    title: "Certifications",
+    isVisible: true,
+    order: 5,
+  },
 ];
 
-export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps) {
-  const { basics, experiences, education, skills, projects, certifications } = data;
-  const themeColor = data.metadata?.themeColor || '#0f172a'; // Default slate-900
-  const fontName = data.metadata?.fontFamily || 'Inter';
+export function CreativeTemplate({
+  data,
+  className = "",
+}: CreativeTemplateProps) {
+  const { basics, experiences, education, skills, projects, certifications } =
+    data;
+  const themeColor = data.metadata?.themeColor || "#0f172a"; // Default slate-900
+  const fontName = data.metadata?.fontFamily || "Inter";
   const fontSize = data.metadata?.fontSize;
   const scale = getFontScale(fontSize);
 
@@ -30,17 +64,23 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
 
   const renderSection = (section: SectionConfig) => {
     switch (section.type) {
-      case 'education':
+      case "education":
         if (education.length === 0) return null;
         return (
           <div key={section.id}>
-            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">Education</h3>
+            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">
+              Education
+            </h3>
             <div className="space-y-6">
               {education.map((edu) => (
                 <div key={edu.id}>
-                  <h4 className="font-bold text-white leading-tight">{edu.institution}</h4>
+                  <h4 className="font-bold text-white leading-tight">
+                    {edu.institution}
+                  </h4>
                   <p className="text-slate-400 text-sm mt-1">{edu.degree}</p>
-                  <p className="text-slate-500 text-xs mt-1 italic">{edu.field}</p>
+                  <p className="text-slate-500 text-xs mt-1 italic">
+                    {edu.field}
+                  </p>
                   <p className="text-slate-600 text-xs mt-1">
                     {edu.startDate} - {edu.endDate}
                   </p>
@@ -49,18 +89,25 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
             </div>
           </div>
         );
-      case 'skills':
+      case "skills":
         if (skills.length === 0) return null;
         return (
           <div key={section.id}>
-            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">Skills</h3>
+            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">
+              Skills
+            </h3>
             <div className="space-y-4">
               {skills.map((group) => (
                 <div key={group.id}>
-                  <p className="text-slate-300 font-semibold text-sm mb-2">{group.name}</p>
+                  <p className="text-slate-300 font-semibold text-sm mb-2">
+                    {group.name}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {group.skills.map((skill, idx) => (
-                      <span key={idx} className="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded">
+                      <span
+                        key={idx}
+                        className="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded"
+                      >
                         {skill}
                       </span>
                     ))}
@@ -70,15 +117,19 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
             </div>
           </div>
         );
-      case 'certifications':
+      case "certifications":
         if (certifications.length === 0) return null;
         return (
           <div key={section.id}>
-            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">Certifications</h3>
+            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-slate-700 pb-2 mb-4">
+              Certifications
+            </h3>
             <div className="space-y-4">
               {certifications.map((cert) => (
                 <div key={cert.id}>
-                  <p className="text-slate-300 font-semibold text-sm">{cert.name}</p>
+                  <p className="text-slate-300 font-semibold text-sm">
+                    {cert.name}
+                  </p>
                   <p className="text-slate-500 text-xs italic">{cert.issuer}</p>
                   <p className="text-slate-600 text-xs">{cert.date}</p>
                 </div>
@@ -86,39 +137,62 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
             </div>
           </div>
         );
-      case 'summary':
+      case "summary":
         if (!basics.summary) return null;
         return (
           <div key={section.id}>
             <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
-              <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
+              <span
+                className="w-8 h-1 block"
+                style={{ backgroundColor: themeColor }}
+              ></span>
               About Me
             </h2>
-            <RichText text={basics.summary} className="text-slate-600 leading-relaxed text-lg" />
+            <RichText
+              text={basics.summary}
+              className="text-slate-600 leading-relaxed text-lg"
+            />
           </div>
         );
-      case 'experience':
+      case "experience":
         if (experiences.length === 0) return null;
         return (
           <div key={section.id}>
             <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-              <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
+              <span
+                className="w-8 h-1 block"
+                style={{ backgroundColor: themeColor }}
+              ></span>
               Experience
             </h2>
             <div className="space-y-10">
               {experiences.map((exp) => (
-                <div key={exp.id} className="relative pl-8 border-l border-slate-300">
-                  <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full ring-4 ring-slate-100" style={{ backgroundColor: themeColor }}></div>
+                <div
+                  key={exp.id}
+                  className="relative pl-8 border-l border-slate-300"
+                >
+                  <div
+                    className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full ring-4 ring-slate-100"
+                    style={{ backgroundColor: themeColor }}
+                  ></div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
-                    <h3 className="text-xl font-bold text-slate-900">{exp.role}</h3>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {exp.role}
+                    </h3>
                     <span className="text-slate-500 font-mono text-sm bg-slate-200 px-2 py-1 rounded">
-                      {exp.startDate} â€” {exp.current ? 'Present' : exp.endDate}
+                      {exp.startDate} â€”{" "}
+                      {exp.current ? "Present" : exp.endDate}
                     </span>
                   </div>
-                  <div className="text-slate-600 font-semibold mb-3">{exp.company} | {exp.location}</div>
+                  <div className="text-slate-600 font-semibold mb-3">
+                    {exp.company} | {exp.location}
+                  </div>
                   <ul className="space-y-2">
                     {exp.bullets.map((bullet, idx) => (
-                      <li key={idx} className="text-slate-600 leading-relaxed text-sm flex gap-2">
+                      <li
+                        key={idx}
+                        className="text-slate-600 leading-relaxed text-sm flex gap-2"
+                      >
                         <span className="text-slate-400 mt-1">â€º</span>
                         <RichText inline text={bullet} />
                       </li>
@@ -129,28 +203,48 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
             </div>
           </div>
         );
-      case 'projects':
+      case "projects":
         if (projects.length === 0) return null;
         return (
           <div key={section.id}>
             <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-              <span className="w-8 h-1 block" style={{ backgroundColor: themeColor }}></span>
+              <span
+                className="w-8 h-1 block"
+                style={{ backgroundColor: themeColor }}
+              ></span>
               Projects
             </h2>
             <div className="grid grid-cols-1 gap-6">
               {projects.map((project) => (
-                <div key={project.id} className="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                <div
+                  key={project.id}
+                  className="bg-white p-6 rounded-lg shadow-sm border border-slate-100"
+                >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-slate-900 text-lg">{project.name}</h3>
+                    <h3 className="font-bold text-slate-900 text-lg">
+                      {project.name}
+                    </h3>
                     {project.link && (
-                      <a href={project.link} className="text-xs font-bold text-white px-2 py-1 rounded transition-colors" style={{ backgroundColor: themeColor }}>VIEW</a>
+                      <a
+                        href={project.link}
+                        className="text-xs font-bold text-white px-2 py-1 rounded transition-colors"
+                        style={{ backgroundColor: themeColor }}
+                      >
+                        VIEW
+                      </a>
                     )}
                   </div>
-                  <RichText text={project.description} className="text-slate-600 text-sm mb-3" />
+                  <RichText
+                    text={project.description}
+                    className="text-slate-600 text-sm mb-3"
+                  />
                   {project.technologies.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {project.technologies.map((tech, i) => (
-                        <span key={i} className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                        <span
+                          key={i}
+                          className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded"
+                        >
                           #{tech}
                         </span>
                       ))}
@@ -166,69 +260,94 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
     }
   };
 
-  const sidebarSections = ['education', 'skills', 'certifications'];
-  const mainSections = ['summary', 'experience', 'projects'];
+  const sidebarSections = ["education", "skills", "certifications"];
+  const mainSections = ["summary", "experience", "projects"];
 
   return (
     <div
       id="resume-creative"
       className={`resume-template bg-white text-gray-800 grid grid-cols-[300px_1fr] min-h-[1188px] ${className}`}
-      style={{ 
+      style={{
         fontFamily: `"${fontName}", sans-serif`,
-        zoom: scale
+        zoom: scale,
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@300;400;500;700&display=swap');
       `}</style>
       {/* Sidebar - Left Column */}
-      <div className="text-white p-10 flex flex-col gap-8" style={{ backgroundColor: themeColor }}>
+      <div
+        className="text-white p-10 flex flex-col gap-8"
+        style={{ backgroundColor: themeColor }}
+      >
         {/* Photo Placeholder / Image */}
         <div className="w-32 h-32 mx-auto bg-slate-700/50 rounded-full flex items-center justify-center border-4 border-white/20 overflow-hidden">
-           {basics.image ? (
-             <img src={basics.image} alt={basics.name} className="w-full h-full object-cover" />
-           ) : (
-             <span className="text-4xl font-bold tracking-widest">
-              {basics.name ? basics.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'ME'}
-             </span>
-           )}
+          {basics.image ? (
+            <img
+              src={basics.image}
+              alt={basics.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-4xl font-bold tracking-widest">
+              {basics.name
+                ? basics.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                : "ME"}
+            </span>
+          )}
         </div>
 
         {/* Contact */}
         <div className="space-y-4 text-center sm:text-left">
-            <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-white/10 pb-2 mb-4">Contact</h3>
-            <div className="flex flex-col gap-3 text-sm font-light text-slate-300">
-                {basics.email && (
-                    <div className="break-all">
-                        <span className="block text-slate-500 text-xs uppercase">Email</span>
-                        {basics.email}
-                    </div>
-                )}
-                {basics.phone && (
-                    <div>
-                         <span className="block text-slate-500 text-xs uppercase">Phone</span>
-                        {basics.phone}
-                    </div>
-                )}
-                {basics.location && (
-                    <div>
-                         <span className="block text-slate-500 text-xs uppercase">Location</span>
-                        {basics.location}
-                    </div>
-                )}
-                {basics.linkedin && (
-                    <div className="break-all">
-                         <span className="block text-slate-500 text-xs uppercase">LinkedIn</span>
-                        {basics.linkedin.replace(/^https?:\/\//, '')}
-                    </div>
-                )}
-                {basics.github && (
-                    <div className="break-all">
-                         <span className="block text-slate-500 text-xs uppercase">GitHub</span>
-                        {basics.github.replace(/^https?:\/\//, '')}
-                    </div>
-                )}
-            </div>
+          <h3 className="text-slate-400 uppercase tracking-widest text-sm font-bold border-b border-white/10 pb-2 mb-4">
+            Contact
+          </h3>
+          <div className="flex flex-col gap-3 text-sm font-light text-slate-300">
+            {basics.email && (
+              <div className="break-all">
+                <span className="block text-slate-500 text-xs uppercase">
+                  Email
+                </span>
+                {basics.email}
+              </div>
+            )}
+            {basics.phone && (
+              <div>
+                <span className="block text-slate-500 text-xs uppercase">
+                  Phone
+                </span>
+                {basics.phone}
+              </div>
+            )}
+            {basics.location && (
+              <div>
+                <span className="block text-slate-500 text-xs uppercase">
+                  Location
+                </span>
+                {basics.location}
+              </div>
+            )}
+            {basics.linkedin && (
+              <div className="break-all">
+                <span className="block text-slate-500 text-xs uppercase">
+                  LinkedIn
+                </span>
+                {basics.linkedin.replace(/^https?:\/\//, "")}
+              </div>
+            )}
+            {basics.github && (
+              <div className="break-all">
+                <span className="block text-slate-500 text-xs uppercase">
+                  GitHub
+                </span>
+                {basics.github.replace(/^https?:\/\//, "")}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Dynamic Sidebar Sections */}
@@ -244,10 +363,15 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
       <div className="p-12 flex flex-col gap-8 bg-slate-50">
         {/* Header Name & Title */}
         <div className="pb-6 border-b-4" style={{ borderColor: themeColor }}>
-            <h1 className="text-5xl font-extrabold text-slate-900 uppercase tracking-tighter leading-none mb-2">
-                {basics.name?.split(' ')[0]} <span style={{ color: themeColor }}>{basics.name?.split(' ').slice(1).join(' ')}</span>
-            </h1>
-            <p className="text-2xl text-slate-500 font-light tracking-widest uppercase">{basics.title}</p>
+          <h1 className="text-5xl font-extrabold text-slate-900 uppercase tracking-tighter leading-none mb-2">
+            {basics.name?.split(" ")[0]}{" "}
+            <span style={{ color: themeColor }}>
+              {basics.name?.split(" ").slice(1).join(" ")}
+            </span>
+          </h1>
+          <p className="text-2xl text-slate-500 font-light tracking-widest uppercase">
+            {basics.title}
+          </p>
         </div>
 
         {/* Dynamic Main Sections */}
@@ -261,5 +385,3 @@ export function CreativeTemplate({ data, className = '' }: CreativeTemplateProps
     </div>
   );
 }
-
-

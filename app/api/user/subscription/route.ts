@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { panelInternalGet, PanelInternalApiError } from "@/lib/panel-internal-api";
+import {
+  panelInternalGet,
+  PanelInternalApiError,
+} from "@/lib/panel-internal-api";
 import { getSessionUserId } from "@/lib/session-user";
 
 export const runtime = "nodejs";
@@ -21,15 +24,23 @@ export async function GET() {
   }
 
   try {
-    const data = await panelInternalGet<SubscriptionData>("user/subscription", { userId });
+    const data = await panelInternalGet<SubscriptionData>("user/subscription", {
+      userId,
+    });
     return NextResponse.json({
       subscription: data.subscription ?? "free",
       subscriptionPlanId: data.subscriptionPlanId ?? null,
     });
   } catch (error) {
     if (error instanceof PanelInternalApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return NextResponse.json({ error: "Failed to load subscription" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load subscription" },
+      { status: 500 },
+    );
   }
 }

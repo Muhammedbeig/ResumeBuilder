@@ -84,7 +84,10 @@ export function MinimalistProfessionalTemplate({
                     const value = String(item.value || "");
                     const cleaned = value.replace(/^https?:\/\//, "");
                     return (
-                      <div key={`${value}-${idx}`} className="flex gap-2 items-start">
+                      <div
+                        key={`${value}-${idx}`}
+                        className="flex gap-2 items-start"
+                      >
                         <Icon className="w-4 h-4 mt-0.5 text-slate-400" />
                         <span className="break-words">{cleaned}</span>
                       </div>
@@ -138,9 +141,10 @@ export function MinimalistProfessionalTemplate({
                 <div className="mt-2 h-px w-10 bg-slate-300" />
                 <ul className="mt-4 space-y-1 text-sm text-slate-600 list-disc list-inside">
                   {languages.map((language) => (
-                      <li key={language.id}>
-                        {language.name} {language.proficiency ? `(${language.proficiency})` : ""}
-                      </li>
+                    <li key={language.id}>
+                      {language.name}{" "}
+                      {language.proficiency ? `(${language.proficiency})` : ""}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -153,7 +157,9 @@ export function MinimalistProfessionalTemplate({
           {education.length > 0 && (
             <section className="mb-10">
               <div className="flex items-center gap-4">
-                <h2 className="text-xl font-semibold text-slate-800">Education</h2>
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Education
+                </h2>
                 <div className="h-px flex-1 bg-slate-200" />
               </div>
               <div className="mt-6 space-y-6">
@@ -168,7 +174,9 @@ export function MinimalistProfessionalTemplate({
                         {edu.field ? ` | ${edu.field}` : ""}
                       </p>
                       {edu.gpa && (
-                        <p className="text-xs text-slate-500 mt-1">GPA: {edu.gpa}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          GPA: {edu.gpa}
+                        </p>
                       )}
                     </div>
                     <div className="text-xs text-slate-500 whitespace-nowrap">
@@ -183,14 +191,18 @@ export function MinimalistProfessionalTemplate({
           {experiences.length > 0 && (
             <section>
               <div className="flex items-center gap-4">
-                <h2 className="text-xl font-semibold text-slate-800">Experience</h2>
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Experience
+                </h2>
                 <div className="h-px flex-1 bg-slate-200" />
               </div>
               <div className="mt-6 space-y-8">
                 {experiences.map((exp) => (
                   <div key={exp.id} className="grid grid-cols-[1fr_auto] gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">{exp.role}</p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {exp.role}
+                      </p>
                       <p className="text-xs text-slate-500">
                         {exp.company}
                         {exp.location ? ` | ${exp.location}` : ""}

@@ -20,7 +20,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: "Freemium (Free)",
     price: "$0/mo",
     billingNote: "Best for getting started",
-    description: "Build a solid resume with essential tools and SEO-friendly sharing.",
+    description:
+      "Build a solid resume with essential tools and SEO-friendly sharing.",
     features: [
       "Few basic ATS-friendly templates",
       "Manual editor (no AI writing)",
@@ -60,7 +61,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     amountCents: 1900,
     interval: "month",
     billingNote: "Active seeker plan",
-    description: "Everything you need for a competitive search and ongoing polish.",
+    description:
+      "Everything you need for a competitive search and ongoing polish.",
     features: [
       "All Job Hunt Pass features",
       "Resume Roast (AI audit)",
@@ -77,10 +79,11 @@ export const PRICING_PLANS: PricingPlan[] = [
     amountCents: 9900,
     interval: "year",
     billingNote: "Best value for long-term growth",
-    description: "Strategic career support with premium AI and quarterly insights.",
+    description:
+      "Strategic career support with premium AI and quarterly insights.",
     features: [
       "Priority access to Gemini 3 Pro",
-      "Quarterly \"Market Value\" reports",
+      'Quarterly "Market Value" reports',
       "Unlimited versions and cloud storage",
       "All Pro Monthly features",
     ],
@@ -95,7 +98,9 @@ export const PRICING_REGION_HINT =
 export type PaidPlanId = "weekly" | "monthly" | "annual";
 
 export const PAID_PLANS = PRICING_PLANS.filter(
-  (plan): plan is PricingPlan & {
+  (
+    plan,
+  ): plan is PricingPlan & {
     planId: PaidPlanId;
     amountCents: number;
     interval: "week" | "month" | "year";
@@ -103,7 +108,7 @@ export const PAID_PLANS = PRICING_PLANS.filter(
     plan.isPaid === true &&
     !!plan.planId &&
     typeof plan.amountCents === "number" &&
-    !!plan.interval
+    !!plan.interval,
 );
 
 export const getPaidPlanById = (planId: PaidPlanId) =>

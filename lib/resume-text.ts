@@ -6,9 +6,15 @@ type ResumeTextOptions = {
 };
 
 const join = (parts: Array<string | undefined | null>) =>
-  parts.map((part) => (part ?? "").trim()).filter(Boolean).join(" | ");
+  parts
+    .map((part) => (part ?? "").trim())
+    .filter(Boolean)
+    .join(" | ");
 
-export function buildResumeText(data: ResumeData, options: ResumeTextOptions = {}) {
+export function buildResumeText(
+  data: ResumeData,
+  options: ResumeTextOptions = {},
+) {
   const lines: string[] = [];
 
   if (data.basics.name) lines.push(data.basics.name);
@@ -41,7 +47,10 @@ export function buildResumeText(data: ResumeData, options: ResumeTextOptions = {
         exp.role ? `${exp.role}` : undefined,
         exp.company ? `@ ${exp.company}` : undefined,
       ]).replace(" @ ", " @ ");
-      const dates = join([exp.startDate, exp.current ? "Present" : exp.endDate]);
+      const dates = join([
+        exp.startDate,
+        exp.current ? "Present" : exp.endDate,
+      ]);
       lines.push("");
       lines.push(header || "Role");
       if (exp.location || dates) lines.push(join([exp.location, dates]));
@@ -59,7 +68,13 @@ export function buildResumeText(data: ResumeData, options: ResumeTextOptions = {
       lines.push("");
       lines.push(header || edu.institution || "Education");
       if (edu.institution) lines.push(edu.institution);
-      lines.push(join([edu.startDate, edu.endDate, edu.gpa ? `GPA: ${edu.gpa}` : undefined]));
+      lines.push(
+        join([
+          edu.startDate,
+          edu.endDate,
+          edu.gpa ? `GPA: ${edu.gpa}` : undefined,
+        ]),
+      );
     });
   }
 
