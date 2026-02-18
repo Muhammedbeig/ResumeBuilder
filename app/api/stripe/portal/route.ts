@@ -9,15 +9,11 @@ import {
   panelInternalPatch,
   PanelInternalApiError,
 } from "@/lib/panel-internal-api";
+import { resolveAppOrigin } from "@/lib/public-origin";
 import { getSessionUserId } from "@/lib/session-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const resolveBaseUrl = (request: Request) =>
-  process.env.NEXT_PUBLIC_APP_URL ||
-  process.env.NEXTAUTH_URL ||
-  new URL(request.url).origin;
 
 type UserPaymentProfile = {
   id: string;
@@ -70,7 +66,16 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const returnUrlParam = searchParams.get("returnUrl");
-    const baseUrl = resolveBaseUrl(request);
+    const baseUrl = resolveAppOrigin(request);
+    if (!baseUrl) {
+      return NextResponse.json(
+        {
+          error:
+            "Unable to determine public app URL. Configure NEXT_PUBLIC_APP_URL or NEXTAUTH_URL.",
+        },
+        { status: 500 },
+      );
+    }
     const returnUrl =
       returnUrlParam && returnUrlParam.startsWith("/")
         ? new URL(returnUrlParam, baseUrl).toString()

@@ -9,54 +9,12 @@ import {
   panelInternalPost,
   PanelInternalApiError,
 } from "@/lib/panel-internal-api";
+import { resolveAppOrigin } from "@/lib/public-origin";
 import { getSessionUserId } from "@/lib/session-user";
 import { paypalRequest } from "@/lib/paypal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const resolveHeaderValue = (value: string | null) => {
-  if (!value) return "";
-  return value.split(",")[0]?.trim() ?? "";
-};
-
-const resolveRequestOrigin = (request: Request) => {
-  try {
-    const reqUrl = new URL(request.url);
-    const forwardedHost = resolveHeaderValue(
-      request.headers.get("x-forwarded-host"),
-    );
-    const host =
-      forwardedHost ||
-      resolveHeaderValue(request.headers.get("host")) ||
-      reqUrl.host;
-    if (!host) return null;
-
-    const forwardedProto = resolveHeaderValue(
-      request.headers.get("x-forwarded-proto"),
-    ).toLowerCase();
-    const isLocalHost =
-      host.startsWith("localhost") ||
-      host.startsWith("127.0.0.1") ||
-      host.startsWith("[::1]");
-    const protocol =
-      forwardedProto === "http" || forwardedProto === "https"
-        ? forwardedProto
-        : isLocalHost
-          ? "http"
-          : "https";
-
-    return `${protocol}://${host}`;
-  } catch {
-    return null;
-  }
-};
-
-const resolveBaseUrl = (request: Request) =>
-  process.env.NEXT_PUBLIC_APP_URL ||
-  process.env.NEXTAUTH_URL ||
-  resolveRequestOrigin(request) ||
-  new URL(request.url).origin;
 
 const resolveReturnUrl = (returnUrl: string | undefined, baseUrl: string) => {
   if (!returnUrl) return baseUrl;
@@ -175,7 +133,16 @@ export async function POST(request: Request) {
     );
     paymentTransactionId = txRes.transaction.id;
 
-    const baseUrl = resolveBaseUrl(request);
+    const baseUrl = resolveAppOrigin(request);
+    if (!baseUrl) {
+      return NextResponse.json(
+        {
+          error:
+            "Unable to determine public app URL. Configure NEXT_PUBLIC_APP_URL or NEXTAUTH_URL.",
+        },
+        { status: 500 },
+      );
+    }
     const resolvedReturnUrl = resolveReturnUrl(body.returnUrl, baseUrl);
 
     const successUrl = new URL(resolvedReturnUrl);

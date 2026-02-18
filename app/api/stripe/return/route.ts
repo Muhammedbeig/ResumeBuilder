@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
+import { resolveAppOrigin } from "@/lib/public-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function resolveTargetUrl(request: Request, rawReturnUrl: string | null): URL {
-  const origin = new URL(request.url).origin;
+function resolveTargetUrl(appOrigin: string, rawReturnUrl: string | null): URL {
   if (rawReturnUrl) {
     try {
       if (rawReturnUrl.startsWith("/")) {
-        return new URL(rawReturnUrl, origin);
+        return new URL(rawReturnUrl, appOrigin);
       }
       const absolute = new URL(rawReturnUrl);
-      if (absolute.origin === origin) {
+      if (absolute.origin === appOrigin) {
         return absolute;
       }
     } catch {
@@ -19,11 +19,11 @@ function resolveTargetUrl(request: Request, rawReturnUrl: string | null): URL {
     }
   }
 
-  return new URL("/pricing", origin);
+  return new URL("/pricing", appOrigin);
 }
 
 async function confirmStripePayment(
-  origin: string,
+  appOrigin: string,
   paymentTransactionId: string | null,
   sessionId: string | null,
 ) {
@@ -35,7 +35,7 @@ async function confirmStripePayment(
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const res = await fetch(`${origin}/api/stripe/confirm`, {
+      const res = await fetch(`${appOrigin}/api/stripe/confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,6 +56,17 @@ async function confirmStripePayment(
 }
 
 export async function GET(request: Request) {
+  const appOrigin = resolveAppOrigin(request);
+  if (!appOrigin) {
+    return NextResponse.json(
+      {
+        error:
+          "Unable to determine public app URL. Configure NEXT_PUBLIC_APP_URL or NEXTAUTH_URL.",
+      },
+      { status: 500 },
+    );
+  }
+
   const url = new URL(request.url);
   const stripeStatus =
     url.searchParams.get("stripe") === "cancel" ? "cancel" : "success";
@@ -63,10 +74,10 @@ export async function GET(request: Request) {
   const sessionId = url.searchParams.get("session_id");
   const returnUrl = url.searchParams.get("return_url");
 
-  const target = resolveTargetUrl(request, returnUrl);
+  const target = resolveTargetUrl(appOrigin, returnUrl);
 
   if (stripeStatus === "success") {
-    await confirmStripePayment(url.origin, paymentTransactionId, sessionId);
+    await confirmStripePayment(appOrigin, paymentTransactionId, sessionId);
   }
 
   target.searchParams.set("stripe", stripeStatus);
