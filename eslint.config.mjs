@@ -12,10 +12,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Worker generated/build artifacts:
-    "worker/.next/**",
-    "worker/out/**",
-    "worker/build/**",
   ]),
   {
     files: ["**/*.{js,jsx,ts,tsx}"],

@@ -6,9 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "worker:dev": "next dev worker -p 3010",
-    "worker:build": "next build worker",
-    "worker:start": "next start worker -p 3010",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
