@@ -1,7 +1,8 @@
-import { panelGet } from "@/lib/panel-api";
-import { FAQClient, type FaqItem } from "@/sections/FAQClient";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from "react";
+import { resolveApiUrl } from "@/lib/client-api";
+import { FAQClient, type FaqItem } from "@/sections/FAQClient";
 
 const FALLBACK_FAQS: FaqItem[] = [
   {
@@ -39,24 +40,65 @@ type PanelFaq = {
   translated_answer?: string;
 };
 
-async function loadFaqs(): Promise<FaqItem[]> {
-  try {
-    const res = await panelGet<PanelFaq[]>("faq");
-    const rows = Array.isArray(res.data) ? res.data : [];
-    const normalized = rows
-      .map((row) => ({
-        question: (row.translated_question ?? row.question ?? "").trim(),
-        answer: (row.translated_answer ?? row.answer ?? "").trim(),
-      }))
-      .filter((item) => item.question.length > 0 && item.answer.length > 0);
+type PanelFaqEnvelope = {
+  error?: boolean;
+  data?: PanelFaq[];
+};
 
-    return normalized.length > 0 ? normalized : FALLBACK_FAQS;
-  } catch {
-    return FALLBACK_FAQS;
+function normalizeFaqRows(rows: PanelFaq[]): FaqItem[] {
+  return rows
+    .map((row) => ({
+      question: (row.translated_question ?? row.question ?? "").trim(),
+      answer: (row.translated_answer ?? row.answer ?? "").trim(),
+    }))
+    .filter((item) => item.question.length > 0 && item.answer.length > 0);
+}
+
+async function fetchFaqsFromApi(): Promise<FaqItem[]> {
+  const response = await fetch(resolveApiUrl("/api/faq"), {
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`FAQ fetch failed (${response.status})`);
   }
+
+  const payload = (await response.json().catch(() => null)) as
+    | PanelFaqEnvelope
+    | null;
+  if (!payload || payload.error) {
+    throw new Error("Invalid FAQ response");
+  }
+
+  const rows = Array.isArray(payload.data) ? payload.data : [];
+  const normalized = normalizeFaqRows(rows);
+  return normalized.length > 0 ? normalized : FALLBACK_FAQS;
 }
 
-export async function FAQ() {
-  const faqs = await loadFaqs();
-  return <FAQClient faqs={faqs} />;
+export function FAQ() {
+  const [faqs, setFaqs] = useState<FaqItem[]>(FALLBACK_FAQS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const next = await fetchFaqsFromApi();
+        if (!active) return;
+        setFaqs(next);
+      } catch {
+        if (!active) return;
+        setFaqs(FALLBACK_FAQS);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return <FAQClient faqs={faqs} loading={loading} />;
 }
+

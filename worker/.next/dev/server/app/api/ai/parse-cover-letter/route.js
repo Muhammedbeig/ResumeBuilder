@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/ai/parse-cover-letter/route.js")
+R.c("server/chunks/node_modules_next_866c40a6._.js")
+R.c("server/chunks/node_modules_next-auth_b9efd365._.js")
+R.c("server/chunks/node_modules_openid-client_d15f72b3._.js")
+R.c("server/chunks/node_modules_jose_dist_node_cjs_bd88468e._.js")
+R.c("server/chunks/node_modules_27ca49a3._.js")
+R.c("server/chunks/[root-of-the-server]__1f32e046._.js")
+R.c("server/chunks/cc0ca__next-internal_server_app_api_ai_parse-cover-letter_route_actions_97b4e32a.js")
+R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/worker/app/api/ai/parse-cover-letter/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/worker/app/api/ai/parse-cover-letter/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

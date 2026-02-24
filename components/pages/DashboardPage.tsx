@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Plus,
   FileText,
@@ -40,25 +41,37 @@ import {
 import { useResume } from "@/contexts/ResumeContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { useCV } from "@/contexts/CVContext";
+import { useCoverLetter } from "@/contexts/CoverLetterContext";
 
 export function DashboardPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { planChoice } = usePlanChoice();
   const user = session?.user;
   const { resumes, deleteResume } = useResume();
+  const { cvs, deleteCV } = useCV();
+  const { coverLetters, deleteCoverLetter } = useCoverLetter();
   const [isCreating, setIsCreating] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    kind: "resume" | "cv" | "cover";
+  } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   useEffect(() => {
+    if (status !== "unauthenticated") return;
+    router.replace("/login?callbackUrl=%2Fdashboard");
+  }, [status, router]);
+
+  useEffect(() => {
     if (!session?.user) return;
     let active = true;
     setReportsLoading(true);
-    fetch("/api/market-value")
+    fetch(resolveApiUrl("/api/market-value"))
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         if (!active) return;
@@ -83,7 +96,8 @@ export function DashboardPage() {
   };
 
   const ensurePlanChosen = () => {
-    if (!session?.user) return true;
+    if (status === "loading") return false;
+    if (!session?.user) return false;
     if (!planChoice) {
       openPlanModal();
       return false;
@@ -103,12 +117,38 @@ export function DashboardPage() {
     setIsCreating(false);
   };
 
+  const handleCreateCV = async () => {
+    if (!ensurePlanChosen()) return;
+    setIsCreating(true);
+    router.push("/cv/new");
+    setIsCreating(false);
+  };
+
+  const handleCreateCoverLetter = async () => {
+    if (!ensurePlanChosen()) return;
+    setIsCreating(true);
+    router.push("/cover-letter/new");
+    setIsCreating(false);
+  };
+
   const handleDeleteConfirm = async () => {
-    if (!deleteId) return;
+    if (!deleteTarget) return;
     setIsDeleting(true);
-    await deleteResume(deleteId);
+    if (deleteTarget.kind === "resume") {
+      await deleteResume(deleteTarget.id);
+    } else if (deleteTarget.kind === "cv") {
+      await deleteCV(deleteTarget.id);
+    } else {
+      await deleteCoverLetter(deleteTarget.id);
+    }
     setIsDeleting(false);
-    setDeleteId(null);
+    setDeleteTarget(null);
+  };
+
+  const formatUpdatedDate = (value: Date | string) => {
+    const dateValue = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(dateValue.getTime())) return "Unknown date";
+    return dateValue.toLocaleDateString();
   };
 
   const SidebarItem = ({
@@ -144,6 +184,36 @@ export function DashboardPage() {
       {children}
     </div>
   );
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="border-dashed">
+            <CardContent className="flex items-center justify-center py-20 text-gray-500">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              Loading dashboard...
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="border-dashed">
+            <CardContent className="flex items-center justify-center py-20 text-gray-500">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              Redirecting to sign in...
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
@@ -248,95 +318,286 @@ export function DashboardPage() {
                   </p>
                 </motion.div>
 
-                {/* Resumes List */}
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                      My Resumes
-                    </h2>
-                    <Button
-                      onClick={handleCreateResume}
-                      disabled={isCreating}
-                      className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create New
-                    </Button>
+                <div className="space-y-8">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        My Resumes
+                      </h2>
+                      <Button
+                        onClick={handleCreateResume}
+                        disabled={isCreating}
+                        className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create New
+                      </Button>
+                    </div>
+
+                    {resumes.length === 0 ? (
+                      <Card className="border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center py-8">
+                          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                            <FileText className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 mb-3">
+                            You haven't created any resumes yet.
+                          </p>
+                          <Button
+                            onClick={handleCreateResume}
+                            disabled={isCreating}
+                            className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Your First Resume
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid gap-4">
+                        {resumes.map((resume) => (
+                          <Card
+                            key={resume.id}
+                            className="hover:shadow-lg transition-shadow"
+                          >
+                            <CardContent className="flex items-center justify-between p-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                                  <FileText className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                                    {resume.title}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Template: {resume.template} - Updated{" "}
+                                    {formatUpdatedDate(resume.updatedAt)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleNavigate(`/resume/${resume.id}`)
+                                  }
+                                >
+                                  Edit
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                                      onClick={() =>
+                                        setDeleteTarget({
+                                          id: resume.id,
+                                          kind: "resume",
+                                        })
+                                      }
+                                    >
+                                      <Trash className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {resumes.length === 0 ? (
-                    <Card className="border-dashed">
-                      <CardContent className="flex flex-col items-center justify-center py-12">
-                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                          <FileText className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                          You haven't created any resumes yet.
-                        </p>
-                        <Button
-                          onClick={handleCreateResume}
-                          disabled={isCreating}
-                          className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Create Your First Resume
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="grid gap-4">
-                      {resumes.map((resume) => (
-                        <Card
-                          key={resume.id}
-                          className="hover:shadow-lg transition-shadow"
-                        >
-                          <CardContent className="flex items-center justify-between p-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-                                <FileText className="w-6 h-6 text-white" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-900 dark:text-white">
-                                  {resume.title}
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Template: {resume.template} - Updated{" "}
-                                  {resume.updatedAt.toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  handleNavigate(`/resume/${resume.id}`)
-                                }
-                              >
-                                Edit
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreVertical className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    className="text-red-600 focus:text-red-600 cursor-pointer"
-                                    onClick={() => setDeleteId(resume.id)}
-                                  >
-                                    <Trash className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        My CVs
+                      </h2>
+                      <Button
+                        onClick={handleCreateCV}
+                        disabled={isCreating}
+                        className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create New
+                      </Button>
                     </div>
-                  )}
+
+                    {cvs.length === 0 ? (
+                      <Card className="border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center py-8">
+                          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                            <FileCode className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 mb-3">
+                            You haven't created any CVs yet.
+                          </p>
+                          <Button
+                            onClick={handleCreateCV}
+                            disabled={isCreating}
+                            className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Your First CV
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid gap-4">
+                        {cvs.map((cv) => (
+                          <Card key={cv.id} className="hover:shadow-lg transition-shadow">
+                            <CardContent className="flex items-center justify-between p-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                                  <FileCode className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                                    {cv.title}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Template: {cv.template} - Updated{" "}
+                                    {formatUpdatedDate(cv.updatedAt)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleNavigate(`/cv/${cv.id}`)}
+                                >
+                                  Edit
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                                      onClick={() =>
+                                        setDeleteTarget({
+                                          id: cv.id,
+                                          kind: "cv",
+                                        })
+                                      }
+                                    >
+                                      <Trash className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        My Cover Letters
+                      </h2>
+                      <Button
+                        onClick={handleCreateCoverLetter}
+                        disabled={isCreating}
+                        className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create New
+                      </Button>
+                    </div>
+
+                    {coverLetters.length === 0 ? (
+                      <Card className="border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center py-8">
+                          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                            <FileText className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 mb-3">
+                            You haven't created any cover letters yet.
+                          </p>
+                          <Button
+                            onClick={handleCreateCoverLetter}
+                            disabled={isCreating}
+                            className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white rounded-full"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Your First Cover Letter
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid gap-4">
+                        {coverLetters.map((coverLetter) => (
+                          <Card
+                            key={coverLetter.id}
+                            className="hover:shadow-lg transition-shadow"
+                          >
+                            <CardContent className="flex items-center justify-between p-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                                  <FileText className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                                    {coverLetter.title}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Template: {coverLetter.template} - Updated{" "}
+                                    {formatUpdatedDate(coverLetter.updatedAt)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleNavigate(`/cover-letter/${coverLetter.id}`)
+                                  }
+                                >
+                                  Edit
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                                      onClick={() =>
+                                        setDeleteTarget({
+                                          id: coverLetter.id,
+                                          kind: "cover",
+                                        })
+                                      }
+                                    >
+                                      <Trash className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </TabsContent>
 
@@ -439,8 +700,8 @@ export function DashboardPage() {
       </div>
 
       <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

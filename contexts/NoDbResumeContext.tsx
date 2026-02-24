@@ -1,5 +1,6 @@
 "use client";
 
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   useCallback,
   useContext,
@@ -348,7 +349,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     async (templateId: string) => {
       setIsLoading(true);
       try {
-        const response = await fetch("/api/generate-pdf", {
+        const response = await fetch(resolveApiUrl("/api/generate-pdf"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

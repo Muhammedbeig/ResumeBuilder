@@ -3,7 +3,8 @@ import "server-only";
 import { envInt } from "@/lib/env";
 import { panelInternalPost } from "@/lib/panel-internal-api";
 
-const CACHE_TTL_MS = 60_000;
+const DEFAULT_CACHE_TTL_MS = 60_000;
+const WORKER_CACHE_TTL_MS = 5_000;
 
 const SETTINGS_KEYS = ["AI_TEXT_LIMIT", "ai_text_limit"] as const;
 
@@ -30,18 +31,12 @@ let cachedAt = 0;
 
 const DEFAULTS: ResourceSettings = {
   pdfRender: {
-    concurrency: envInt(
-      "PDF_RENDER_CONCURRENCY",
-      envInt("PUPPETEER_CONCURRENCY", 2),
-    ),
+    concurrency: envInt("PDF_RENDER_CONCURRENCY", 2),
     timeoutMs: envInt("PDF_RENDER_TIMEOUT_MS", 45_000),
   },
   rateLimits: {
     windowMs: envInt("RATE_LIMIT_WINDOW_MS", 60_000),
-    pdfExport: envInt(
-      "RATE_LIMIT_PDF_EXPORT",
-      envInt("RATE_LIMIT_PUPPETEER", envInt("RATE_LIMIT_PDF", 12)),
-    ),
+    pdfExport: envInt("RATE_LIMIT_PDF_EXPORT", envInt("RATE_LIMIT_PDF", 12)),
     pdf: envInt("RATE_LIMIT_PDF", 20),
     ai: envInt("RATE_LIMIT_AI", 20),
     aiHeavy: envInt("RATE_LIMIT_AI_HEAVY", 10),
@@ -51,6 +46,19 @@ const DEFAULTS: ResourceSettings = {
     pdfText: envInt("PDF_TEXT_LIMIT", 20_000),
   },
 };
+
+function getResourceSettingsCacheTtlMs(): number {
+  const configured = Number.parseInt(
+    process.env.RESOURCE_SETTINGS_CACHE_MS ?? "",
+    10,
+  );
+  if (Number.isFinite(configured) && configured >= 0) {
+    return configured;
+  }
+  return process.env.RB_WORKER_MODE?.trim() === "1"
+    ? WORKER_CACHE_TTL_MS
+    : DEFAULT_CACHE_TTL_MS;
+}
 
 function parseIntValue(
   value: string | undefined,
@@ -93,7 +101,7 @@ async function readSettings(): Promise<Record<string, string>> {
 
 export async function getResourceSettings(): Promise<ResourceSettings> {
   const now = Date.now();
-  if (cached && now - cachedAt < CACHE_TTL_MS) {
+  if (cached && now - cachedAt < getResourceSettingsCacheTtlMs()) {
     return cached;
   }
 

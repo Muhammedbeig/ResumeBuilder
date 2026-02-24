@@ -1,18 +1,10 @@
-import { PricingPlans } from "@/components/pricing/PricingPlans";
-import { fetchPricingCards } from "@/lib/panel-pricing";
+import { Suspense } from "react";
+import PricingPageClient from "@/app/pricing/PricingPageClient";
 
-export default async function PricingPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ flow?: string; returnUrl?: string }>;
-}) {
-  const cards = await fetchPricingCards();
-  const resolvedParams = searchParams ? await searchParams : undefined;
+export default function PricingPage() {
   return (
-    <PricingPlans
-      cards={cards}
-      flow={resolvedParams?.flow}
-      returnUrl={resolvedParams?.returnUrl}
-    />
+    <Suspense fallback={null}>
+      <PricingPageClient />
+    </Suspense>
   );
 }

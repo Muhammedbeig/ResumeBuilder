@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Dialog,
   DialogContent,
@@ -105,7 +106,7 @@ export function DownloadGateModal({
 
     (async () => {
       const createLink = async (body: Record<string, unknown>) => {
-        const response = await fetch("/api/app-download-links", {
+        const response = await fetch(resolveApiUrl("/api/app-download-links"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

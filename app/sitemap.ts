@@ -1,27 +1,8 @@
 import type { MetadataRoute } from "next";
-import { panelGet } from "@/lib/panel-api";
 
-type PanelBlog = {
-  slug?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-};
+export const dynamic = "force-static";
 
-type BlogCategory = {
-  value?: string | null;
-};
-
-type PanelPagination<T> = {
-  data?: T[];
-  current_page?: number;
-  last_page?: number;
-};
-
-type PanelResponse<T> = {
-  data?: PanelPagination<T> | T[];
-};
-
-const toBaseUrl = () => {
+function toBaseUrl() {
   const candidates = [
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.NEXT_PUBLIC_APP_URL,
@@ -39,94 +20,15 @@ const toBaseUrl = () => {
     }
   }
 
-  return null;
-};
-
-const buildUrl = (base: string, path: string) => {
-  if (!path.startsWith("/")) return `${base}/${path}`;
-  return `${base}${path}`;
-};
-
-const normalizeCustomUrl = (base: string, value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-  if (trimmed.startsWith("#")) return null;
-  if (trimmed.startsWith("/")) return buildUrl(base, trimmed);
-  return buildUrl(base, `/${trimmed}`);
-};
-
-async function fetchCustomLinks(base: string): Promise<string[]> {
-  try {
-    const res = await panelGet<Record<string, unknown>>("get-system-settings");
-    const raw =
-      typeof res?.data?.sitemap_custom_links === "string"
-        ? res.data.sitemap_custom_links
-        : "";
-    const lines = raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const urls = lines
-      .map((line) => normalizeCustomUrl(base, line))
-      .filter(Boolean) as string[];
-    return Array.from(new Set(urls));
-  } catch {
-    return [];
-  }
+  return "";
 }
 
-async function fetchAllBlogs(): Promise<PanelBlog[]> {
-  const posts: PanelBlog[] = [];
-  let page = 1;
-  let lastPage = 1;
-
-  while (page <= lastPage) {
-    try {
-      const res = await panelGet<PanelResponse<PanelBlog>>("blogs", {
-        sort_by: "new-to-old",
-        page,
-      });
-      const payload = res?.data;
-      const pageData = Array.isArray(
-        (payload as PanelPagination<PanelBlog>)?.data,
-      )
-        ? ((payload as PanelPagination<PanelBlog>).data as PanelBlog[])
-        : Array.isArray(payload)
-          ? (payload as PanelBlog[])
-          : [];
-      posts.push(...pageData);
-      const meta = payload as PanelPagination<PanelBlog>;
-      lastPage =
-        Number(meta?.last_page ?? meta?.current_page ?? lastPage) || lastPage;
-      page += 1;
-    } catch {
-      break;
-    }
-  }
-
-  return posts;
-}
-
-async function fetchBlogCategories(): Promise<BlogCategory[]> {
-  try {
-    const res = await panelGet<BlogCategory[]>("blog-categories");
-    return Array.isArray(res.data) ? res.data : [];
-  } catch {
-    return [];
-  }
-}
-
-export const dynamic = "force-dynamic";
-
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
   const base = toBaseUrl();
   if (!base) return [];
 
   const now = new Date();
-  const staticPaths = [
+  const paths = [
     "/",
     "/pricing",
     "/choose-builder",
@@ -140,60 +42,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/cover-letter/start",
     "/cover-letter/templates",
     "/about",
-    "/about/story",
-    "/about/press",
-    "/about/careers",
     "/contact",
     "/privacy-policy",
     "/terms-of-service",
     "/refund-policy",
   ];
 
-  const entries: MetadataRoute.Sitemap = staticPaths.map((path, index) => ({
-    url: buildUrl(base, path),
+  return paths.map((path) => ({
+    url: `${base}${path}`,
     lastModified: now,
-    changeFrequency: index === 0 ? "daily" : "weekly",
-    priority: index === 0 ? 1 : 0.7,
+    changeFrequency: "weekly",
+    priority: path === "/" ? 1 : 0.7,
   }));
-
-  const [customLinks, blogs, categories] = await Promise.all([
-    fetchCustomLinks(base),
-    fetchAllBlogs(),
-    fetchBlogCategories(),
-  ]);
-
-  for (const link of customLinks) {
-    entries.push({
-      url: link,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    });
-  }
-
-  for (const blog of blogs) {
-    if (!blog?.slug) continue;
-    const lastModified = blog.updated_at || blog.created_at || now;
-    entries.push({
-      url: buildUrl(base, `/career-blog/${blog.slug}`),
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.6,
-    });
-  }
-
-  for (const category of categories) {
-    if (!category?.value) continue;
-    entries.push({
-      url: buildUrl(
-        base,
-        `/career-blog/category/${encodeURIComponent(category.value)}`,
-      ),
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.5,
-    });
-  }
-
-  return entries;
 }

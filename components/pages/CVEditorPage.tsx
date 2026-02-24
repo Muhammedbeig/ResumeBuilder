@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
 import {
   User,
@@ -59,6 +59,8 @@ import { useCV } from "@/contexts/CVContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { cvTemplateMap } from "@/lib/cv-templates";
+import { resolveCvTemplateComponent } from "@/lib/template-resolvers";
+import { usePanelTemplate } from "@/hooks/use-panel-template";
 import { generatePDF } from "@/lib/pdf";
 import {
   buildMonthYear,
@@ -70,6 +72,7 @@ import {
 import { GenericSectionManager } from "@/components/editor/GenericSectionManager";
 import { DesignControls } from "@/components/editor/DesignControls";
 import { WatermarkOverlay } from "@/components/editor/WatermarkOverlay";
+import { ScaledPreviewDocument } from "@/components/editor/ScaledPreviewDocument";
 import { RichTextarea } from "@/components/editor/RichTextarea";
 import { FormattingToolbar } from "@/components/editor/FormattingToolbar";
 import { CV_TEMPLATE_DEFAULT_FONTS } from "@/lib/template-defaults";
@@ -78,16 +81,81 @@ import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { hasPaidAccess } from "@/lib/subscription";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
 const AI_SUGGESTION_DELAY_MS = 1200;
 
+const SUMMARY_PLACEHOLDER_VALUES = new Set([
+  "job title",
+  "company name",
+  "your name",
+  "professional title",
+]);
+
+const SUMMARY_PLACEHOLDER_BULLET_HINTS = [
+  "start with a strong action verb",
+  "highlight a project tool or process you led and its results",
+  "describe your achievement",
+];
+
+const SUMMARY_PLACEHOLDER_SKILL_VALUES = new Set([
+  "skill one",
+  "skill two",
+  "skill three",
+  "tool one",
+  "tool two",
+  "tool three",
+]);
+
+function normalizeSummarySeedText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}%<>]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isPlaceholderExperienceForSummary(exp: Experience): boolean {
+  const role = normalizeSummarySeedText(exp.role || "");
+  const company = normalizeSummarySeedText(exp.company || "");
+  const bullets = (exp.bullets || [])
+    .map((bullet) => normalizeSummarySeedText(bullet))
+    .filter(Boolean);
+
+  if (!role && !company && bullets.length === 0) {
+    return true;
+  }
+
+  if (SUMMARY_PLACEHOLDER_VALUES.has(role) || SUMMARY_PLACEHOLDER_VALUES.has(company)) {
+    return true;
+  }
+
+  if (bullets.length === 0) {
+    return false;
+  }
+
+  if (bullets.some((bullet) => /<[^>]+>/.test(bullet))) {
+    return true;
+  }
+
+  return bullets.every((bullet) =>
+    SUMMARY_PLACEHOLDER_BULLET_HINTS.some((hint) => bullet.includes(hint)),
+  );
+}
+
+function isPlaceholderSkillForSummary(skill: string): boolean {
+  const normalized = normalizeSummarySeedText(skill);
+  if (!normalized) return true;
+  return SUMMARY_PLACEHOLDER_SKILL_VALUES.has(normalized);
+}
+
 export function CVEditorPage() {
   const router = useRouter();
   const params = useParams();
   const cvId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-  const { data: session, update: updateSession } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
   const { settings: siteSettings, loaded: siteSettingsLoaded } =
     useSiteSettings();
@@ -106,11 +174,17 @@ export function CVEditorPage() {
   const hasSubscription = useMemo(
     () =>
       subscriptionOverride ||
-      serverSubscription === "pro" ||
-      serverSubscription === "business" ||
-      session?.user?.subscription === "pro" ||
-      session?.user?.subscription === "business",
-    [subscriptionOverride, serverSubscription, session?.user?.subscription],
+      hasPaidAccess(serverSubscription, session?.user?.subscriptionPlanId) ||
+      hasPaidAccess(
+        session?.user?.subscription,
+        session?.user?.subscriptionPlanId,
+      ),
+    [
+      subscriptionOverride,
+      serverSubscription,
+      session?.user?.subscription,
+      session?.user?.subscriptionPlanId,
+    ],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
@@ -160,6 +234,8 @@ export function CVEditorPage() {
     string[]
   >([]);
   const [summarySuggestions, setSummarySuggestions] = useState<string[]>([]);
+  const [isSummarySuggestionsLoading, setIsSummarySuggestionsLoading] =
+    useState(false);
   const summaryKeyRef = useRef("");
   const { ref: previewContainerRef, size: previewContainerSize } =
     useElementSize<HTMLDivElement>();
@@ -227,6 +303,30 @@ export function CVEditorPage() {
       (suggestion) => !used.has(suggestion.toLowerCase()),
     );
   }, [summarySuggestions, usedSummarySuggestions]);
+
+  const summarySourceExperiences = useMemo(
+    () =>
+      previewData.experiences.filter(
+        (exp) => !isPlaceholderExperienceForSummary(exp),
+      ),
+    [previewData.experiences],
+  );
+
+  const summarySourceSkillGroups = useMemo(
+    () =>
+      previewData.skills
+        .map((group) => ({
+          ...group,
+          skills: group.skills.filter(
+            (skill) => !isPlaceholderSkillForSummary(skill),
+          ),
+        }))
+        .filter((group) => group.skills.length > 0),
+    [previewData.skills],
+  );
+
+  const hasSummarySource =
+    summarySourceExperiences.length > 0 && summarySourceSkillGroups.length > 0;
 
   useEffect(() => {
     setUsedSummarySuggestions([]);
@@ -386,8 +486,7 @@ export function CVEditorPage() {
 
     void (async () => {
       const latest = await syncSubscription();
-      const ok =
-        latest?.subscription === "pro" || latest?.subscription === "business";
+      const ok = hasPaidAccess(latest?.subscription, latest?.subscriptionPlanId);
       if (ok && !cancelled) {
         setSubscriptionOverride(true);
         setIsSubscriptionActivating(false);
@@ -401,33 +500,61 @@ export function CVEditorPage() {
 
   useEffect(() => {
     if (activeTab !== "basics") return;
-    if (previewData.experiences.length === 0) {
+    if (!hasSummarySource) {
       setSummarySuggestions([]);
+      setIsSummarySuggestionsLoading(false);
       summaryKeyRef.current = "";
       return;
     }
-    const experienceText = previewData.experiences
+    const experienceText = summarySourceExperiences
       .map(
         (exp) => `${exp.role} ${exp.company} ${exp.bullets?.join(" ") || ""}`,
       )
       .join(" ")
       .trim();
-    const skillsText = previewData.skills
+    const skillsText = summarySourceSkillGroups
       .flatMap((group) => group.skills)
       .join(" ")
       .trim();
     const key = `${previewData.basics.title}|${experienceText}|${skillsText}`;
     if (summaryKeyRef.current === key) return;
+    let isMounted = true;
+    setIsSummarySuggestionsLoading(true);
     const timer = setTimeout(async () => {
-      const suggestions = await suggestSummaryAI(
-        previewData,
-        previewData.basics.title || undefined,
-      );
-      setSummarySuggestions(suggestions);
-      summaryKeyRef.current = key;
+      try {
+        const suggestions = await suggestSummaryAI(
+          {
+            ...previewData,
+            experiences: summarySourceExperiences,
+            skills: summarySourceSkillGroups,
+          },
+          previewData.basics.title || undefined,
+        );
+        if (!isMounted) return;
+        setSummarySuggestions(suggestions);
+        summaryKeyRef.current = key;
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Summary suggestions failed", error);
+        setSummarySuggestions([]);
+      } finally {
+        if (isMounted) {
+          setIsSummarySuggestionsLoading(false);
+        }
+      }
     }, AI_SUGGESTION_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [previewData, suggestSummaryAI, activeTab]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [
+    previewData,
+    hasSummarySource,
+    summarySourceExperiences,
+    summarySourceSkillGroups,
+    suggestSummaryAI,
+    activeTab,
+  ]);
 
   useEffect(() => {
     if (cvId) {
@@ -436,83 +563,39 @@ export function CVEditorPage() {
   }, [cvId, loadCV]);
 
   const activeTemplateId = currentCV?.template || "academic-cv";
-  const ActiveTemplate =
-    cvTemplateMap[activeTemplateId as keyof typeof cvTemplateMap] ||
-    cvTemplateMap["academic-cv"];
+  const shouldFetchTemplate =
+    !cvTemplateMap[activeTemplateId as keyof typeof cvTemplateMap];
+  const panelTemplate = usePanelTemplate("cv", activeTemplateId, shouldFetchTemplate);
+  const templateConfig = panelTemplate?.config as any;
+  const ActiveTemplate = useMemo(
+    () => resolveCvTemplateComponent(activeTemplateId, templateConfig),
+    [activeTemplateId, templateConfig],
+  );
   const exportElementId = "cv-preview-export";
+  const previewRenderKey = useMemo(
+    () =>
+      [
+        activeTemplateId,
+        JSON.stringify(templateConfig ?? {}),
+        JSON.stringify(previewData.metadata ?? {}),
+        JSON.stringify(previewData.structure ?? []),
+      ].join("|"),
+    [
+      activeTemplateId,
+      templateConfig,
+      previewData.metadata,
+      previewData.structure,
+    ],
+  );
 
-  const PreviewDocument = ({
-    elementId,
-    withScale = true,
-    maxWidth,
-  }: {
-    elementId: string;
-    withScale?: boolean;
-    maxWidth?: number;
-  }) => {
-    const contentRef = useRef<HTMLDivElement>(null);
-    const [contentHeight, setContentHeight] = useState(PAGE_HEIGHT);
-
-    useEffect(() => {
-      if (!withScale) return;
-      const element = contentRef.current;
-      if (!element) return;
-
-      const updateHeight = () => {
-        setContentHeight(element.scrollHeight || PAGE_HEIGHT);
-      };
-
-      updateHeight();
-      const observer = new ResizeObserver(() => updateHeight());
-      observer.observe(element);
-      return () => observer.disconnect();
-    }, [withScale]);
-
-    const scale = withScale ? getPreviewScale(maxWidth) : 1;
-    const scaledWidth = PAGE_WIDTH * scale;
-    const scaledHeight = contentHeight * scale;
-
-    return (
-      <div
-        className={withScale ? "overflow-hidden" : undefined}
-        style={
-          withScale ? { width: scaledWidth, height: scaledHeight } : undefined
-        }
-      >
-        <div
-          className={
-            withScale ? "transition-transform duration-200" : undefined
-          }
-          style={
-            withScale
-              ? {
-                  transform: `scale(${scale})`,
-                  transformOrigin: "top left",
-                  width: PAGE_WIDTH,
-                }
-              : undefined
-          }
-        >
-          <div
-            ref={contentRef}
-            id={elementId}
-            className="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
-          >
-            <ActiveTemplate
-              key={JSON.stringify(cvData.structure)}
-              data={previewData}
-            />
-            {watermarkEnabled && (
-              <WatermarkOverlay
-                text={watermarkText}
-                settings={siteSettings.watermark}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const renderPreviewContent = () => (
+    <>
+      <ActiveTemplate key={previewRenderKey} data={previewData} />
+      {watermarkEnabled && (
+        <WatermarkOverlay text={watermarkText} settings={siteSettings.watermark} />
+      )}
+    </>
+  );
 
   const buildShareUrl = () => {
     if (typeof window === "undefined") return "";
@@ -541,6 +624,7 @@ export function CVEditorPage() {
   };
 
   const ensurePlanChosen = () => {
+    if (status === "loading") return false;
     if (!session?.user) return true;
     if (!planChoice) {
       toast.info("Select a plan to continue.");
@@ -554,8 +638,10 @@ export function CVEditorPage() {
     if (!ensurePlanChosen()) return;
     if (planChoice === "paid" && !hasSubscription) {
       const latest = await syncSubscription();
-      const latestHasSubscription =
-        latest?.subscription === "pro" || latest?.subscription === "business";
+      const latestHasSubscription = hasPaidAccess(
+        latest?.subscription,
+        latest?.subscriptionPlanId,
+      );
       if (!latestHasSubscription) {
         router.push(
           `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`,
@@ -728,10 +814,16 @@ export function CVEditorPage() {
                           </div>
                         </div>
                         <div className="min-w-max w-full flex justify-center">
-                          <PreviewDocument
+                          <ScaledPreviewDocument
                             elementId="cv-preview-mobile"
                             maxWidth={mobilePreviewSize.width}
-                          />
+                            getScale={getPreviewScale}
+                            pageWidth={PAGE_WIDTH}
+                            pageHeight={PAGE_HEIGHT}
+                            contentClassName="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+                          >
+                            {renderPreviewContent()}
+                          </ScaledPreviewDocument>
                         </div>
                       </div>
                     </div>
@@ -1094,13 +1186,20 @@ export function CVEditorPage() {
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             AI features are available in the Paid plan.
                           </p>
-                        ) : previewData.experiences.length === 0 ? (
+                        ) : !hasSummarySource ? (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Add at least one experience to see summary ideas.
+                            Update Experience and Skills sections to see summary
+                            suggestions.
                           </p>
                         ) : (
                           <div className="space-y-2">
-                            {availableSummarySuggestions.length === 0 ? (
+                            {isSummarySuggestionsLoading ? (
+                              <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300 py-1">
+                                <Spinner className="h-3 w-3" />
+                                <Sparkles className="h-3 w-3 animate-pulse" />
+                                <span>Generating summary suggestions...</span>
+                              </div>
+                            ) : availableSummarySuggestions.length === 0 ? (
                               <p className="text-xs text-gray-500 dark:text-gray-400">
                                 Suggestions are generating based on your latest
                                 edits.
@@ -1211,10 +1310,16 @@ export function CVEditorPage() {
             <div className="flex-1 w-full overflow-y-auto overflow-x-auto p-8">
               <div ref={previewContainerRef} className="w-full">
                 <div className="min-w-max w-full flex justify-center">
-                  <PreviewDocument
+                  <ScaledPreviewDocument
                     elementId="cv-preview-view"
                     maxWidth={previewContainerSize.width}
-                  />
+                    getScale={getPreviewScale}
+                    pageWidth={PAGE_WIDTH}
+                    pageHeight={PAGE_HEIGHT}
+                    contentClassName="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+                  >
+                    {renderPreviewContent()}
+                  </ScaledPreviewDocument>
                 </div>
               </div>
             </div>
@@ -1222,7 +1327,16 @@ export function CVEditorPage() {
 
           {/* Offscreen preview for mobile export */}
           <div className="absolute -left-[9999px] top-0">
-            <PreviewDocument elementId={exportElementId} withScale={false} />
+            <ScaledPreviewDocument
+              elementId={exportElementId}
+              withScale={false}
+              getScale={getPreviewScale}
+              pageWidth={PAGE_WIDTH}
+              pageHeight={PAGE_HEIGHT}
+              contentClassName="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+            >
+              {renderPreviewContent()}
+            </ScaledPreviewDocument>
           </div>
         </div>
       </div>
@@ -1464,7 +1578,7 @@ function ExperienceSection({
       setIsNewSuggestionsLoading(false);
       return;
     }
-    const description = (newExperience.bullets || []).join(" ").trim();
+    const description = (newExperience.company || "").trim();
     const role = newExperience.role.trim();
     let isMounted = true;
     setIsNewSuggestionsLoading(true);
@@ -1487,7 +1601,7 @@ function ExperienceSection({
     isActive,
     isAdding,
     newExperience.role,
-    newExperience.bullets,
+    newExperience.company,
     suggestResponsibilitiesAI,
   ]);
 
@@ -1509,7 +1623,7 @@ function ExperienceSection({
         return;
       }
       const description = exp.bullets.join(" ").trim();
-      const key = `${exp.role}|${description}`;
+      const key = `${exp.role.trim()}|${exp.company.trim()}`;
       if (existingAiKeys[exp.id] === key) return;
       setExistingSuggestionsLoading((prev) => ({ ...prev, [exp.id]: true }));
       const timer = setTimeout(async () => {

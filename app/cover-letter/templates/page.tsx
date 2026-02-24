@@ -10,7 +10,7 @@ import { fetchTemplates } from "@/lib/template-client";
 import { resolveCoverLetterTemplateComponent } from "@/lib/template-resolvers";
 import type { CoverLetterTemplateConfig } from "@/lib/panel-templates";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 
 type TemplateOption = {
@@ -20,6 +20,24 @@ type TemplateOption = {
   premium: boolean;
   component: ComponentType<{ data: any }>;
 };
+
+function CoverTemplateSkeletonCard() {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900">
+      <div className="p-4 pb-0 rounded-t-2xl bg-gray-50 dark:bg-gray-800/50">
+        <div className="aspect-[210/297] w-full rounded-t-xl bg-gray-200 animate-pulse dark:bg-gray-800" />
+      </div>
+      <div className="p-6">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="h-6 w-40 rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+          <div className="h-5 w-16 rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+        </div>
+        <div className="h-4 w-full rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+        <div className="mt-2 h-4 w-3/4 rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+      </div>
+    </div>
+  );
+}
 
 // Using a placeholder data for previews
 const previewData = {
@@ -93,19 +111,21 @@ function RescaleContainer({ children }: { children: React.ReactNode }) {
 }
 
 export default function CoverLetterTemplatesPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { planChoice } = usePlanChoice();
   const isAuthenticated = !!session?.user;
   const router = useRouter();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [templates, setTemplates] =
     useState<TemplateOption[]>(coverLetterTemplates);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
   const openPlanModal = () => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
   };
 
   const ensurePlanChosen = () => {
+    if (status === "loading") return false;
     if (!isAuthenticated) return true;
     if (!planChoice) {
       openPlanModal();
@@ -118,26 +138,32 @@ export default function CoverLetterTemplatesPage() {
     let isActive = true;
 
     const loadTemplates = async () => {
-      const panelTemplates = await fetchTemplates("cover_letter", {
-        active: true,
-      });
-      if (!panelTemplates.length || !isActive) return;
+      try {
+        const panelTemplates = await fetchTemplates("cover_letter", {
+          active: true,
+        });
+        if (!panelTemplates.length || !isActive) return;
 
-      const mapped: TemplateOption[] = panelTemplates.map((template) => ({
-        id: template.template_id,
-        name: template.name || template.template_id,
-        description: template.description || "",
-        premium: template.is_premium,
-        component: resolveCoverLetterTemplateComponent(
-          template.template_id,
-          template.config as CoverLetterTemplateConfig,
-        ),
-      }));
+        const mapped: TemplateOption[] = panelTemplates.map((template) => ({
+          id: template.template_id,
+          name: template.name || template.template_id,
+          description: template.description || "",
+          premium: template.is_premium,
+          component: resolveCoverLetterTemplateComponent(
+            template.template_id,
+            template.config as CoverLetterTemplateConfig,
+          ),
+        }));
 
-      if (isActive) setTemplates(mapped);
+        if (isActive) setTemplates(mapped);
+      } finally {
+        if (isActive) {
+          setTemplatesLoading(false);
+        }
+      }
     };
 
-    loadTemplates();
+    void loadTemplates();
     return () => {
       isActive = false;
     };
@@ -174,63 +200,69 @@ export default function CoverLetterTemplatesPage() {
       {/* Templates Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {templates.map((template, index) => {
-            const TemplateComponent = template.component;
-            return (
-              <motion.div
-                key={template.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 hover:shadow-2xl transition-all duration-300 flex flex-col"
-              >
-                {/* Preview Container */}
-                <div className="relative p-4 pb-0 bg-gray-50 dark:bg-gray-800/50 rounded-t-2xl">
-                  <RescaleContainer>
-                    <TemplateComponent data={previewData} />
-                  </RescaleContainer>
+          {templatesLoading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <CoverTemplateSkeletonCard
+                  key={`cover-template-gallery-skeleton-${index}`}
+                />
+              ))
+            : templates.map((template, index) => {
+                const TemplateComponent = template.component;
+                return (
+                  <motion.div
+                    key={template.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group relative bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 hover:shadow-2xl transition-all duration-300 flex flex-col"
+                  >
+                    {/* Preview Container */}
+                    <div className="relative p-4 pb-0 bg-gray-50 dark:bg-gray-800/50 rounded-t-2xl">
+                      <RescaleContainer>
+                        <TemplateComponent data={previewData} />
+                      </RescaleContainer>
 
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl z-10">
-                    <Button
-                      size="lg"
-                      className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-xl scale-105"
-                      onClick={() => {
-                        if (!ensurePlanChosen()) return;
-                        router.push(
-                          `/cover-letter/new?template=${template.id}`,
-                        );
-                      }}
-                    >
-                      Use This Template
-                    </Button>
-                  </div>
-                </div>
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-gray-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-2xl z-10">
+                        <Button
+                          size="lg"
+                          className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-xl scale-105"
+                          onClick={() => {
+                            if (!ensurePlanChosen()) return;
+                            router.push(
+                              `/cover-letter/new?template=${template.id}`,
+                            );
+                          }}
+                        >
+                          Use This Template
+                        </Button>
+                      </div>
+                    </div>
 
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      {template.name}
-                    </h3>
-                    {template.premium ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                        <Crown className="w-3 h-3" />
-                        Premium
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                        Free
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                    {template.description}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
+                    {/* Content */}
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          {template.name}
+                        </h3>
+                        {template.premium ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                            <Crown className="w-3 h-3" />
+                            Premium
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            Free
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                        {template.description}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
         </div>
       </div>
     </div>

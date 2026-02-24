@@ -9,7 +9,7 @@ import {
   type ComponentType,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { Crown } from "lucide-react";
 import { coverLetterTemplates } from "@/lib/cover-letter-templates";
 import { fetchTemplates } from "@/lib/template-client";
@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { toast } from "sonner";
+import { hasPaidAccess } from "@/lib/subscription";
 
 type TemplateOption = {
   id: string;
@@ -31,6 +32,22 @@ type TemplateOption = {
   premium: boolean;
   component: ComponentType<{ data: any }>;
 };
+
+function TemplateCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-gray-200 dark:border-gray-800">
+      <div className="relative bg-gray-50 p-4 dark:bg-gray-900/50">
+        <div className="h-72 rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800" />
+      </div>
+      <CardContent className="p-4">
+        <div className="h-5 w-2/3 rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+        <div className="mt-3 h-4 w-full rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+        <div className="mt-2 h-4 w-3/4 rounded bg-gray-200 animate-pulse dark:bg-gray-800" />
+        <div className="mt-5 h-10 w-full rounded-md bg-gray-200 animate-pulse dark:bg-gray-800" />
+      </CardContent>
+    </Card>
+  );
+}
 
 // Placeholder data for preview
 const previewData = {
@@ -73,9 +90,15 @@ function NewCoverLetterContent() {
   ]);
   const [isCreating, setIsCreating] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
 
   const templateIdFromQuery = searchParams.get("template");
   const isAuthenticated = !!session?.user;
+
+  const redirectToLogin = useCallback(() => {
+    const callbackUrl = `${window.location.pathname}${window.location.search}`;
+    router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  }, [router]);
 
   useEffect(() => {
     if (importedData?.personalInfo?.fullName) {
@@ -87,32 +110,38 @@ function NewCoverLetterContent() {
     let isActive = true;
 
     const loadTemplates = async () => {
-      const panelTemplates = await fetchTemplates("cover_letter", {
-        active: true,
-      });
-      if (!panelTemplates.length || !isActive) return;
+      try {
+        const panelTemplates = await fetchTemplates("cover_letter", {
+          active: true,
+        });
+        if (!panelTemplates.length || !isActive) return;
 
-      const mapped: TemplateOption[] = panelTemplates.map((template) => {
-        const component = resolveCoverLetterTemplateComponent(
-          template.template_id,
-          template.config as CoverLetterTemplateConfig,
-        );
+        const mapped: TemplateOption[] = panelTemplates.map((template) => {
+          const component = resolveCoverLetterTemplateComponent(
+            template.template_id,
+            template.config as CoverLetterTemplateConfig,
+          );
 
-        return {
-          id: template.template_id,
-          name: template.name || template.template_id,
-          description: template.description || "",
-          premium: template.is_premium,
-          component,
-        };
-      });
+          return {
+            id: template.template_id,
+            name: template.name || template.template_id,
+            description: template.description || "",
+            premium: template.is_premium,
+            component,
+          };
+        });
 
-      if (isActive) {
-        setTemplates(mapped);
+        if (isActive) {
+          setTemplates(mapped);
+        }
+      } finally {
+        if (isActive) {
+          setTemplatesLoading(false);
+        }
       }
     };
 
-    loadTemplates();
+    void loadTemplates();
 
     return () => {
       isActive = false;
@@ -121,9 +150,11 @@ function NewCoverLetterContent() {
 
   const hasSubscription = useMemo(
     () =>
-      session?.user?.subscription === "pro" ||
-      session?.user?.subscription === "business",
-    [session?.user?.subscription],
+      hasPaidAccess(
+        session?.user?.subscription,
+        session?.user?.subscriptionPlanId,
+      ),
+    [session?.user?.subscription, session?.user?.subscriptionPlanId],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
@@ -150,23 +181,22 @@ function NewCoverLetterContent() {
   }, [templateIdFromQuery, isAuthenticated, planChoice, openPlanModal]);
 
   const ensurePlanChosen = useCallback(() => {
-    if (!isAuthenticated) return true;
+    if (!isAuthenticated) {
+      toast.error("Please sign in to continue.");
+      redirectToLogin();
+      return false;
+    }
     if (!planChoice) {
       openPlanModal();
       return false;
     }
     return true;
-  }, [isAuthenticated, planChoice, openPlanModal]);
+  }, [isAuthenticated, planChoice, openPlanModal, redirectToLogin]);
 
   const handleSelectTemplate = useCallback(
     async (templateId: string, premium: boolean) => {
       if (!ensurePlanChosen()) return;
       if (premium && !canUsePaid) {
-        if (!isAuthenticated) {
-          toast.error("Please sign in to unlock premium templates");
-          router.push(`/login?callbackUrl=${window.location.pathname}`);
-          return;
-        }
         toast.info("Premium templates are available in the Paid plan.");
         openPlanModal();
         return;
@@ -199,6 +229,7 @@ function NewCoverLetterContent() {
 
   // Auto-select template if query param is present
   useEffect(() => {
+    if (templatesLoading) return;
     if (templateIdFromQuery && isLoaded && status !== "loading") {
       if (isAuthenticated && !planChoice) return;
       const template = templates.find((t) => t.id === templateIdFromQuery);
@@ -210,6 +241,7 @@ function NewCoverLetterContent() {
     templateIdFromQuery,
     isLoaded,
     status,
+    templatesLoading,
     isCreating,
     handleSelectTemplate,
     templates,
@@ -254,49 +286,55 @@ function NewCoverLetterContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {templates.map((template) => {
-            const Preview = template.component;
-            const isLocked = template.premium && !canUsePaid;
-            return (
-              <Card
-                key={template.id}
-                className="overflow-hidden border-gray-200 dark:border-gray-800"
-              >
-                <div className="relative bg-gray-50 dark:bg-gray-900/50 p-4">
-                  <div className="absolute right-4 top-4 flex items-center gap-2">
-                    {template.premium && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-800">
-                        <Crown className="h-3 w-3" />
-                        Pro
-                      </span>
-                    )}
-                  </div>
-                  <div className="h-72 overflow-hidden rounded-lg bg-white shadow-sm">
-                    <div className="origin-top-left scale-[0.4] w-[250%]">
-                      <Preview data={previewData} />
-                    </div>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    {template.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {template.description}
-                  </p>
-                  <Button
-                    className="w-full"
-                    disabled={isCreating || isLocked}
-                    onClick={() =>
-                      handleSelectTemplate(template.id, template.premium)
-                    }
+          {templatesLoading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <TemplateCardSkeleton
+                  key={`cover-template-skeleton-${index}`}
+                />
+              ))
+            : templates.map((template) => {
+                const Preview = template.component;
+                const isLocked = template.premium && !canUsePaid;
+                return (
+                  <Card
+                    key={template.id}
+                    className="overflow-hidden border-gray-200 dark:border-gray-800"
                   >
-                    {isCreating ? "Creating..." : "Use this template"}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    <div className="relative bg-gray-50 dark:bg-gray-900/50 p-4">
+                      <div className="absolute right-4 top-4 flex items-center gap-2">
+                        {template.premium && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-800">
+                            <Crown className="h-3 w-3" />
+                            Pro
+                          </span>
+                        )}
+                      </div>
+                      <div className="h-72 overflow-hidden rounded-lg bg-white shadow-sm">
+                        <div className="origin-top-left scale-[0.4] w-[250%]">
+                          <Preview data={previewData} />
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                        {template.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        {template.description}
+                      </p>
+                      <Button
+                        className="w-full"
+                        disabled={isCreating || isLocked}
+                        onClick={() =>
+                          handleSelectTemplate(template.id, template.premium)
+                        }
+                      >
+                        {isCreating ? "Creating..." : "Use this template"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
         </div>
       </div>
     </div>

@@ -9,7 +9,27 @@ export type FaqItem = {
   answer: string;
 };
 
-export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
+function FAQSkeletonItem() {
+  return (
+    <div className="border rounded-2xl overflow-hidden border-gray-200 dark:border-gray-800 px-6 py-5">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="w-10 h-10 rounded-full animate-pulse bg-gray-200 dark:bg-gray-800" />
+          <div className="h-5 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+        </div>
+        <div className="w-8 h-8 rounded-full animate-pulse bg-gray-200 dark:bg-gray-800" />
+      </div>
+    </div>
+  );
+}
+
+export function FAQClient({
+  faqs,
+  loading = false,
+}: {
+  faqs: FaqItem[];
+  loading?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -46,7 +66,13 @@ export function FAQClient({ faqs }: { faqs: FaqItem[] }) {
 
         {/* FAQ Items */}
         <div className="space-y-4">
-          {faqs.length > 0 ? (
+          {loading ? (
+            <>
+              {[0, 1, 2, 3].map((index) => (
+                <FAQSkeletonItem key={`faq-skeleton-${index}`} />
+              ))}
+            </>
+          ) : faqs.length > 0 ? (
             faqs.map((faq, index) => (
               <motion.div
                 key={`${index}-${faq.question}`}

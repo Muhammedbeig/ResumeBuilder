@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getProviders, signIn, useSession } from "next-auth/react";
+import { getProviders, signIn, useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -29,7 +29,7 @@ import { toast } from "sonner";
 export function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status } = useSession();
+  const { status, refresh } = useSession();
 
   // If the callbackUrl is just the login page itself, default to dashboard
   const rawCallback = searchParams.get("callbackUrl") || "/dashboard";
@@ -103,6 +103,13 @@ export function LoginPage() {
       });
       if (result?.error) {
         toast.error("Login failed");
+        return;
+      }
+      const nextSession = await refresh();
+      if (!nextSession?.user?.id) {
+        toast.error(
+          "Login succeeded but session was not established. Please try again.",
+        );
         return;
       }
       toast.success("Welcome back!");

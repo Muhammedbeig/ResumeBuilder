@@ -32,3 +32,6 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local postman secrets
+postman/static-panel/*.local.json

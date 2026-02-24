@@ -1,7 +1,6 @@
-import { PricingSection } from "@/components/pricing/PricingSection";
-import { fetchPricingCards } from "@/lib/panel-pricing";
+import { PricingClient } from "@/sections/PricingClient";
 
-export async function Pricing() {
-  const cards = await fetchPricingCards();
-  return <PricingSection mode="landing" cards={cards} />;
+export function Pricing() {
+  return <PricingClient />;
 }
+

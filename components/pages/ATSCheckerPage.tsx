@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Upload,
   FileText,
@@ -31,7 +32,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 
 interface ATSAnalysis {
   score: number;
@@ -48,9 +49,71 @@ interface ATSAnalysis {
   formatting_issues: string[];
 }
 
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === "string" ? item : String(item ?? "")))
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function normalizeBreakdown(
+  value: unknown,
+): ATSAnalysis["breakdown"] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  const raw = value as Record<string, unknown>;
+  const normalized: ATSAnalysis["breakdown"] = {};
+
+  for (const [key, entry] of Object.entries(raw)) {
+    if (!key || typeof key !== "string") continue;
+    const row =
+      entry && typeof entry === "object" && !Array.isArray(entry)
+        ? (entry as Record<string, unknown>)
+        : {};
+
+    normalized[key] = {
+      score: Math.max(0, Math.min(100, Math.round(toNumber(row.score, 0)))),
+      feedback: toStringArray(row.feedback),
+    };
+  }
+
+  return normalized;
+}
+
+function normalizeAnalysisPayload(value: unknown): ATSAnalysis | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const raw = value as Record<string, unknown>;
+
+  return {
+    score: Math.max(0, Math.min(100, Math.round(toNumber(raw.score, 0)))),
+    summary:
+      typeof raw.summary === "string" ? raw.summary : "Analysis completed.",
+    breakdown: normalizeBreakdown(raw.breakdown),
+    strengths: toStringArray(raw.strengths),
+    weaknesses: toStringArray(raw.weaknesses),
+    missing_keywords: toStringArray(raw.missing_keywords),
+    formatting_issues: toStringArray(raw.formatting_issues),
+  };
+}
+
 export function ATSCheckerPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
@@ -64,6 +127,7 @@ export function ATSCheckerPage() {
   };
 
   const ensurePlanChosen = () => {
+    if (status === "loading") return false;
     if (!isAuthenticated) return true;
     if (!planChoice) {
       openPlanModal();
@@ -109,7 +173,7 @@ export function ATSCheckerPage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("/api/ai/ats-check", {
+      const response = await fetch(resolveApiUrl("/api/ai/ats-check"), {
         method: "POST",
         body: formData,
       });
@@ -117,7 +181,11 @@ export function ATSCheckerPage() {
       if (!response.ok) throw new Error("Analysis failed");
 
       const data = await response.json();
-      setAnalysis(data);
+      const normalized = normalizeAnalysisPayload(data);
+      if (!normalized) {
+        throw new Error("Invalid ATS analysis payload");
+      }
+      setAnalysis(normalized);
       toast.success("Resume analyzed successfully!");
     } catch (error) {
       console.error(error);
@@ -223,7 +291,8 @@ export function ATSCheckerPage() {
 
                 <TabsContent value="breakdown" className="space-y-4 mt-4">
                   <div className="grid gap-4 md:grid-cols-2">
-                    {Object.entries(analysis.breakdown).map(([key, data]) => (
+                    {Object.entries(analysis.breakdown || {}).map(
+                      ([key, data]) => (
                       <Card
                         key={key}
                         className="border border-gray-200 dark:border-gray-700"
@@ -244,7 +313,7 @@ export function ATSCheckerPage() {
                             className={`h-2 mb-3 ${getProgressColor(data.score)}`}
                           />
                           <ul className="space-y-1">
-                            {data.feedback.map((item, i) => (
+                            {(data.feedback || []).map((item, i) => (
                               <li
                                 key={i}
                                 className="text-xs text-gray-500 flex items-start gap-2"
@@ -270,7 +339,7 @@ export function ATSCheckerPage() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-3">
-                          {analysis.strengths.map((item, i) => (
+                          {(analysis.strengths || []).map((item, i) => (
                             <li
                               key={i}
                               className="flex gap-2 text-sm text-gray-700 dark:text-gray-300"
@@ -291,7 +360,7 @@ export function ATSCheckerPage() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-3">
-                          {analysis.weaknesses.map((item, i) => (
+                          {(analysis.weaknesses || []).map((item, i) => (
                             <li
                               key={i}
                               className="flex gap-2 text-sm text-gray-700 dark:text-gray-300"
@@ -321,7 +390,8 @@ export function ATSCheckerPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="flex flex-wrap gap-2">
-                          {analysis.missing_keywords.map((keyword, i) => (
+                          {(analysis.missing_keywords || []).map(
+                            (keyword, i) => (
                             <Badge
                               key={i}
                               variant="secondary"
@@ -343,8 +413,8 @@ export function ATSCheckerPage() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
-                          {analysis.formatting_issues.length > 0 ? (
-                            analysis.formatting_issues.map((issue, i) => (
+                          {(analysis.formatting_issues || []).length > 0 ? (
+                            (analysis.formatting_issues || []).map((issue, i) => (
                               <li
                                 key={i}
                                 className="flex gap-2 text-sm text-gray-700 dark:text-gray-300"

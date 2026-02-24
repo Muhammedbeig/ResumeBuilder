@@ -1,0 +1,3 @@
+{
+  "/api/ai/parse-cover-letter/route": "app/api/ai/parse-cover-letter/route.js"
+}

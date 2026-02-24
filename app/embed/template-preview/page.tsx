@@ -13,8 +13,15 @@ import type {
   ResumeTemplateConfig,
   TemplateType,
 } from "@/lib/panel-templates";
+import {
+  mapCvConfigToResumeConfig,
+  normalizeCoverLetterConfig,
+  normalizeResumeConfig,
+} from "@/lib/panel-templates";
 import { previewResumeData } from "@/lib/resume-samples";
 import { previewCoverLetterData } from "@/lib/template-preview-samples";
+import { CatalogTemplate } from "@/components/resume/templates/catalog/CatalogTemplate";
+import { CoverLetterCatalogTemplate } from "@/components/cover-letter/templates/CoverLetterCatalogTemplate";
 
 const DEFAULT_TEMPLATE_BY_TYPE: Record<TemplateType, string> = {
   resume: "modern",
@@ -70,6 +77,20 @@ function TemplatePreviewEmbedContent() {
   const useConfig = renderEngine !== "static";
 
   if (type === "cover_letter") {
+    if (useConfig && config) {
+      const resolvedConfig = normalizeCoverLetterConfig(
+        config as CoverLetterTemplateConfig,
+      );
+      return (
+        <PreviewFrame>
+          <CoverLetterCatalogTemplate
+            data={previewCoverLetterData}
+            config={resolvedConfig}
+          />
+        </PreviewFrame>
+      );
+    }
+
     const TemplateComponent = resolveCoverLetterTemplateComponent(
       templateId,
       (useConfig ? config : null) as CoverLetterTemplateConfig | null,
@@ -83,6 +104,20 @@ function TemplatePreviewEmbedContent() {
   }
 
   if (type === "cv") {
+    if (useConfig && config) {
+      const mapped = mapCvConfigToResumeConfig(
+        config as CvTemplateConfig,
+        templateId,
+      );
+      if (mapped) {
+        return (
+          <PreviewFrame>
+            <CatalogTemplate data={previewResumeData} config={mapped} />
+          </PreviewFrame>
+        );
+      }
+    }
+
     const TemplateComponent = resolveCvTemplateComponent(
       templateId,
       (useConfig ? config : null) as CvTemplateConfig | null,
@@ -93,6 +128,20 @@ function TemplatePreviewEmbedContent() {
         <TemplateComponent data={previewResumeData} />
       </PreviewFrame>
     );
+  }
+
+  if (useConfig && config) {
+    const resolvedConfig = normalizeResumeConfig(
+      config as ResumeTemplateConfig,
+      templateId,
+    );
+    if (resolvedConfig) {
+      return (
+        <PreviewFrame>
+          <CatalogTemplate data={previewResumeData} config={resolvedConfig} />
+        </PreviewFrame>
+      );
+    }
   }
 
   const TemplateComponent = resolveResumeTemplateComponent(

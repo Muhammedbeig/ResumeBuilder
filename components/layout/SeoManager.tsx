@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { resolveSeo } from "@/lib/seo";
+import { resolveApiUrl } from "@/lib/client-api";
 
 const setMetaTag = (selector: string, attrs: Record<string, string>) => {
   let element = document.querySelector<HTMLMetaElement>(selector);
@@ -84,7 +85,7 @@ export function SeoManager() {
     let active = true;
     void (async () => {
       try {
-        const res = await fetch("/api/site/settings", { cache: "no-store" });
+        const res = await fetch(resolveApiUrl("/api/site/settings"), { cache: "no-store" });
         if (!res.ok) return;
         const data = (await res.json()) as {
           faviconUrl?: string;

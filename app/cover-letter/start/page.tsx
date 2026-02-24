@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { FileUp, Plus, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,23 +11,33 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { resolveApiUrl } from "@/lib/client-api";
 
 export default function StartCoverLetterPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { setImportedData } = useCoverLetter();
   const { planChoice } = usePlanChoice();
   const [isUploading, setIsUploading] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   const isAuthenticated = !!session?.user;
+  const redirectToLogin = () => {
+    const callbackUrl = `${window.location.pathname}${window.location.search}`;
+    router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  };
   const openPlanModal = () => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
   };
 
   const ensurePlanChosen = () => {
-    if (!isAuthenticated) return true;
+    if (status === "loading") return false;
+    if (!isAuthenticated) {
+      toast.error("Please sign in to continue.");
+      redirectToLogin();
+      return false;
+    }
     if (!planChoice) {
       openPlanModal();
       return false;
@@ -62,7 +72,7 @@ export default function StartCoverLetterPage() {
   ) => {
     if (!session?.user) {
       toast.error("Please sign in to use the AI import feature");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      redirectToLogin();
       return;
     }
     if (!ensurePaidPlan()) return;
@@ -82,7 +92,7 @@ export default function StartCoverLetterPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const extractRes = await fetch("/api/extract-pdf-text", {
+      const extractRes = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
         method: "POST",
         body: formData,
       });
@@ -93,7 +103,7 @@ export default function StartCoverLetterPage() {
       if (!text) throw new Error("Could not extract text from PDF");
 
       // 2. Parse text with AI
-      const parseRes = await fetch("/api/ai/parse-cover-letter", {
+      const parseRes = await fetch(resolveApiUrl("/api/ai/parse-cover-letter"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),

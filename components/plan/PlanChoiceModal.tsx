@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { usePlanChoice, type PlanChoice } from "@/contexts/PlanChoiceContext";
 import { Check, ChevronLeft, ChevronRight, Crown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
+import { hasPaidAccess } from "@/lib/subscription";
 
 interface PlanChoiceModalProps {
   open: boolean;
@@ -30,9 +31,10 @@ export function PlanChoiceModal({
 }: PlanChoiceModalProps) {
   const { data: session } = useSession();
   const { setPlanChoice } = usePlanChoice();
-  const hasSubscription =
-    session?.user?.subscription === "pro" ||
-    session?.user?.subscription === "business";
+  const hasSubscription = hasPaidAccess(
+    session?.user?.subscription,
+    session?.user?.subscriptionPlanId,
+  );
   const plans = useMemo(
     () => [
       {

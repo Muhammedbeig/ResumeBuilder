@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import {
   RESUME_TEMPLATE_CATEGORIES,
@@ -122,13 +122,32 @@ const ensureCategoryDefaults = (
   return merged;
 };
 
+function TemplateCatalogSkeletonCard() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900/70">
+      <div className="p-4 pb-0 rounded-t-2xl bg-slate-50 dark:bg-slate-900/30">
+        <div className="aspect-[918/1188] w-full rounded-t-xl bg-slate-200 animate-pulse dark:bg-slate-800" />
+      </div>
+      <div className="p-6">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="h-5 w-40 rounded bg-slate-200 animate-pulse dark:bg-slate-800" />
+          <div className="h-5 w-12 rounded bg-slate-200 animate-pulse dark:bg-slate-800" />
+        </div>
+        <div className="h-4 w-full rounded bg-slate-200 animate-pulse dark:bg-slate-800" />
+        <div className="mt-2 h-4 w-3/4 rounded bg-slate-200 animate-pulse dark:bg-slate-800" />
+        <div className="mt-5 h-4 w-48 rounded bg-slate-200 animate-pulse dark:bg-slate-800" />
+      </div>
+    </div>
+  );
+}
+
 export function TemplatesCatalogPage({
   initialCategory,
 }: {
   initialCategory?: string | null;
 }) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { planChoice } = usePlanChoice();
   const isAuthenticated = !!session?.user;
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -138,6 +157,7 @@ export function TemplatesCatalogPage({
   };
 
   const ensurePlanChosen = () => {
+    if (status === "loading") return false;
     if (!isAuthenticated) return true;
     if (!planChoice) {
       openPlanModal();
@@ -153,6 +173,7 @@ export function TemplatesCatalogPage({
     Record<string, ResumeTemplateCatalogEntry[]>
   >(RESUME_TEMPLATE_CATALOG_BY_CATEGORY);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [templatesLoading, setTemplatesLoading] = useState(true);
 
   const categories = useMemo(
     () => [{ slug: "all", label: "All", description: "" }, ...categoryOptions],
@@ -163,56 +184,66 @@ export function TemplatesCatalogPage({
     let isActive = true;
 
     const loadPanelTemplates = async () => {
-      const [panelCategories, panelTemplates] = await Promise.all([
-        fetchTemplateCategories("resume"),
-        fetchTemplates("resume", { active: true }),
-      ]);
+      try {
+        const [panelCategories, panelTemplates] = await Promise.all([
+          fetchTemplateCategories("resume"),
+          fetchTemplates("resume", { active: true }),
+        ]);
 
-      const resolvedCategories =
-        panelCategories.length > 0
-          ? panelCategories.map((cat) => ({
-              slug: cat.slug,
-              label: cat.label,
-              description: cat.description ?? "",
-            }))
-          : RESUME_TEMPLATE_CATEGORIES;
+        const resolvedCategories =
+          panelCategories.length > 0
+            ? panelCategories.map((cat) => ({
+                slug: cat.slug,
+                label: cat.label,
+                description: cat.description ?? "",
+              }))
+            : RESUME_TEMPLATE_CATEGORIES;
 
-      const mappedTemplates = panelTemplates
-        .map((template: PanelTemplate) => {
-          const config = normalizeResumeConfig(
-            template.config as ResumeTemplateCatalogEntry,
-            template.template_id,
-          );
-          if (!config) return null;
-          return {
-            ...config,
-            id: template.template_id,
-            name: template.name || config.name,
-            description: template.description || config.description,
-            category: template.category?.slug || config.category,
-          } as ResumeTemplateCatalogEntry;
-        })
-        .filter(Boolean) as ResumeTemplateCatalogEntry[];
+        const mappedTemplates = panelTemplates
+          .map((template: PanelTemplate) => {
+            const config = normalizeResumeConfig(
+              template.config as ResumeTemplateCatalogEntry,
+              template.template_id,
+            );
+            if (!config) return null;
+            return {
+              ...config,
+              id: template.template_id,
+              name: template.name || config.name,
+              description: template.description || config.description,
+              category: template.category?.slug || config.category,
+            } as ResumeTemplateCatalogEntry;
+          })
+          .filter(Boolean) as ResumeTemplateCatalogEntry[];
 
-      const grouped: Record<string, ResumeTemplateCatalogEntry[]> = {};
-      const sourceTemplates =
-        mappedTemplates.length > 0
-          ? mappedTemplates
-          : Object.values(RESUME_TEMPLATE_CATALOG_BY_CATEGORY).flat();
+        const grouped: Record<string, ResumeTemplateCatalogEntry[]> = {};
+        const sourceTemplates =
+          mappedTemplates.length > 0
+            ? mappedTemplates
+            : Object.values(RESUME_TEMPLATE_CATALOG_BY_CATEGORY).flat();
 
-      for (const template of sourceTemplates) {
-        if (!grouped[template.category]) grouped[template.category] = [];
-        grouped[template.category].push(template);
+        for (const template of sourceTemplates) {
+          if (!grouped[template.category]) grouped[template.category] = [];
+          grouped[template.category].push(template);
+        }
+
+        if (!isActive) return;
+        setCategoryOptions(resolvedCategories);
+        setTemplatesByCategory(
+          ensureCategoryDefaults(resolvedCategories, grouped),
+        );
+      } catch {
+        if (!isActive) return;
+        setCategoryOptions(RESUME_TEMPLATE_CATEGORIES);
+        setTemplatesByCategory(RESUME_TEMPLATE_CATALOG_BY_CATEGORY);
+      } finally {
+        if (isActive) {
+          setTemplatesLoading(false);
+        }
       }
-
-      if (!isActive) return;
-      setCategoryOptions(resolvedCategories);
-      setTemplatesByCategory(
-        ensureCategoryDefaults(resolvedCategories, grouped),
-      );
     };
 
-    loadPanelTemplates();
+    void loadPanelTemplates();
 
     return () => {
       isActive = false;
@@ -286,7 +317,11 @@ export function TemplatesCatalogPage({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {templates.map((template, index) => {
+          {templatesLoading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <TemplateCatalogSkeletonCard key={`template-skeleton-${index}`} />
+              ))
+            : templates.map((template, index) => {
             return (
               <motion.div
                 key={template.id}

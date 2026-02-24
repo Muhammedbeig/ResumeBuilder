@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { MOCK_RESUME } from "@/lib/mock-resume";
 import { resumeTemplateMap } from "@/lib/resume-templates";
 import { Button } from "@/components/ui/button";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Select,
   SelectContent,
@@ -29,7 +30,7 @@ export default function ResumePreviewPage() {
       if (!exportHtml) {
         throw new Error("Unable to capture resume HTML for export.");
       }
-      const response = await fetch("/api/generate-pdf", {
+      const response = await fetch(resolveApiUrl("/api/generate-pdf"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

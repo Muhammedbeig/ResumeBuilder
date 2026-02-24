@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Card,
   CardContent,
@@ -67,7 +68,7 @@ export function ContactPage({
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/contact-us", {
+      const response = await fetch(resolveApiUrl("/api/contact-us"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { resolveApiUrl } from "@/lib/client-api";
+import { hasPaidAccess, normalizePlanId } from "@/lib/subscription";
 import {
   Select,
   SelectContent,
@@ -57,7 +59,7 @@ export default function CareerManagementPage() {
     let active = true;
     const loadSubscription = async () => {
       try {
-        const res = await fetch("/api/user/subscription");
+        const res = await fetch(resolveApiUrl("/api/user/subscription"));
         if (!res.ok) {
           return;
         }
@@ -95,12 +97,13 @@ export default function CareerManagementPage() {
   }, [updateSession, session?.user]);
 
   const hasAnnualAccess = useMemo(() => {
-    const planId =
+    const planId = normalizePlanId(
       serverSubscription?.subscriptionPlanId ??
-      session?.user?.subscriptionPlanId;
+        session?.user?.subscriptionPlanId,
+    );
     const subscription =
       serverSubscription?.subscription ?? session?.user?.subscription;
-    return planId === "annual" || subscription === "business";
+    return planId === "annual" && hasPaidAccess(subscription, planId);
   }, [
     serverSubscription?.subscriptionPlanId,
     serverSubscription?.subscription,
@@ -115,7 +118,7 @@ export default function CareerManagementPage() {
   }, [resumes, selectedResumeId]);
 
   const fetchResumeJson = async (resumeId: string) => {
-    const response = await fetch(`/api/resumes/${resumeId}`);
+    const response = await fetch(resolveApiUrl(`/api/resumes/${resumeId}`));
     if (!response.ok) {
       throw new Error("Failed to load resume");
     }
@@ -126,7 +129,7 @@ export default function CareerManagementPage() {
   const parseResumeFromFile = async (fileToParse: File) => {
     const formData = new FormData();
     formData.append("file", fileToParse);
-    const extractRes = await fetch("/api/extract-pdf-text", {
+    const extractRes = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
       method: "POST",
       body: formData,
     });
@@ -138,7 +141,7 @@ export default function CareerManagementPage() {
       throw new Error("No text found in PDF");
     }
 
-    const parseRes = await fetch("/api/ai/parse", {
+    const parseRes = await fetch(resolveApiUrl("/api/ai/parse"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: extractData.text }),
@@ -188,7 +191,7 @@ export default function CareerManagementPage() {
         throw new Error("Resume data not found");
       }
 
-      const response = await fetch("/api/market-value", {
+      const response = await fetch(resolveApiUrl("/api/market-value"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

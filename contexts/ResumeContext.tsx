@@ -1,5 +1,6 @@
 "use client";
 
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   createContext,
   useCallback,
@@ -10,8 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter, useParams } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import type {
   Certification,
   Education,
@@ -25,6 +25,7 @@ import { emptyResumeData, normalizeResumeData } from "@/lib/resume-data";
 import { getSuggestedBullets } from "@/lib/experience-suggestions";
 import { extractSummarySuggestions } from "@/lib/summary-suggestions";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { hasPaidAccess } from "@/lib/subscription";
 import { toast } from "sonner";
 
 interface ResumeContextType {
@@ -88,8 +89,6 @@ export const ResumeContext = createContext<ResumeContextType | undefined>(
   undefined,
 );
 
-const LOCAL_STORAGE_PREFIX = "resupra_guest_resume_";
-
 function parseResumeDates(resume: Resume): Resume {
   return {
     ...resume,
@@ -105,9 +104,6 @@ function normalizeResumeList(resumes: Resume[]): Resume[] {
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const { planChoice } = usePlanChoice();
-  const router = useRouter();
-  const params = useParams();
-  const currentPathId = params?.id as string;
 
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [currentResume, setCurrentResume] = useState<Resume | null>(null);
@@ -117,53 +113,33 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const aiInFlightRef = useRef(new Map<string, Promise<unknown>>());
   const hasSubscription = useMemo(
     () =>
-      session?.user?.subscription === "pro" ||
-      session?.user?.subscription === "business",
-    [session?.user?.subscription],
+      hasPaidAccess(
+        session?.user?.subscription,
+        session?.user?.subscriptionPlanId,
+      ),
+    [session?.user?.subscription, session?.user?.subscriptionPlanId],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
     [planChoice, hasSubscription],
   );
 
-  const getLocalResumes = useCallback(() => {
-    const guestResumes: Resume[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(LOCAL_STORAGE_PREFIX)) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key)!);
-          guestResumes.push(parseResumeDates(data.resume));
-        } catch (e) {
-          console.error("Error parsing local resume", e);
-        }
-      }
-    }
-    return guestResumes;
-  }, []);
+  const getLocalResumes = useCallback(() => [] as Resume[], []);
 
   const refreshResumes = useCallback(async () => {
     const localResumes = getLocalResumes();
 
     if (!session?.user) {
-      setResumes(
-        localResumes.sort(
-          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-        ),
-      );
+      setResumes([]);
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/resumes");
+      const response = await fetch(resolveApiUrl("/api/resumes"));
       if (!response.ok) {
         console.error("Failed to load resumes", response.status);
-        setResumes(
-          localResumes.sort(
-            (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-          ),
-        );
+        setResumes([]);
         return;
       }
       const data = await response.json();
@@ -171,18 +147,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       // Combine remote and local (local will be synced soon)
       // Filter out local resumes that might have already been synced (redundant but safe)
-      setResumes(
-        [...remoteResumes, ...localResumes].sort(
-          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-        ),
-      );
+      setResumes(remoteResumes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
     } catch (error) {
       console.error("Failed to load resumes", error);
-      setResumes(
-        localResumes.sort(
-          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-        ),
-      );
+      setResumes([]);
     } finally {
       setIsLoading(false);
     }
@@ -193,101 +161,20 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [session?.user, refreshResumes]);
 
   const syncGuestData = useCallback(async () => {
-    if (!session?.user) return;
-
-    const localKeys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(LOCAL_STORAGE_PREFIX)) {
-        localKeys.push(key);
-      }
-    }
-
-    if (localKeys.length === 0) return;
-
-    setIsLoading(true);
-    let syncedCurrentId: string | null = null;
-
-    try {
-      for (const key of localKeys) {
-        const localData = JSON.parse(localStorage.getItem(key)!);
-        const oldId = localData.resume.id;
-
-        const response = await fetch("/api/resumes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: localData.resume.title,
-            template: localData.resume.template,
-            data: localData.data,
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          localStorage.removeItem(key);
-
-          if (oldId === currentPathId) {
-            syncedCurrentId = result.resume.id;
-          }
-        }
-      }
-
-      await refreshResumes();
-
-      if (syncedCurrentId) {
-        router.replace(`/resume/${syncedCurrentId}`);
-      }
-
-      toast.success("Syncing your guest data...");
-    } catch (error) {
-      console.error("Failed to sync guest data", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session?.user, refreshResumes, currentPathId, router]);
-
-  // Trigger sync on login
-  useEffect(() => {
-    if (session?.user) {
-      syncGuestData();
-    }
-  }, [session?.user, syncGuestData]);
+    return Promise.resolve();
+  }, []);
 
   const createResume = useCallback(
     async (title: string, template: string, initialData?: ResumeData) => {
       const dataToUse = normalizeResumeData(initialData || emptyResumeData);
 
       if (!session?.user) {
-        const guestId = `local-${Date.now()}`;
-        const newResume: Resume = {
-          id: guestId,
-          userId: "guest",
-          title,
-          template,
-          isPublic: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        localStorage.setItem(
-          `${LOCAL_STORAGE_PREFIX}${guestId}`,
-          JSON.stringify({
-            resume: newResume,
-            data: dataToUse,
-          }),
-        );
-
-        setResumes((prev) => [newResume, ...prev]);
-        setCurrentResume(newResume);
-        setResumeData(dataToUse);
-        toast.success("Resume created successfully!");
-        return newResume;
+        throw new Error("Please sign in to create a resume.");
       }
 
       setIsLoading(true);
       try {
-        const response = await fetch("/api/resumes", {
+        const response = await fetch(resolveApiUrl("/api/resumes"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, template, data: dataToUse }),
@@ -316,23 +203,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       // If we are already loading this resume, skip
       if (currentResume?.id === resumeId) return;
 
-      if (resumeId.startsWith("local-")) {
-        const local = localStorage.getItem(
-          `${LOCAL_STORAGE_PREFIX}${resumeId}`,
-        );
-        if (local) {
-          const parsed = JSON.parse(local);
-          setCurrentResume(parseResumeDates(parsed.resume));
-          setResumeData(normalizeResumeData(parsed.data));
-        }
-        return;
-      }
+      if (resumeId.startsWith("local-")) return;
 
       if (!session?.user) return;
 
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/resumes/${resumeId}`);
+        const response = await fetch(resolveApiUrl(`/api/resumes/${resumeId}`));
         if (!response.ok) {
           throw new Error("Failed to load resume");
         }
@@ -349,21 +226,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const deleteResume = useCallback(
     async (id: string) => {
-      if (id.startsWith("local-")) {
-        localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}${id}`);
-        setResumes((prev) => prev.filter((r) => r.id !== id));
-        if (currentResume?.id === id) {
-          setCurrentResume(null);
-          setResumeData(emptyResumeData);
-        }
-        toast.success("Resume deleted");
-        return;
-      }
+      if (id.startsWith("local-")) return;
 
       if (!session?.user) return;
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/resumes/${id}`, {
+        const response = await fetch(resolveApiUrl(`/api/resumes/${id}`), {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -397,14 +265,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       if (!currentResume) return;
 
       if (currentResume.id.startsWith("local-")) {
-        localStorage.setItem(
-          `${LOCAL_STORAGE_PREFIX}${currentResume.id}`,
-          JSON.stringify({
-            resume: { ...currentResume, updatedAt: new Date() },
-            data: resumeData,
-          }),
-        );
-        if (!isAutoSave) toast.success("Progress saved locally");
+        if (!isAutoSave) toast.error("Please sign in to save your resume.");
         return;
       }
 
@@ -412,7 +273,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       if (!isAutoSave) setIsLoading(true);
       try {
-        const response = await fetch(`/api/resumes/${currentResume.id}`, {
+        const response = await fetch(resolveApiUrl(`/api/resumes/${currentResume.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -477,7 +338,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     );
 
     try {
-      await fetch(`/api/resumes/${currentResume.id}`, {
+      await fetch(resolveApiUrl(`/api/resumes/${currentResume.id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -664,7 +525,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       if (existing) return existing;
 
       const request = (async () => {
-        const response = await fetch(`/api/ai/${path}`, {
+        const response = await fetch(resolveApiUrl(`/api/ai/${path}`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

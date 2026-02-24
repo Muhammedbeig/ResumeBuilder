@@ -4,7 +4,11 @@ import { Footer } from "@/sections/Footer";
 import { panelGet } from "@/lib/panel-api";
 import { resolvePanelAssetUrl } from "@/lib/panel-assets";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return [{ slug: "_" }];
+}
 
 type BlogCategory = { label: string; value: string };
 
@@ -63,6 +67,18 @@ export default async function CareerBlogCategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  if (slug === "_") {
+    return (
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+        <section className="max-w-6xl mx-auto px-6">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+            Select a category from the blog page to view category posts.
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   let categorySlug = slug;
   try {

@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { useSiteSettings } from "@/hooks/use-site-settings";
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DesignControls } from "@/components/editor/DesignControls";
 import { WatermarkOverlay } from "@/components/editor/WatermarkOverlay";
+import { ScaledPreviewDocument } from "@/components/editor/ScaledPreviewDocument";
 import { RichTextarea } from "@/components/editor/RichTextarea";
 import { COVER_LETTER_DEFAULT_FONTS } from "@/lib/template-defaults";
 import { useElementSize } from "@/hooks/use-element-size";
@@ -40,10 +41,11 @@ import { DownloadGateModal } from "@/components/payments/DownloadGateModal";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
+import { hasPaidAccess } from "@/lib/subscription";
 
 export function CoverLetterEditor() {
   const router = useRouter();
-  const { data: session, update: updateSession } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
   const { settings: siteSettings, loaded: siteSettingsLoaded } =
     useSiteSettings();
@@ -78,11 +80,17 @@ export function CoverLetterEditor() {
   const hasSubscription = useMemo(
     () =>
       subscriptionOverride ||
-      serverSubscription === "pro" ||
-      serverSubscription === "business" ||
-      session?.user?.subscription === "pro" ||
-      session?.user?.subscription === "business",
-    [subscriptionOverride, serverSubscription, session?.user?.subscription],
+      hasPaidAccess(serverSubscription, session?.user?.subscriptionPlanId) ||
+      hasPaidAccess(
+        session?.user?.subscription,
+        session?.user?.subscriptionPlanId,
+      ),
+    [
+      subscriptionOverride,
+      serverSubscription,
+      session?.user?.subscription,
+      session?.user?.subscriptionPlanId,
+    ],
   );
   const canUsePaid = useMemo(
     () => planChoice === "paid" || hasSubscription,
@@ -264,8 +272,7 @@ export function CoverLetterEditor() {
 
     void (async () => {
       const latest = await syncSubscription();
-      const ok =
-        latest?.subscription === "pro" || latest?.subscription === "business";
+      const ok = hasPaidAccess(latest?.subscription, latest?.subscriptionPlanId);
       if (ok && !cancelled) {
         setSubscriptionOverride(true);
         setIsSubscriptionActivating(false);
@@ -297,76 +304,24 @@ export function CoverLetterEditor() {
     [currentCoverLetter.template, templateConfig],
   );
   const exportElementId = "cl-preview-export";
+  const previewRenderKey = useMemo(
+    () =>
+      [
+        currentCoverLetter.template,
+        JSON.stringify(templateConfig ?? {}),
+        JSON.stringify(coverLetterData.metadata ?? {}),
+      ].join("|"),
+    [currentCoverLetter.template, templateConfig, coverLetterData.metadata],
+  );
 
-  const PreviewDocument = ({
-    elementId,
-    withScale = true,
-    maxWidth,
-  }: {
-    elementId: string;
-    withScale?: boolean;
-    maxWidth?: number;
-  }) => {
-    const contentRef = useRef<HTMLDivElement>(null);
-    const [contentHeight, setContentHeight] = useState(PAGE_HEIGHT);
-
-    useEffect(() => {
-      if (!withScale) return;
-      const element = contentRef.current;
-      if (!element) return;
-
-      const updateHeight = () => {
-        setContentHeight(element.scrollHeight || PAGE_HEIGHT);
-      };
-
-      updateHeight();
-      const observer = new ResizeObserver(() => updateHeight());
-      observer.observe(element);
-      return () => observer.disconnect();
-    }, [withScale]);
-
-    const scale = withScale ? getPreviewScale(maxWidth) : 1;
-    const scaledWidth = PAGE_WIDTH * scale;
-    const scaledHeight = contentHeight * scale;
-
-    return (
-      <div
-        className={withScale ? "overflow-hidden" : undefined}
-        style={
-          withScale ? { width: scaledWidth, height: scaledHeight } : undefined
-        }
-      >
-        <div
-          className={
-            withScale ? "transition-transform duration-200" : undefined
-          }
-          style={
-            withScale
-              ? {
-                  transform: `scale(${scale})`,
-                  transformOrigin: "top left",
-                  width: PAGE_WIDTH,
-                }
-              : undefined
-          }
-        >
-          <div
-            ref={contentRef}
-            id={elementId}
-            className="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
-          >
-            <TemplateComponent data={coverLetterData} />
-            {watermarkEnabled && (
-              <WatermarkOverlay
-                text={watermarkText}
-                settings={siteSettings.watermark}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const renderPreviewContent = () => (
+    <>
+      <TemplateComponent key={previewRenderKey} data={coverLetterData} />
+      {watermarkEnabled && (
+        <WatermarkOverlay text={watermarkText} settings={siteSettings.watermark} />
+      )}
+    </>
+  );
 
   const openPlanModal = () => {
     if (!session?.user) return;
@@ -387,6 +342,7 @@ export function CoverLetterEditor() {
   };
 
   const ensurePlanChosen = () => {
+    if (status === "loading") return false;
     if (!session?.user) return true;
     if (!planChoice) {
       toast.info("Select a plan to continue.");
@@ -400,8 +356,10 @@ export function CoverLetterEditor() {
     if (!ensurePlanChosen()) return;
     if (planChoice === "paid" && !hasSubscription) {
       const latest = await syncSubscription();
-      const latestHasSubscription =
-        latest?.subscription === "pro" || latest?.subscription === "business";
+      const latestHasSubscription = hasPaidAccess(
+        latest?.subscription,
+        latest?.subscriptionPlanId,
+      );
       if (!latestHasSubscription) {
         router.push(
           `/pricing?flow=download&returnUrl=${encodeURIComponent(window.location.pathname)}`,
@@ -497,10 +455,16 @@ export function CoverLetterEditor() {
                         </div>
                       </div>
                       <div className="min-w-max w-full flex justify-center">
-                        <PreviewDocument
+                        <ScaledPreviewDocument
                           elementId="cl-preview-mobile"
                           maxWidth={mobilePreviewSize.width}
-                        />
+                          getScale={getPreviewScale}
+                          pageWidth={PAGE_WIDTH}
+                          pageHeight={PAGE_HEIGHT}
+                          contentClassName="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+                        >
+                          {renderPreviewContent()}
+                        </ScaledPreviewDocument>
                       </div>
                     </div>
                   </div>
@@ -942,10 +906,16 @@ export function CoverLetterEditor() {
           <div className="flex-1 w-full overflow-y-auto overflow-x-auto p-8">
             <div ref={previewContainerRef} className="w-full">
               <div className="min-w-max w-full flex justify-center">
-                <PreviewDocument
+                <ScaledPreviewDocument
                   elementId="cl-preview-view"
                   maxWidth={previewContainerSize.width}
-                />
+                  getScale={getPreviewScale}
+                  pageWidth={PAGE_WIDTH}
+                  pageHeight={PAGE_HEIGHT}
+                  contentClassName="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+                >
+                  {renderPreviewContent()}
+                </ScaledPreviewDocument>
               </div>
             </div>
           </div>
@@ -953,7 +923,16 @@ export function CoverLetterEditor() {
 
         {/* Offscreen preview for mobile export */}
         <div className="absolute -left-[9999px] top-0">
-          <PreviewDocument elementId={exportElementId} withScale={false} />
+          <ScaledPreviewDocument
+            elementId={exportElementId}
+            withScale={false}
+            getScale={getPreviewScale}
+            pageWidth={PAGE_WIDTH}
+            pageHeight={PAGE_HEIGHT}
+            contentClassName="relative bg-white shadow-2xl min-h-[1056px] w-[816px] overflow-hidden"
+          >
+            {renderPreviewContent()}
+          </ScaledPreviewDocument>
         </div>
       </div>
     </>

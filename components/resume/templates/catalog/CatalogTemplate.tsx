@@ -273,19 +273,57 @@ export function CatalogTemplate({
     }
 
     if (config.headerStyle === "split") {
+      if (isSidebarLayout) {
+        return (
+          <div className="mb-6">
+            <div className="flex flex-col items-start gap-4">
+              {config.hasPhoto && photo}
+              <div className="w-full min-w-0">
+                <h1
+                  className="text-2xl font-bold tracking-tight leading-tight break-words"
+                  style={{ fontFamily: `"${headingFont}", serif` }}
+                >
+                  {basics.name || "Your Name"}
+                </h1>
+                <p
+                  className="text-sm mt-1 break-words"
+                  style={{ color: config.palette.muted }}
+                >
+                  {basics.title || "Professional Title"}
+                </p>
+              </div>
+            </div>
+            <div
+              className="mt-3 flex flex-wrap gap-2 text-[11px]"
+              style={{ color: config.palette.muted }}
+            >
+              {contactItems.map((item) => (
+                <span
+                  key={item}
+                  className="max-w-full break-all px-3 py-1 rounded-full"
+                  style={{ backgroundColor: accentSoft }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
       return (
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <div className="flex min-w-0 items-center gap-4">
             {config.hasPhoto && photo}
-            <div>
+            <div className="min-w-0">
               <h1
-                className="text-3xl font-bold tracking-tight"
+                className="text-3xl font-bold tracking-tight break-words"
                 style={{ fontFamily: `"${headingFont}", serif` }}
               >
                 {basics.name || "Your Name"}
               </h1>
               <p
-                className="text-base mt-1"
+                className="text-base mt-1 break-words"
                 style={{ color: config.palette.muted }}
               >
                 {basics.title || "Professional Title"}
@@ -293,13 +331,13 @@ export function CatalogTemplate({
             </div>
           </div>
           <div
-            className="flex flex-wrap gap-2 text-xs"
+            className="flex flex-wrap gap-2 text-xs md:justify-end"
             style={{ color: config.palette.muted }}
           >
             {contactItems.map((item) => (
               <span
                 key={item}
-                className="px-3 py-1 rounded-full"
+                className="max-w-full break-all px-3 py-1 rounded-full"
                 style={{ backgroundColor: accentSoft }}
               >
                 {item}

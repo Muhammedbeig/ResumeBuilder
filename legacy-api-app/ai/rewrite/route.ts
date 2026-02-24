@@ -1,0 +1,59 @@
+import { NextResponse } from "next/server";
+import { getGeminiModel } from "@/lib/gemini";
+import { requirePaidAiAccess } from "@/lib/ai-access";
+import { rateLimit } from "@/lib/rate-limit";
+import { truncateText } from "@/lib/limits";
+import { getResourceSettings } from "@/lib/resource-settings";
+
+export async function POST(request: Request) {
+  const access = await requirePaidAiAccess(request);
+  if (access) return access;
+
+  const resourceSettings = await getResourceSettings();
+
+  const rateLimitResponse = rateLimit(request, {
+    prefix: "ai-rewrite",
+    limit: resourceSettings.rateLimits.ai,
+    windowMs: resourceSettings.rateLimits.windowMs,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const body = await request.json().catch(() => ({}));
+  const bullet = String(body?.bullet || "").trim();
+  const context = body?.context ? String(body.context) : "";
+
+  if (!bullet) {
+    return NextResponse.json(
+      { error: "Bullet text is required" },
+      { status: 400 },
+    );
+  }
+  const limitedBullet = truncateText(bullet, resourceSettings.limits.aiText);
+  const limitedContext = truncateText(context, resourceSettings.limits.aiText);
+
+  try {
+    const model = await getGeminiModel();
+    const prompt = `You are an expert resume writer. Rewrite this bullet point to be more impactful using the STAR method (Situation, Task, Action, Result).
+
+Focus on:
+- Start with a strong action verb
+- Include quantifiable metrics and results where possible
+- Be concise and specific
+- Avoid generic phrases
+
+Original: ${limitedBullet}
+${limitedContext ? `Context: ${limitedContext}` : ""}
+
+Rewritten bullet:`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rewritten = response.text().trim();
+
+    return NextResponse.json({ rewritten });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
+}

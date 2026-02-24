@@ -1,0 +1,224 @@
+{
+  "_": {
+    "postman_variable_scope": "environment",
+    "postman_exported_at": "2026-02-23T19:28:15.453Z",
+    "postman_exported_using": "Newman/6.2.2"
+  },
+  "id": "d948627f-60a7-4bb0-96bc-7f61fdde1cfa",
+  "name": "ResuPro Static Panel Local",
+  "values": [
+    {
+      "type": "any",
+      "value": "http://localhost/Panel/public/api/rb",
+      "key": "apiBaseUrl"
+    },
+    {
+      "type": "any",
+      "value": "https://www.resumibuilder.com",
+      "key": "websiteBaseUrl"
+    },
+    {
+      "type": "any",
+      "value": "postman.run.1771856321@example.com",
+      "key": "userEmail"
+    },
+    {
+      "type": "any",
+      "value": "StrongPass@123a",
+      "key": "userPassword"
+    },
+    {
+      "type": "any",
+      "value": "Postman Register User",
+      "key": "newUserName"
+    },
+    {
+      "type": "any",
+      "value": "postman.register.{{$timestamp}}@example.com",
+      "key": "newUserEmail"
+    },
+    {
+      "type": "any",
+      "value": "StrongPass@123a",
+      "key": "newUserPassword"
+    },
+    {
+      "type": "any",
+      "value": "Postman Updated User",
+      "key": "updatedUserName"
+    },
+    {
+      "type": "any",
+      "value": "cmlzl5e0dbyvvvolxhg2v2vdm",
+      "key": "resumeId"
+    },
+    {
+      "type": "any",
+      "value": "cmlzl5l7jfqpeskjwfeeu4oea",
+      "key": "cvId"
+    },
+    {
+      "type": "any",
+      "value": "cmlzl5e0dbyvvvolxhg2v2vdm",
+      "key": "sharedId"
+    },
+    {
+      "type": "any",
+      "value": "modern",
+      "key": "templateId"
+    },
+    {
+      "type": "any",
+      "value": "3",
+      "key": "packageId"
+    },
+    {
+      "type": "any",
+      "value": "153",
+      "key": "paymentTransactionId"
+    },
+    {
+      "type": "any",
+      "value": "cs_test_a1uiemnKaOrPD52KwKQbFgeI1WaWZSc7W93ADxvm8LPtXjvEUIXRZxl5Qz",
+      "key": "stripeSessionId"
+    },
+    {
+      "type": "any",
+      "value": "ORDER-TEST-AUTO",
+      "key": "paypalOrderId"
+    },
+    {
+      "type": "any",
+      "value": "t=1771875927,v1=ef26b5659449e32c0e541a6d93d050b025f5fa3705ccc5a16c84576013c44f24",
+      "key": "stripeSignature"
+    },
+    {
+      "type": "any",
+      "value": "{\"id\":\"evt_test_webhook\",\"object\":\"event\",\"type\":\"checkout.session.completed\"}",
+      "key": "stripeWebhookPayload"
+    },
+    {
+      "type": "any",
+      "value": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample-receipt.png",
+      "key": "receiptFilePath"
+    },
+    {
+      "type": "any",
+      "value": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample.pdf",
+      "key": "samplePdfPath"
+    },
+    {
+      "type": "any",
+      "value": "https://example.com/jobs/frontend-engineer",
+      "key": "jobUrl"
+    },
+    {
+      "type": "any",
+      "value": "Senior frontend engineer with React, TypeScript, and API integration experience.",
+      "key": "sampleResumeText"
+    },
+    {
+      "type": "any",
+      "value": "{\"basics\":{\"name\":\"Panel Local\",\"title\":\"Engineer\",\"email\":\"a@b.com\",\"phone\":\"123\",\"location\":\"City\",\"summary\":\"Summary\"},\"experiences\":[],\"education\":[],\"skills\":[]}",
+      "key": "resumeJson"
+    },
+    {
+      "type": "any",
+      "value": "eaf28bceaa55b24ae1ac93933f4ece6cec27c0e1ae6ca13bae2a544e7d7229fc",
+      "key": "internalExportKey"
+    },
+    {
+      "type": "any",
+      "value": "http://localhost/Panel/public/api/internal",
+      "key": "internalApiBaseUrl"
+    },
+    {
+      "type": "any",
+      "value": "cc15883cf31ff93e8313c59772e16b55f54b5415284945dbceaf779e5c88ac2e838bdeb31b2522d7d6e039d4070e016d",
+      "key": "internalApiKey"
+    },
+    {
+      "type": "any",
+      "value": "91",
+      "key": "internalUserId"
+    },
+    {
+      "type": "any",
+      "value": "resume",
+      "key": "downloadResourceType"
+    },
+    {
+      "type": "any",
+      "value": "{{resumeId}}",
+      "key": "downloadResourceId"
+    },
+    {
+      "type": "any",
+      "value": "cmlzl72xizicnyfvogifcdn8y",
+      "key": "internalResumeId"
+    },
+    {
+      "type": "any",
+      "value": "cmlzl75f9mijzcq4b9ipghslm",
+      "key": "internalCvId"
+    },
+    {
+      "type": "any",
+      "value": "161",
+      "key": "internalPaymentTransactionId"
+    },
+    {
+      "type": "any",
+      "value": "postman.oauth.test@example.com",
+      "key": "oauthTestEmail"
+    },
+    {
+      "type": "any",
+      "value": "postman-google-provider-001",
+      "key": "oauthProviderAccountId"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "stripeCustomerId"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "marketReportId"
+    },
+    {
+      "type": "any",
+      "value": "{\"score\":78,\"median\":6200,\"topSkill\":\"React\"}",
+      "key": "marketReportJson"
+    },
+    {
+      "type": "any",
+      "value": "whsec_QBwHN6HqVBk3HCiHjhCkOxv0PTX5JI07",
+      "key": "stripeWebhookSecret"
+    },
+    {
+      "type": "any",
+      "value": "Built internal dashboard",
+      "key": "rewriteBullet"
+    },
+    {
+      "type": "any",
+      "value": "React and TypeScript app used by recruiters",
+      "key": "rewriteContext"
+    },
+    {
+      "type": "any",
+      "value": "pi_postman_1771875966279",
+      "key": "internalOrderId"
+    },
+    {
+      "type": "any",
+      "value": "4",
+      "key": "bankTransferPackageId"
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-02-23T19:46:10.685Z",
+  "_postman_exported_using": "Newman/6.2.2"
+}

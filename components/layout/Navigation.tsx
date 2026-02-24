@@ -37,7 +37,7 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 
 export function Navigation() {

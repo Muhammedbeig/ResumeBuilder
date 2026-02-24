@@ -5,7 +5,11 @@ import { panelGet } from "@/lib/panel-api";
 import { resolvePanelAssetUrl } from "@/lib/panel-assets";
 import { normalizeRichContent } from "@/lib/rich-content";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return [{ slug: "_" }];
+}
 
 type PanelPaginator<T> = {
   data: T[];
@@ -75,6 +79,18 @@ export default async function CareerBlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  if (slug === "_") {
+    return (
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+        <section className="max-w-4xl mx-auto px-6">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+            Open an article from the blog list to view full details.
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   const res = await panelGet<PanelPaginator<PanelBlog>>("blogs", { slug });
   const page = res.data;

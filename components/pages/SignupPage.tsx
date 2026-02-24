@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getProviders, signIn, useSession } from "next-auth/react";
+import { getProviders, signIn, useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Mail,
   Lock,
@@ -36,7 +37,7 @@ import { toast } from "sonner";
 export function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status } = useSession();
+  const { status, refresh } = useSession();
 
   // If the callbackUrl is just the auth pages, default to dashboard
   const rawCallback = searchParams.get("callbackUrl") || "/dashboard";
@@ -113,7 +114,7 @@ export function SignupPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch(resolveApiUrl("/api/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -140,6 +141,13 @@ export function SignupPage() {
         return;
       }
 
+      const nextSession = await refresh();
+      if (!nextSession?.user?.id) {
+        toast.error(
+          "Account created but session was not established. Please sign in again.",
+        );
+        return;
+      }
       toast.success("Account created successfully!");
       router.push(callbackUrl);
     } finally {

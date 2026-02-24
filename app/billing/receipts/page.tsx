@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   BANK_TRANSFER_ADMIN_EMAIL,
   BANK_TRANSFER_DETAILS,
@@ -78,7 +79,7 @@ export default function ReceiptsPage() {
 
   const loadCards = async () => {
     try {
-      const response = await fetch("/api/subscription-packages");
+      const response = await fetch(resolveApiUrl("/api/subscription-packages"));
       if (!response.ok) throw new Error("Failed to load packages");
       const data = (await response.json()) as { cards?: PricingCard[] };
       setCards(Array.isArray(data.cards) ? data.cards : []);
@@ -89,7 +90,7 @@ export default function ReceiptsPage() {
 
   const loadReceipts = async () => {
     try {
-      const response = await fetch("/api/bank-transfer/receipts");
+      const response = await fetch(resolveApiUrl("/api/bank-transfer/receipts"));
       if (!response.ok) {
         throw new Error("Failed to load receipts");
       }
@@ -112,7 +113,7 @@ export default function ReceiptsPage() {
 
     void (async () => {
       try {
-        const res = await fetch("/api/bank-transfer/settings", {
+        const res = await fetch(resolveApiUrl("/api/bank-transfer/settings"), {
           cache: "no-store",
         });
         if (!res.ok) return;
@@ -166,7 +167,7 @@ export default function ReceiptsPage() {
       formData.append("packageId", selectedPackageId);
       formData.append("file", receiptFile);
 
-      const response = await fetch("/api/bank-transfer/receipt", {
+      const response = await fetch(resolveApiUrl("/api/bank-transfer/receipt"), {
         method: "POST",
         body: formData,
       });

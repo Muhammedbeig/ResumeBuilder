@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   FileUp,
   Plus,
@@ -21,20 +22,29 @@ import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 
 export default function StartResumePage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { setImportedData } = useResume();
   const { planChoice } = usePlanChoice();
   const [isUploading, setIsUploading] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   const isAuthenticated = !!session?.user;
+  const redirectToLogin = () => {
+    const callbackUrl = `${window.location.pathname}${window.location.search}`;
+    router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  };
   const openPlanModal = () => {
     if (!isAuthenticated) return;
     setIsPlanModalOpen(true);
   };
 
   const ensurePlanChosen = () => {
-    if (!isAuthenticated) return true;
+    if (status === "loading") return false;
+    if (!isAuthenticated) {
+      toast.error("Please sign in to continue.");
+      redirectToLogin();
+      return false;
+    }
     if (!planChoice) {
       openPlanModal();
       return false;
@@ -69,7 +79,7 @@ export default function StartResumePage() {
   ) => {
     if (!session?.user) {
       toast.error("Please sign in to use the AI import feature");
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      redirectToLogin();
       return;
     }
     if (!ensurePaidPlan()) return;
@@ -89,7 +99,7 @@ export default function StartResumePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const extractRes = await fetch("/api/extract-pdf-text", {
+      const extractRes = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
         method: "POST",
         body: formData,
       });
@@ -100,7 +110,7 @@ export default function StartResumePage() {
       if (!text) throw new Error("Could not extract text from PDF");
 
       // 2. Parse text with AI
-      const parseRes = await fetch("/api/ai/parse", {
+      const parseRes = await fetch(resolveApiUrl("/api/ai/parse"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),

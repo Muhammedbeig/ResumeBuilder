@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, type ComponentType } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   Sparkles,
   Upload,
@@ -39,7 +40,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import type { ResumeData, TailoringResult } from "@/types";
@@ -51,6 +52,7 @@ import { ResumePreviewComponent } from "@/components/resume/ResumePreviewCompone
 import { useResume } from "@/contexts/ResumeContext";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
+import { normalizePlanId, normalizeSubscriptionLevel } from "@/lib/subscription";
 
 type TemplateOption = {
   id: string;
@@ -134,10 +136,15 @@ export default function AIResumeOptimizerPage() {
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const normalizedPlanId = normalizePlanId(session?.user?.subscriptionPlanId);
+  const normalizedSubscription = normalizeSubscriptionLevel(
+    session?.user?.subscription,
+    session?.user?.subscriptionPlanId,
+  );
   const hasJobUrlAccess =
-    session?.user?.subscription === "business" ||
-    session?.user?.subscriptionPlanId === "monthly" ||
-    session?.user?.subscriptionPlanId === "annual";
+    normalizedSubscription === "business" ||
+    normalizedPlanId === "monthly" ||
+    normalizedPlanId === "annual";
 
   const openPlanModal = () => setIsPlanModalOpen(true);
 
@@ -200,6 +207,9 @@ export default function AIResumeOptimizerPage() {
     },
   ];
 
+  const scoreRingRadius = 42;
+  const scoreRingCircumference = 2 * Math.PI * scoreRingRadius;
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -214,7 +224,7 @@ export default function AIResumeOptimizerPage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("/api/extract-pdf-text", {
+      const response = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
         method: "POST",
         body: formData,
       });
@@ -262,7 +272,7 @@ export default function AIResumeOptimizerPage() {
     setIsAnalyzing(true);
     try {
       // Step 1: Parse Resume
-      const parseRes = await fetch("/api/ai/parse", {
+      const parseRes = await fetch(resolveApiUrl("/api/ai/parse"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: resumeText }),
@@ -327,7 +337,7 @@ export default function AIResumeOptimizerPage() {
       setParsedResume(processedResume);
 
       // Step 2: Tailor Resume
-      const tailorRes = await fetch("/api/ai/tailor", {
+      const tailorRes = await fetch(resolveApiUrl("/api/ai/tailor"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -381,7 +391,7 @@ export default function AIResumeOptimizerPage() {
 
     setIsJobUrlLoading(true);
     try {
-      const response = await fetch("/api/ai/job-url", {
+      const response = await fetch(resolveApiUrl("/api/ai/job-url"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: jobUrl }),
@@ -1120,21 +1130,27 @@ export default function AIResumeOptimizerPage() {
                 <div className="grid lg:grid-cols-3 gap-8">
                   <Card className="p-8 flex flex-col items-center justify-center text-center space-y-4 border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl">
                     <div className="relative w-40 h-40">
-                      <svg className="w-full h-full transform -rotate-90">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                         <circle
-                          cx="50%"
-                          cy="50%"
-                          r="45%"
+                          cx="50"
+                          cy="50"
+                          r={scoreRingRadius}
                           className="stroke-gray-200 dark:stroke-gray-700 fill-none"
                           strokeWidth="10"
                         />
                         <circle
-                          cx="50%"
-                          cy="50%"
-                          r="45%"
+                          cx="50"
+                          cy="50"
+                          r={scoreRingRadius}
                           className={`fill-none transition-all duration-1000 ease-out ${analysisResults.matchScore >= 70 ? "stroke-green-500" : analysisResults.matchScore >= 50 ? "stroke-yellow-500" : "stroke-red-500"}`}
                           strokeWidth="10"
-                          strokeDasharray={`${analysisResults.matchScore * 2.83} 283`}
+                          strokeDasharray={scoreRingCircumference}
+                          strokeDashoffset={
+                            scoreRingCircumference -
+                            (Math.max(0, Math.min(100, analysisResults.matchScore)) /
+                              100) *
+                              scoreRingCircumference
+                          }
                           strokeLinecap="round"
                         />
                       </svg>
@@ -1478,10 +1494,6 @@ export default function AIResumeOptimizerPage() {
                           <Sparkles className="w-4 h-4" /> Optimization Success
                         </h3>
                         <ul className="space-y-2 text-sm text-purple-800 dark:text-purple-200">
-                          <li className="flex items-center gap-2">
-                            <Check className="w-4 h-4" /> Match Score:{" "}
-                            {analysisResults?.matchScore}%
-                          </li>
                           <li className="flex items-center gap-2">
                             <Check className="w-4 h-4" />{" "}
                             {analysisResults?.matchedKeywords.length} Keywords

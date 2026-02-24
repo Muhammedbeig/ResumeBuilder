@@ -9,10 +9,18 @@ import {
 } from "@/lib/panel-internal-api";
 import { getPlanChoiceCookieKey, parsePlanChoice } from "@/lib/plan-choice";
 import { getSessionUserId } from "@/lib/session-user";
+import { hasPaidAccess, normalizePlanId } from "@/lib/subscription";
 
 type SubscriptionData = {
-  subscription: "free" | "pro" | "business";
-  subscriptionPlanId: "weekly" | "monthly" | "annual" | null;
+  subscription: string | null;
+  subscriptionPlanId: string | null;
+};
+
+type WorkerAccessContext = {
+  userId: string;
+  subscription: string | null;
+  subscriptionPlanId: string | null;
+  planChoice: "free" | "paid" | null;
 };
 
 async function fetchSubscription(
@@ -30,21 +38,69 @@ async function fetchSubscription(
   }
 }
 
-export async function requirePaidAiAccess() {
-  const session = await getServerSession(authOptions);
-  const userId = getSessionUserId(session);
+function resolveWorkerContext(request?: Request): WorkerAccessContext | null {
+  if (!request) return null;
 
-  const cookieStore = await cookies();
-  const planChoiceCookieKey = getPlanChoiceCookieKey(userId);
-  const planChoice = parsePlanChoice(
-    cookieStore.get(planChoiceCookieKey)?.value,
+  const expectedKey = process.env.RB_WORKER_INTERNAL_KEY?.trim();
+  if (!expectedKey) return null;
+
+  const requestKey = request.headers.get("x-rb-worker-key")?.trim();
+  if (!requestKey || requestKey !== expectedKey) return null;
+
+  const userId = request.headers.get("x-rb-user-id")?.trim();
+  if (!userId) return null;
+
+  const rawSubscription = request.headers
+    .get("x-rb-subscription")
+    ?.trim()
+    .toLowerCase();
+  const subscription = rawSubscription || null;
+
+  const subscriptionPlanId = normalizePlanId(
+    request.headers
+    .get("x-rb-subscription-plan")
+    ?.trim()
+    .toLowerCase(),
   );
-  const hasPaidChoice = planChoice === "paid";
 
-  const subscription = userId ? await fetchSubscription(userId) : null;
-  const isSubscribed =
-    subscription?.subscription === "pro" ||
-    subscription?.subscription === "business";
+  const planChoice = parsePlanChoice(
+    request.headers.get("x-rb-plan-choice")?.trim().toLowerCase(),
+  );
+
+  return { userId, subscription, subscriptionPlanId, planChoice };
+}
+
+export async function requirePaidAiAccess(request?: Request) {
+  const workerContext = resolveWorkerContext(request);
+  const workerUserId = workerContext?.userId ?? null;
+  const sessionUserId = workerUserId
+    ? null
+    : getSessionUserId(await getServerSession(authOptions));
+  const userId = workerUserId ?? sessionUserId;
+
+  let hasPaidChoice = workerContext?.planChoice === "paid";
+  if (!workerUserId) {
+    const cookieStore = await cookies();
+    const planChoiceCookieKey = getPlanChoiceCookieKey(userId);
+    const planChoice = parsePlanChoice(
+      cookieStore.get(planChoiceCookieKey)?.value,
+    );
+    hasPaidChoice = planChoice === "paid";
+  }
+
+  const subscription =
+    workerContext?.subscription !== null && workerContext
+      ? {
+          subscription: workerContext.subscription,
+          subscriptionPlanId: workerContext.subscriptionPlanId,
+        }
+      : userId
+        ? await fetchSubscription(userId)
+        : null;
+  const isSubscribed = hasPaidAccess(
+    subscription?.subscription,
+    subscription?.subscriptionPlanId,
+  );
 
   if (!isSubscribed && !hasPaidChoice) {
     return NextResponse.json(
@@ -56,21 +112,31 @@ export async function requirePaidAiAccess() {
   return null;
 }
 
-export async function requireAnnualAccess() {
-  const session = await getServerSession(authOptions);
-  const userId = getSessionUserId(session);
+export async function requireAnnualAccess(request?: Request) {
+  const workerContext = resolveWorkerContext(request);
+  const workerUserId = workerContext?.userId ?? null;
+  const sessionUserId = workerUserId
+    ? null
+    : getSessionUserId(await getServerSession(authOptions));
+  const userId = workerUserId ?? sessionUserId;
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const subscription = await fetchSubscription(userId);
+  const subscription =
+    workerContext?.subscription !== null && workerContext
+      ? {
+          subscription: workerContext.subscription,
+          subscriptionPlanId: workerContext.subscriptionPlanId,
+        }
+      : await fetchSubscription(userId);
   if (!subscription) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const isAnnual =
-    subscription.subscription !== "free" &&
-    subscription.subscriptionPlanId === "annual";
+    hasPaidAccess(subscription.subscription, subscription.subscriptionPlanId) &&
+    normalizePlanId(subscription.subscriptionPlanId) === "annual";
   if (!isAnnual) {
     return NextResponse.json(
       { error: "Annual plan required for Career Management reports." },

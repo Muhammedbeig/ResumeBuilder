@@ -4,6 +4,10 @@ interface TemplatesCategoryPageProps {
   params: Promise<{ category: string }>;
 }
 
+export function generateStaticParams() {
+  return [{ category: "all" }];
+}
+
 export default async function TemplatesCategoryPage({
   params,
 }: TemplatesCategoryPageProps) {

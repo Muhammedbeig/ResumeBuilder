@@ -4,7 +4,11 @@ import { Footer } from "@/sections/Footer";
 import { panelGet } from "@/lib/panel-api";
 import { resolvePanelAssetUrl } from "@/lib/panel-assets";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return [{ slug: "_" }];
+}
 
 type BlogTag = { label: string; value: string };
 
@@ -76,6 +80,18 @@ export default async function CareerBlogTagPage({
 }) {
   const { slug } = await params;
 
+  if (slug === "_") {
+    return (
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+        <section className="max-w-6xl mx-auto px-6">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+            Select a keyword tag from the blog page to view tagged posts.
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   let tagValue = slug;
   try {
     tagValue = decodeURIComponent(slug);
@@ -127,25 +143,32 @@ export default async function CareerBlogTagPage({
               const postTitle =
                 post.translated_title ?? post.title ?? "Untitled";
               return (
-                <Link
+                <article
                   key={post.slug}
-                  href={`/career-blog/${post.slug}`}
                   className="rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-purple-300 dark:border-gray-800 dark:bg-gray-900"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     {imageUrl ? (
-                      <div className="w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 sm:w-44">
+                      <Link
+                        href={`/career-blog/${post.slug}`}
+                        className="block w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 sm:w-44"
+                      >
                         <img
                           src={imageUrl}
                           alt={postTitle}
                           className="h-28 w-full object-cover sm:h-28"
                           loading="lazy"
                         />
-                      </div>
+                      </Link>
                     ) : null}
                     <div className="flex-1">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {postTitle}
+                        <Link
+                          href={`/career-blog/${post.slug}`}
+                          className="hover:text-purple-600 dark:hover:text-purple-300 transition"
+                        >
+                          {postTitle}
+                        </Link>
                       </h2>
                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                         {excerptFromHtml(
@@ -167,11 +190,14 @@ export default async function CareerBlogTagPage({
                         <span>{formatDate(post.created_at)}</span>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-purple-600">
+                    <Link
+                      href={`/career-blog/${post.slug}`}
+                      className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+                    >
                       Read guide
-                    </span>
+                    </Link>
                   </div>
-                </Link>
+                </article>
               );
             })
           ) : (

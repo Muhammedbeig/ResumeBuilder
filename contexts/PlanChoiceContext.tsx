@@ -9,13 +9,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import {
   getPlanChoiceCookieKey,
   getPlanChoiceStorageKey,
   parsePlanChoice,
   type PlanChoice,
 } from "@/lib/plan-choice";
+import { hasPaidAccess } from "@/lib/subscription";
 
 export type { PlanChoice } from "@/lib/plan-choice";
 
@@ -61,9 +62,10 @@ export function PlanChoiceProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const userId =
     status === "authenticated" ? (session?.user?.id ?? null) : null;
-  const hasSubscription =
-    session?.user?.subscription === "pro" ||
-    session?.user?.subscription === "business";
+  const hasSubscription = hasPaidAccess(
+    session?.user?.subscription,
+    session?.user?.subscriptionPlanId,
+  );
   const resolvedPlanChoice: PlanChoice | null = hasSubscription
     ? "paid"
     : planChoiceState;

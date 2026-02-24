@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   DEFAULT_SITE_SETTINGS,
   type SiteSettings,
@@ -21,7 +22,7 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
 
   inflight = (async () => {
     try {
-      const res = await fetch("/api/site/settings", { cache: "no-store" });
+      const res = await fetch(resolveApiUrl("/api/site/settings"), { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch site settings");
       const data = (await res.json()) as Partial<SiteSettings>;
       cachedSettings = { ...DEFAULT_SITE_SETTINGS, ...data };

@@ -16,12 +16,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { PlanChoiceModal } from "@/components/plan/PlanChoiceModal";
 import { useState } from "react";
 
 export default function ChooseBuilderPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { planChoice } = usePlanChoice();
   const router = useRouter();
   const isAuthenticated = !!session?.user;
@@ -32,6 +32,7 @@ export default function ChooseBuilderPage() {
   };
 
   const ensurePlanChosen = () => {
+    if (status === "loading") return false;
     if (!isAuthenticated) return true;
     if (!planChoice) {
       openPlanModal();

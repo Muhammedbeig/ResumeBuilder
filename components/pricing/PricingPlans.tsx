@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PricingSection } from "@/components/pricing/PricingSection";
 import { usePlanChoice } from "@/contexts/PlanChoiceContext";
+import { resolveApiUrl } from "@/lib/client-api";
 import {
   BANK_TRANSFER_ADMIN_EMAIL,
   BANK_TRANSFER_DETAILS,
@@ -42,10 +43,37 @@ type PaymentMethod = "card" | "paypal" | "bank";
 type PaymentSettingsResponse = {
   stripeEnabled?: boolean;
   paypalEnabled?: boolean;
+  stripe_enabled?: boolean | string | number;
+  paypal_enabled?: boolean | string | number;
+  stripe?: boolean | string | number;
+  paypal?: boolean | string | number;
+  data?: Record<string, unknown>;
 };
+
+function parseBooleanFlag(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return null;
+  }
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return null;
+  if (["1", "true", "yes", "on", "enabled", "active"].includes(normalized)) {
+    return true;
+  }
+  if (
+    ["0", "false", "no", "off", "disabled", "inactive"].includes(normalized)
+  ) {
+    return false;
+  }
+  return null;
+}
 
 export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setPlanChoice } = usePlanChoice();
   const isMountedRef = useRef(true);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
@@ -57,9 +85,17 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isPayPalRedirecting, setIsPayPalRedirecting] = useState(false);
+  const resolvedFlow = useMemo(
+    () => flow ?? searchParams?.get("flow") ?? undefined,
+    [flow, searchParams],
+  );
+  const resolvedReturnUrl = useMemo(
+    () => returnUrl ?? searchParams?.get("returnUrl") ?? undefined,
+    [returnUrl, searchParams],
+  );
   const safeReturnUrl = useMemo(
-    () => normalizeReturnUrl(returnUrl),
-    [returnUrl],
+    () => normalizeReturnUrl(resolvedReturnUrl),
+    [resolvedReturnUrl],
   );
   const [isPaymentConfirming, setIsPaymentConfirming] = useState(false);
   const [bankTransferDetails, setBankTransferDetails] =
@@ -80,10 +116,10 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
   const [paypalEnabled, setPaypalEnabled] = useState(true);
   const pricingCallbackUrl = useMemo(() => {
     const params = new URLSearchParams();
-    if (flow) params.set("flow", flow);
+    if (resolvedFlow) params.set("flow", resolvedFlow);
     params.set("returnUrl", safeReturnUrl);
     return `/pricing?${params.toString()}`;
-  }, [flow, safeReturnUrl]);
+  }, [resolvedFlow, safeReturnUrl]);
   const stripeVisible = !paymentSettingsLoaded || stripeEnabled;
   const paypalVisible = !paymentSettingsLoaded || paypalEnabled;
   const bankTransferAvailable =
@@ -184,7 +220,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     // If this purchase was triggered by a download flow, hand off to the editor page
     // so it can open the QR/download modal.
-    if (flow === "download" && target.pathname !== "/pricing") {
+    if (resolvedFlow === "download" && target.pathname !== "/pricing") {
       if (stripeStatus === "success") {
         target.searchParams.set("stripe", "success");
         if (paymentTransactionId) {
@@ -267,14 +303,14 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
         if (isMountedRef.current) setIsPaymentConfirming(false);
       }
     })();
-  }, [flow, pollActivationStatus, router, safeReturnUrl]);
+  }, [pollActivationStatus, resolvedFlow, router, safeReturnUrl]);
 
   useEffect(() => {
     let active = true;
 
     void (async () => {
       try {
-        const res = await fetch("/api/bank-transfer/settings", {
+        const res = await fetch(resolveApiUrl("/api/bank-transfer/settings"), {
           cache: "no-store",
         });
         if (!res.ok) return;
@@ -303,15 +339,26 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     void (async () => {
       try {
-        const res = await fetch("/api/payment/settings", { cache: "no-store" });
+        const res = await fetch(resolveApiUrl("/api/payment/settings"), { cache: "no-store" });
         if (!res.ok) return;
         const data = (await res.json()) as PaymentSettingsResponse;
         if (!active) return;
-        if (typeof data?.stripeEnabled === "boolean") {
-          setStripeEnabled(data.stripeEnabled);
+        const payload = (data?.data ?? data) as Record<string, unknown>;
+        const stripeFlag =
+          parseBooleanFlag(payload?.stripeEnabled) ??
+          parseBooleanFlag(payload?.stripe_enabled) ??
+          parseBooleanFlag(payload?.stripe) ??
+          parseBooleanFlag((payload as any)?.isStripeEnabled);
+        const paypalFlag =
+          parseBooleanFlag(payload?.paypalEnabled) ??
+          parseBooleanFlag(payload?.paypal_enabled) ??
+          parseBooleanFlag(payload?.paypal) ??
+          parseBooleanFlag((payload as any)?.isPaypalEnabled);
+        if (stripeFlag !== null) {
+          setStripeEnabled(stripeFlag);
         }
-        if (typeof data?.paypalEnabled === "boolean") {
-          setPaypalEnabled(data.paypalEnabled);
+        if (paypalFlag !== null) {
+          setPaypalEnabled(paypalFlag);
         }
       } catch {
         // Keep defaults if Panel settings are unavailable.
@@ -362,7 +409,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     setIsRedirecting(true);
     try {
-      const response = await fetch("/api/stripe/checkout", {
+      const response = await fetch(resolveApiUrl("/api/stripe/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -412,7 +459,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     setIsPayPalRedirecting(true);
     try {
-      const response = await fetch("/api/paypal/checkout", {
+      const response = await fetch(resolveApiUrl("/api/paypal/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -458,7 +505,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       formData.append("packageId", selectedPackageId);
       formData.append("file", receiptFile);
 
-      const response = await fetch("/api/bank-transfer/receipt", {
+      const response = await fetch(resolveApiUrl("/api/bank-transfer/receipt"), {
         method: "POST",
         body: formData,
       });

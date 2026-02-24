@@ -25,6 +25,10 @@ type SharedInternalResponse = {
   latestVersionJson: Partial<ResumeData>;
 };
 
+export function generateStaticParams() {
+  return [{ id: "_" }];
+}
+
 export default async function SharedResumePage({
   params,
 }: SharedResumePageProps) {
@@ -83,7 +87,7 @@ export default async function SharedResumePage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pb-12 pt-[calc(var(--app-header-offset,88px)+1rem)] px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto mb-8 flex justify-between items-center">
         <Link
           href="/"

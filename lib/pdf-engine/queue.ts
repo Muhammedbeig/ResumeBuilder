@@ -50,10 +50,7 @@ type PdfQueueGlobal = {
   concurrency?: number;
 };
 
-const DEFAULT_CONCURRENCY = envInt(
-  "PDF_RENDER_CONCURRENCY",
-  envInt("PUPPETEER_CONCURRENCY", 2),
-);
+const DEFAULT_CONCURRENCY = envInt("PDF_RENDER_CONCURRENCY", 2);
 const DEFAULT_TIMEOUT_MS = envInt("PDF_RENDER_TIMEOUT_MS", 45_000);
 
 const globalPdfQueue = globalThis as unknown as PdfQueueGlobal;

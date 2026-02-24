@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "@/lib/auth-client";
 import { usePathname, useRouter } from "next/navigation";
 import { Settings, LogOut, CreditCard, Receipt, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,23 +27,25 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPasswordPolicyError, normalizeName } from "@/lib/auth-validation";
+import { resolveApiUrl } from "@/lib/client-api";
 import { toast } from "sonner";
+import { normalizePlanId, normalizeSubscriptionLevel } from "@/lib/subscription";
 
-type SubscriptionLevel = "free" | "pro" | "business";
-type SubscriptionPlanId = "weekly" | "monthly" | "annual" | null;
+type SubscriptionLevel = ReturnType<typeof normalizeSubscriptionLevel>;
+type SubscriptionPlanId = ReturnType<typeof normalizePlanId>;
 type SettingsTab = "general" | "security" | "plan";
 
-function normalizeSubscription(value?: string | null): SubscriptionLevel {
-  if (value === "pro" || value === "business") return value;
-  return "free";
+function normalizeSubscription(
+  value?: string | null,
+  planId?: string | null,
+): SubscriptionLevel {
+  return normalizeSubscriptionLevel(value, planId);
 }
 
 function normalizeSubscriptionPlanId(
   value?: string | null,
 ): SubscriptionPlanId {
-  if (value === "weekly" || value === "monthly" || value === "annual")
-    return value;
-  return null;
+  return normalizePlanId(value);
 }
 
 function getPlanMeta(
@@ -98,7 +100,10 @@ export function UserNav() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionLevel>(
-    normalizeSubscription(session?.user?.subscription),
+    normalizeSubscription(
+      session?.user?.subscription,
+      session?.user?.subscriptionPlanId,
+    ),
   );
   const [subscriptionPlanId, setSubscriptionPlanId] =
     useState<SubscriptionPlanId>(
@@ -125,7 +130,12 @@ export function UserNav() {
   }, [session?.user?.name]);
 
   useEffect(() => {
-    setSubscription(normalizeSubscription(session?.user?.subscription));
+    setSubscription(
+      normalizeSubscription(
+        session?.user?.subscription,
+        session?.user?.subscriptionPlanId,
+      ),
+    );
     setSubscriptionPlanId(
       normalizeSubscriptionPlanId(session?.user?.subscriptionPlanId),
     );
@@ -137,14 +147,17 @@ export function UserNav() {
     let active = true;
     void (async () => {
       try {
-        const response = await fetch("/api/user/subscription", {
+        const response = await fetch(resolveApiUrl("/api/user/subscription"), {
           cache: "no-store",
         });
         if (!response.ok) return;
         const data = await response.json();
         if (!active) return;
 
-        const nextSubscription = normalizeSubscription(data?.subscription);
+        const nextSubscription = normalizeSubscription(
+          data?.subscription,
+          data?.subscriptionPlanId,
+        );
         const nextPlanId = normalizeSubscriptionPlanId(
           data?.subscriptionPlanId,
         );
@@ -153,6 +166,7 @@ export function UserNav() {
 
         const currentSubscription = normalizeSubscription(
           session?.user?.subscription,
+          session?.user?.subscriptionPlanId,
         );
         const currentPlanId = normalizeSubscriptionPlanId(
           session?.user?.subscriptionPlanId,
@@ -210,7 +224,7 @@ export function UserNav() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/user/update", {
+      const res = await fetch(resolveApiUrl("/api/user/update"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -256,7 +270,7 @@ export function UserNav() {
         payload.currentPassword = currentPassword;
       }
 
-      const res = await fetch("/api/user/update", {
+      const res = await fetch(resolveApiUrl("/api/user/update"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -344,9 +358,9 @@ export function UserNav() {
               </DialogTrigger>
               <DropdownMenuItem
                 onClick={() => {
-                  window.location.href = `/api/stripe/portal?returnUrl=${encodeURIComponent(
-                    window.location.pathname,
-                  )}`;
+                  window.location.href = resolveApiUrl(
+                    `/api/stripe/portal?returnUrl=${encodeURIComponent(window.location.pathname)}`,
+                  );
                 }}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
@@ -490,9 +504,9 @@ export function UserNav() {
                   <Button
                     onClick={() => {
                       setIsSettingsOpen(false);
-                      window.location.href = `/api/stripe/portal?returnUrl=${encodeURIComponent(
-                        pathname || "/dashboard",
-                      )}`;
+                      window.location.href = resolveApiUrl(
+                        `/api/stripe/portal?returnUrl=${encodeURIComponent(pathname || "/dashboard")}`,
+                      );
                     }}
                     className="w-full"
                   >
