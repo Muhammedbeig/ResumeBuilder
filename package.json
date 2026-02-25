@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "node scripts/build-static.mjs",
+    "start": "node scripts/start-static.mjs",
+    "build:next": "next build",
+    "start:next": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
@@ -73,6 +75,7 @@
     "react-select": "^5.10.2",
     "recharts": "^2.15.4",
     "sonner": "^2.0.7",
+    "serve": "^14.2.4",
     "stripe": "^20.2.0",
     "tailwind-merge": "^3.4.0",
     "tsx": "^4.21.0",

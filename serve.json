@@ -1,0 +1,69 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/resume/new",
+      "destination": "/resume/new.html"
+    },
+    {
+      "source": "/resume/start",
+      "destination": "/resume/start.html"
+    },
+    {
+      "source": "/resume/*",
+      "destination": "/resume/_.html"
+    },
+    {
+      "source": "/cv/new",
+      "destination": "/cv/new.html"
+    },
+    {
+      "source": "/cv/start",
+      "destination": "/cv/start.html"
+    },
+    {
+      "source": "/cv/*",
+      "destination": "/cv/_.html"
+    },
+    {
+      "source": "/cover-letter/new",
+      "destination": "/cover-letter/new.html"
+    },
+    {
+      "source": "/cover-letter/start",
+      "destination": "/cover-letter/start.html"
+    },
+    {
+      "source": "/cover-letter/templates",
+      "destination": "/cover-letter/templates.html"
+    },
+    {
+      "source": "/cover-letter/*",
+      "destination": "/cover-letter/_.html"
+    },
+    {
+      "source": "/reports/*",
+      "destination": "/reports/_.html"
+    },
+    {
+      "source": "/shared/*",
+      "destination": "/shared/_.html"
+    },
+    {
+      "source": "/career-blog/category/*",
+      "destination": "/career-blog/category/_.html"
+    },
+    {
+      "source": "/career-blog/tag/*",
+      "destination": "/career-blog/tag/_.html"
+    },
+    {
+      "source": "/career-blog/*",
+      "destination": "/career-blog/_.html"
+    },
+    {
+      "source": "/templates/*",
+      "destination": "/templates/all.html"
+    }
+  ]
+}
