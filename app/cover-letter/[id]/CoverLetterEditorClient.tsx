@@ -6,6 +6,7 @@ import { useSession } from "@/lib/auth-client";
 import { useCoverLetter } from "@/contexts/CoverLetterContext";
 import { CoverLetterEditor } from "@/components/cover-letter/CoverLetterEditor";
 import { Spinner } from "@/components/ui/spinner";
+import { useRuntimeRouteParam } from "@/lib/use-runtime-route-param";
 
 export default function CoverLetterEditorClient() {
   const router = useRouter();
@@ -13,15 +14,22 @@ export default function CoverLetterEditorClient() {
   const { status } = useSession();
   const { currentCoverLetter, loadCoverLetter, isLoading } = useCoverLetter();
   const [loadResolved, setLoadResolved] = useState(false);
+  const paramCoverLetterId = Array.isArray(params?.id)
+    ? params.id[0]
+    : params?.id;
+  const coverLetterId = useRuntimeRouteParam(
+    "/cover-letter",
+    typeof paramCoverLetterId === "string" ? paramCoverLetterId : null,
+  );
 
   useEffect(() => {
-    if (!params.id || typeof params.id !== "string") {
+    if (!coverLetterId) {
       setLoadResolved(true);
       return;
     }
 
     let cancelled = false;
-    const targetId = params.id;
+    const targetId = coverLetterId;
 
     if (currentCoverLetter?.id === targetId) {
       setLoadResolved(true);
@@ -38,15 +46,15 @@ export default function CoverLetterEditorClient() {
     return () => {
       cancelled = true;
     };
-  }, [params.id, currentCoverLetter?.id, loadCoverLetter]);
+  }, [coverLetterId, currentCoverLetter?.id, loadCoverLetter]);
 
   useEffect(() => {
-    if (!params.id || typeof params.id !== "string") return;
+    if (!coverLetterId) return;
     if (status === "loading" || isLoading || !loadResolved) return;
-    if (currentCoverLetter?.id === params.id) return;
+    if (currentCoverLetter?.id === coverLetterId) return;
     router.replace("/cover-letter/new");
   }, [
-    params.id,
+    coverLetterId,
     status,
     isLoading,
     loadResolved,

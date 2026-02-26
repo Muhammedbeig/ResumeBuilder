@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -147,6 +147,7 @@ export function TemplatesCatalogPage({
   initialCategory?: string | null;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const { planChoice } = usePlanChoice();
   const isAuthenticated = !!session?.user;
@@ -179,6 +180,13 @@ export function TemplatesCatalogPage({
     () => [{ slug: "all", label: "All", description: "" }, ...categoryOptions],
     [categoryOptions],
   );
+
+  const pathnameCategory = useMemo(() => {
+    if (!pathname) return null;
+    const parts = pathname.split("/").filter(Boolean);
+    if (parts[0] !== "templates") return null;
+    return parts[1] ?? "all";
+  }, [pathname]);
 
   useEffect(() => {
     let isActive = true;
@@ -252,9 +260,11 @@ export function TemplatesCatalogPage({
 
   useEffect(() => {
     const slugs = categories.map((category) => category.slug);
-    const resolved = resolveInitialCategory(initialCategory, slugs) || "all";
+    const resolved =
+      resolveInitialCategory(pathnameCategory ?? initialCategory, slugs) ||
+      "all";
     setActiveCategory(resolved);
-  }, [initialCategory, categories]);
+  }, [initialCategory, pathnameCategory, categories]);
 
   const handleCategoryClick = (slug: string) => {
     setActiveCategory(slug);

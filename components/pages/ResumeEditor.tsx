@@ -86,6 +86,7 @@ import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { hasPaidAccess } from "@/lib/subscription";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
+import { useRuntimeRouteParam } from "@/lib/use-runtime-route-param";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
 const AI_SUGGESTION_DELAY_MS = 1200;
@@ -157,7 +158,11 @@ function isPlaceholderSkillForSummary(skill: string): boolean {
 export function ResumeEditorPage() {
   const router = useRouter();
   const params = useParams();
-  const resumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const paramResumeId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const resumeId = useRuntimeRouteParam(
+    "/resume",
+    typeof paramResumeId === "string" ? paramResumeId : null,
+  );
   const { data: session, status, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
   const { settings: siteSettings, loaded: siteSettingsLoaded } =

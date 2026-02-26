@@ -83,6 +83,7 @@ import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import { hasPaidAccess } from "@/lib/subscription";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
+import { useRuntimeRouteParam } from "@/lib/use-runtime-route-param";
 import type { Experience, Education, Project, SkillGroup } from "@/types";
 
 const AI_SUGGESTION_DELAY_MS = 1200;
@@ -154,7 +155,11 @@ function isPlaceholderSkillForSummary(skill: string): boolean {
 export function CVEditorPage() {
   const router = useRouter();
   const params = useParams();
-  const cvId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const paramCvId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const cvId = useRuntimeRouteParam(
+    "/cv",
+    typeof paramCvId === "string" ? paramCvId : null,
+  );
   const { data: session, status, update: updateSession } = useSession();
   const { planChoice } = usePlanChoice();
   const { settings: siteSettings, loaded: siteSettingsLoaded } =

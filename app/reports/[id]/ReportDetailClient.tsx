@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { resolveApiUrl } from "@/lib/client-api";
+import { useRuntimeRouteParam } from "@/lib/use-runtime-route-param";
 
 type ReportPayload = {
   summary?: string;
@@ -29,7 +30,11 @@ export default function ReportDetailClient() {
   const router = useRouter();
   const [report, setReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const reportId = params?.id as string;
+  const paramReportId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const reportId = useRuntimeRouteParam(
+    "/reports",
+    typeof paramReportId === "string" ? paramReportId : null,
+  );
 
   useEffect(() => {
     if (!reportId) return;
@@ -164,7 +169,7 @@ export default function ReportDetailClient() {
               {reportJson.trendIdentification?.signals &&
               reportJson.trendIdentification.signals.length > 0 ? (
                 <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
-                  {reportJson.trendIdentification.signals.map((signal, idx) => (
+                  {reportJson.trendIdentification.signals.map((signal: string, idx: number) => (
                     <li key={`${signal}-${idx}`}>{signal}</li>
                   ))}
                 </ul>
@@ -226,7 +231,7 @@ export default function ReportDetailClient() {
             {reportJson.recommendedActions &&
             reportJson.recommendedActions.length > 0 ? (
               <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
-                {reportJson.recommendedActions.map((action, idx) => (
+                {reportJson.recommendedActions.map((action: string, idx: number) => (
                   <li key={`${action}-${idx}`}>{action}</li>
                 ))}
               </ul>

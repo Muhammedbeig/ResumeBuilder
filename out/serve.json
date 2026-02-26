@@ -2,6 +2,14 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/resume/:id/:rsc",
+      "destination": "/resume/_/:rsc"
+    },
+    {
+      "source": "/resume/:id.txt",
+      "destination": "/resume/_.txt"
+    },
+    {
       "source": "/resume/new",
       "destination": "/resume/new.html"
     },
@@ -10,8 +18,16 @@
       "destination": "/resume/start.html"
     },
     {
-      "source": "/resume/*",
+      "source": "/resume/:id",
       "destination": "/resume/_.html"
+    },
+    {
+      "source": "/cv/:id/:rsc",
+      "destination": "/cv/_/:rsc"
+    },
+    {
+      "source": "/cv/:id.txt",
+      "destination": "/cv/_.txt"
     },
     {
       "source": "/cv/new",
@@ -22,8 +38,16 @@
       "destination": "/cv/start.html"
     },
     {
-      "source": "/cv/*",
+      "source": "/cv/:id",
       "destination": "/cv/_.html"
+    },
+    {
+      "source": "/cover-letter/:id/:rsc",
+      "destination": "/cover-letter/_/:rsc"
+    },
+    {
+      "source": "/cover-letter/:id.txt",
+      "destination": "/cover-letter/_.txt"
     },
     {
       "source": "/cover-letter/new",
@@ -38,31 +62,79 @@
       "destination": "/cover-letter/templates.html"
     },
     {
-      "source": "/cover-letter/*",
+      "source": "/cover-letter/:id",
       "destination": "/cover-letter/_.html"
     },
     {
-      "source": "/reports/*",
+      "source": "/reports/:id/:rsc",
+      "destination": "/reports/_/:rsc"
+    },
+    {
+      "source": "/reports/:id.txt",
+      "destination": "/reports/_.txt"
+    },
+    {
+      "source": "/reports/:id",
       "destination": "/reports/_.html"
     },
     {
-      "source": "/shared/*",
+      "source": "/shared/:id/:rsc",
+      "destination": "/shared/_/:rsc"
+    },
+    {
+      "source": "/shared/:id.txt",
+      "destination": "/shared/_.txt"
+    },
+    {
+      "source": "/shared/:id",
       "destination": "/shared/_.html"
     },
     {
-      "source": "/career-blog/category/*",
+      "source": "/career-blog/category/:slug/:rsc",
+      "destination": "/career-blog/category/_/:rsc"
+    },
+    {
+      "source": "/career-blog/category/:slug.txt",
+      "destination": "/career-blog/category/_.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug",
       "destination": "/career-blog/category/_.html"
     },
     {
-      "source": "/career-blog/tag/*",
+      "source": "/career-blog/tag/:slug/:rsc",
+      "destination": "/career-blog/tag/_/:rsc"
+    },
+    {
+      "source": "/career-blog/tag/:slug.txt",
+      "destination": "/career-blog/tag/_.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug",
       "destination": "/career-blog/tag/_.html"
     },
     {
-      "source": "/career-blog/*",
+      "source": "/career-blog/:slug/:rsc",
+      "destination": "/career-blog/_/:rsc"
+    },
+    {
+      "source": "/career-blog/:slug.txt",
+      "destination": "/career-blog/_.txt"
+    },
+    {
+      "source": "/career-blog/:slug",
       "destination": "/career-blog/_.html"
     },
     {
-      "source": "/templates/*",
+      "source": "/templates/:category/:rsc",
+      "destination": "/templates/all/:rsc"
+    },
+    {
+      "source": "/templates/:category.txt",
+      "destination": "/templates/all.txt"
+    },
+    {
+      "source": "/templates/:category",
       "destination": "/templates/all.html"
     }
   ]
