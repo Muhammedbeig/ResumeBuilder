@@ -2,96 +2,216 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/resume/:id/:rsc",
-      "destination": "/resume/_/:rsc"
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next._tree.txt",
+      "destination": "/resume/_/__next._tree.txt"
     },
     {
-      "source": "/resume/:id.txt",
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next._head.txt",
+      "destination": "/resume/_/__next._head.txt"
+    },
+    {
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next._index.txt",
+      "destination": "/resume/_/__next._index.txt"
+    },
+    {
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next._full.txt",
+      "destination": "/resume/_/__next._full.txt"
+    },
+    {
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next.resume.txt",
+      "destination": "/resume/_/__next.resume.txt"
+    },
+    {
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next.resume.:any_id.txt",
+      "destination": "/resume/_/__next.resume/_.txt"
+    },
+    {
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})/__next.resume/:any_id/:file",
+      "destination": "/resume/_/__next.resume/_/:file"
+    },
+    {
+      "source": "/resume/:id([A-Za-z0-9_-]{8,}).txt",
       "destination": "/resume/_.txt"
     },
     {
-      "source": "/resume/new",
-      "destination": "/resume/new.html"
+      "source": "/resume/:id([A-Za-z0-9_-]{8,})",
+      "destination": "/resume/_"
     },
     {
-      "source": "/resume/start",
-      "destination": "/resume/start.html"
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next._tree.txt",
+      "destination": "/cv/_/__next._tree.txt"
     },
     {
-      "source": "/resume/:id",
-      "destination": "/resume/_.html"
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next._head.txt",
+      "destination": "/cv/_/__next._head.txt"
     },
     {
-      "source": "/cv/:id/:rsc",
-      "destination": "/cv/_/:rsc"
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next._index.txt",
+      "destination": "/cv/_/__next._index.txt"
     },
     {
-      "source": "/cv/:id.txt",
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next._full.txt",
+      "destination": "/cv/_/__next._full.txt"
+    },
+    {
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next.cv.txt",
+      "destination": "/cv/_/__next.cv.txt"
+    },
+    {
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next.cv.:any_id.txt",
+      "destination": "/cv/_/__next.cv/_.txt"
+    },
+    {
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})/__next.cv/:any_id/:file",
+      "destination": "/cv/_/__next.cv/_/:file"
+    },
+    {
+      "source": "/cv/:id([A-Za-z0-9_-]{8,}).txt",
       "destination": "/cv/_.txt"
     },
     {
-      "source": "/cv/new",
-      "destination": "/cv/new.html"
+      "source": "/cv/:id([A-Za-z0-9_-]{8,})",
+      "destination": "/cv/_"
     },
     {
-      "source": "/cv/start",
-      "destination": "/cv/start.html"
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next._tree.txt",
+      "destination": "/cover-letter/_/__next._tree.txt"
     },
     {
-      "source": "/cv/:id",
-      "destination": "/cv/_.html"
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next._head.txt",
+      "destination": "/cover-letter/_/__next._head.txt"
     },
     {
-      "source": "/cover-letter/:id/:rsc",
-      "destination": "/cover-letter/_/:rsc"
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next._index.txt",
+      "destination": "/cover-letter/_/__next._index.txt"
     },
     {
-      "source": "/cover-letter/:id.txt",
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next._full.txt",
+      "destination": "/cover-letter/_/__next._full.txt"
+    },
+    {
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next.cover-letter.txt",
+      "destination": "/cover-letter/_/__next.cover-letter.txt"
+    },
+    {
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next.cover-letter.:any_id.txt",
+      "destination": "/cover-letter/_/__next.cover-letter/_.txt"
+    },
+    {
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})/__next.cover-letter/:any_id/:file",
+      "destination": "/cover-letter/_/__next.cover-letter/_/:file"
+    },
+    {
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,}).txt",
       "destination": "/cover-letter/_.txt"
     },
     {
-      "source": "/cover-letter/new",
-      "destination": "/cover-letter/new.html"
+      "source": "/cover-letter/:id([A-Za-z0-9_-]{8,})",
+      "destination": "/cover-letter/_"
     },
     {
-      "source": "/cover-letter/start",
-      "destination": "/cover-letter/start.html"
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next._tree.txt",
+      "destination": "/reports/_/__next._tree.txt"
     },
     {
-      "source": "/cover-letter/templates",
-      "destination": "/cover-letter/templates.html"
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next._head.txt",
+      "destination": "/reports/_/__next._head.txt"
     },
     {
-      "source": "/cover-letter/:id",
-      "destination": "/cover-letter/_.html"
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next._index.txt",
+      "destination": "/reports/_/__next._index.txt"
     },
     {
-      "source": "/reports/:id/:rsc",
-      "destination": "/reports/_/:rsc"
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next._full.txt",
+      "destination": "/reports/_/__next._full.txt"
     },
     {
-      "source": "/reports/:id.txt",
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next.reports.txt",
+      "destination": "/reports/_/__next.reports.txt"
+    },
+    {
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next.reports.:any_id.txt",
+      "destination": "/reports/_/__next.reports/_.txt"
+    },
+    {
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})/__next.reports/:any_id/:file",
+      "destination": "/reports/_/__next.reports/_/:file"
+    },
+    {
+      "source": "/reports/:id([A-Za-z0-9_-]{8,}).txt",
       "destination": "/reports/_.txt"
     },
     {
-      "source": "/reports/:id",
-      "destination": "/reports/_.html"
+      "source": "/reports/:id([A-Za-z0-9_-]{8,})",
+      "destination": "/reports/_"
     },
     {
-      "source": "/shared/:id/:rsc",
-      "destination": "/shared/_/:rsc"
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next._tree.txt",
+      "destination": "/shared/_/__next._tree.txt"
     },
     {
-      "source": "/shared/:id.txt",
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next._head.txt",
+      "destination": "/shared/_/__next._head.txt"
+    },
+    {
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next._index.txt",
+      "destination": "/shared/_/__next._index.txt"
+    },
+    {
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next._full.txt",
+      "destination": "/shared/_/__next._full.txt"
+    },
+    {
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next.shared.txt",
+      "destination": "/shared/_/__next.shared.txt"
+    },
+    {
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next.shared.:any_id.txt",
+      "destination": "/shared/_/__next.shared/_.txt"
+    },
+    {
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})/__next.shared/:any_id/:file",
+      "destination": "/shared/_/__next.shared/_/:file"
+    },
+    {
+      "source": "/shared/:id([A-Za-z0-9_-]{8,}).txt",
       "destination": "/shared/_.txt"
     },
     {
-      "source": "/shared/:id",
-      "destination": "/shared/_.html"
+      "source": "/shared/:id([A-Za-z0-9_-]{8,})",
+      "destination": "/shared/_"
     },
     {
-      "source": "/career-blog/category/:slug/:rsc",
-      "destination": "/career-blog/category/_/:rsc"
+      "source": "/career-blog/category/:slug/__next._tree.txt",
+      "destination": "/career-blog/category/_/__next._tree.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next._head.txt",
+      "destination": "/career-blog/category/_/__next._head.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next._index.txt",
+      "destination": "/career-blog/category/_/__next._index.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next._full.txt",
+      "destination": "/career-blog/category/_/__next._full.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next.career-blog.txt",
+      "destination": "/career-blog/category/_/__next.career-blog.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next.career-blog.category.txt",
+      "destination": "/career-blog/category/_/__next.career-blog/category.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next.career-blog.category.:any_slug.txt",
+      "destination": "/career-blog/category/_/__next.career-blog/category/_.txt"
+    },
+    {
+      "source": "/career-blog/category/:slug/__next.career-blog/category/:any_slug/:file",
+      "destination": "/career-blog/category/_/__next.career-blog/category/_/:file"
     },
     {
       "source": "/career-blog/category/:slug.txt",
@@ -99,11 +219,39 @@
     },
     {
       "source": "/career-blog/category/:slug",
-      "destination": "/career-blog/category/_.html"
+      "destination": "/career-blog/category/_"
     },
     {
-      "source": "/career-blog/tag/:slug/:rsc",
-      "destination": "/career-blog/tag/_/:rsc"
+      "source": "/career-blog/tag/:slug/__next._tree.txt",
+      "destination": "/career-blog/tag/_/__next._tree.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next._head.txt",
+      "destination": "/career-blog/tag/_/__next._head.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next._index.txt",
+      "destination": "/career-blog/tag/_/__next._index.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next._full.txt",
+      "destination": "/career-blog/tag/_/__next._full.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next.career-blog.txt",
+      "destination": "/career-blog/tag/_/__next.career-blog.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next.career-blog.tag.txt",
+      "destination": "/career-blog/tag/_/__next.career-blog/tag.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next.career-blog.tag.:any_slug.txt",
+      "destination": "/career-blog/tag/_/__next.career-blog/tag/_.txt"
+    },
+    {
+      "source": "/career-blog/tag/:slug/__next.career-blog/tag/:any_slug/:file",
+      "destination": "/career-blog/tag/_/__next.career-blog/tag/_/:file"
     },
     {
       "source": "/career-blog/tag/:slug.txt",
@@ -111,11 +259,35 @@
     },
     {
       "source": "/career-blog/tag/:slug",
-      "destination": "/career-blog/tag/_.html"
+      "destination": "/career-blog/tag/_"
     },
     {
-      "source": "/career-blog/:slug/:rsc",
-      "destination": "/career-blog/_/:rsc"
+      "source": "/career-blog/:slug/__next._tree.txt",
+      "destination": "/career-blog/_/__next._tree.txt"
+    },
+    {
+      "source": "/career-blog/:slug/__next._head.txt",
+      "destination": "/career-blog/_/__next._head.txt"
+    },
+    {
+      "source": "/career-blog/:slug/__next._index.txt",
+      "destination": "/career-blog/_/__next._index.txt"
+    },
+    {
+      "source": "/career-blog/:slug/__next._full.txt",
+      "destination": "/career-blog/_/__next._full.txt"
+    },
+    {
+      "source": "/career-blog/:slug/__next.career-blog.txt",
+      "destination": "/career-blog/_/__next.career-blog.txt"
+    },
+    {
+      "source": "/career-blog/:slug/__next.career-blog.:any_slug.txt",
+      "destination": "/career-blog/_/__next.career-blog/_.txt"
+    },
+    {
+      "source": "/career-blog/:slug/__next.career-blog/:any_slug/:file",
+      "destination": "/career-blog/_/__next.career-blog/_/:file"
     },
     {
       "source": "/career-blog/:slug.txt",
@@ -123,11 +295,35 @@
     },
     {
       "source": "/career-blog/:slug",
-      "destination": "/career-blog/_.html"
+      "destination": "/career-blog/_"
     },
     {
-      "source": "/templates/:category/:rsc",
-      "destination": "/templates/all/:rsc"
+      "source": "/templates/:category/__next._tree.txt",
+      "destination": "/templates/all/__next._tree.txt"
+    },
+    {
+      "source": "/templates/:category/__next._head.txt",
+      "destination": "/templates/all/__next._head.txt"
+    },
+    {
+      "source": "/templates/:category/__next._index.txt",
+      "destination": "/templates/all/__next._index.txt"
+    },
+    {
+      "source": "/templates/:category/__next._full.txt",
+      "destination": "/templates/all/__next._full.txt"
+    },
+    {
+      "source": "/templates/:category/__next.templates.txt",
+      "destination": "/templates/all/__next.templates.txt"
+    },
+    {
+      "source": "/templates/:category/__next.templates.:any_cat.txt",
+      "destination": "/templates/all/__next.templates/_.txt"
+    },
+    {
+      "source": "/templates/:category/__next.templates/:any_cat/:file",
+      "destination": "/templates/all/__next.templates/_/:file"
     },
     {
       "source": "/templates/:category.txt",
@@ -135,7 +331,27 @@
     },
     {
       "source": "/templates/:category",
-      "destination": "/templates/all.html"
+      "destination": "/templates/all"
+    },
+    {
+      "source": "/:page/__next.:segment.__PAGE__.txt",
+      "destination": "/:page/__next.:segment/__PAGE__.txt"
+    },
+    {
+      "source": "/:page/:sub/__next.:segment1.:segment2.__PAGE__.txt",
+      "destination": "/:page/:sub/__next.:segment1/:segment2/__PAGE__.txt"
+    },
+    {
+      "source": "/:page/:sub/__next.:segment1.:segment2.txt",
+      "destination": "/:page/:sub/__next.:segment1/:segment2.txt"
+    },
+    {
+      "source": "/:page/:sub/:leaf/__next.:segment1.:segment2.:segment3.__PAGE__.txt",
+      "destination": "/:page/:sub/:leaf/__next.:segment1/:segment2/:segment3/__PAGE__.txt"
+    },
+    {
+      "source": "/:page/:sub/:leaf/__next.:segment1.:segment2.:segment3.txt",
+      "destination": "/:page/:sub/:leaf/__next.:segment1/:segment2/:segment3.txt"
     }
   ]
 }

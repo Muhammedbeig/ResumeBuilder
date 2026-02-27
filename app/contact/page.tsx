@@ -1,9 +1,11 @@
+"use client";
+
 import { ContactPage } from "@/components/pages/ContactPage";
 import { Footer } from "@/sections/Footer";
-import { fetchSiteSettings } from "@/lib/site-settings";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
-export default async function Contact() {
-  const settings = await fetchSiteSettings();
+export default function Contact() {
+  const { settings } = useSiteSettings();
   return (
     <>
       <ContactPage
@@ -19,3 +21,4 @@ export default async function Contact() {
     </>
   );
 }
+

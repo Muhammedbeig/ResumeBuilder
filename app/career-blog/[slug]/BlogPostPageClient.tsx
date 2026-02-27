@@ -6,6 +6,7 @@ import { resolveApiUrl } from "@/lib/client-api";
 import { resolvePanelAssetUrl } from "@/lib/panel-assets";
 import { normalizeRichContent } from "@/lib/rich-content";
 import { useRuntimeRouteParam } from "@/lib/use-runtime-route-param";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type PanelPaginator<T> = {
   data: T[];
@@ -99,6 +100,80 @@ async function fetchBlogBySlug(slug: string) {
   return { blog, related };
 }
 
+function BlogPostSkeleton() {
+  return (
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
+      <section className="max-w-4xl mx-auto px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Skeleton className="h-5 w-36" />
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <Skeleton className="h-10 w-5/6" />
+          <Skeleton className="h-10 w-2/3" />
+        </div>
+
+        <div className="mt-4 space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+
+        <Skeleton className="mt-10 h-72 w-full rounded-2xl" />
+
+        <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-11/12" />
+            <Skeleton className="h-5 w-10/12" />
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-9/12" />
+          </div>
+        </div>
+
+        <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <Skeleton className="h-7 w-56" />
+          <div className="mt-3 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Skeleton className="h-10 w-36 rounded-full" />
+            <Skeleton className="h-10 w-44 rounded-full" />
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-6 mt-16">
+        <Skeleton className="h-8 w-48" />
+        <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((key) => (
+            <div
+              key={`related-skeleton-${key}`}
+              className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+            >
+              <Skeleton className="h-6 w-4/5" />
+              <div className="mt-3 space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export default function BlogPostPageClient() {
   const slug = useRuntimeRouteParam("/career-blog");
   const [loading, setLoading] = useState(true);
@@ -150,15 +225,7 @@ export default function BlogPostPageClient() {
   }
 
   if (loading) {
-    return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-16">
-        <section className="max-w-4xl mx-auto px-6">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-            Loading article...
-          </div>
-        </section>
-      </main>
-    );
+    return <BlogPostSkeleton />;
   }
 
   if (!blog) {

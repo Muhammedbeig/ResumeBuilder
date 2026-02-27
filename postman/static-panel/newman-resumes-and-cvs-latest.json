@@ -1,0 +1,5248 @@
+{
+  "collection": {
+    "_": {
+      "postman_id": "f3735d66-58f2-4c8f-87f8-3eb594e4488c"
+    },
+    "item": [
+      {
+        "id": "a105cbac-3547-4e6d-91e7-55671cc97a44",
+        "name": "Auth",
+        "item": [
+          {
+            "id": "6eb137b5-11b1-4d32-9ccc-01deff1d7383",
+            "name": "Get Providers",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "providers"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "585cb4b7-7bcb-457a-9286-5c8f1757c32d",
+            "name": "Register",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{newUserName}}\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "e7c8c1b7-ade4-405f-9c29-e7f1300f28bf",
+            "name": "Credentials Login",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "callback",
+                  "credentials"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"callbackUrl\": \"/dashboard\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "eda04591-129e-4736-b915-54293d0e9d9e",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                    "var body = pm.response.json();",
+                    "if (body && body.user && body.user.id) { pm.environment.set('internalUserId', String(body.user.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "607bc66c-6ca2-403b-86e2-ff18b8f28148",
+            "name": "Get Session",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "session"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "34fba368-cb92-4f18-ad08-ee736946d8eb",
+        "name": "User And Subscription",
+        "item": [
+          {
+            "id": "80f2e643-2132-468f-a37f-f007561d2baa",
+            "name": "Get User Subscription",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "subscription"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "54b70126-4f56-4264-9164-2aaab34cf355",
+            "name": "Update Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "update"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{updatedUserName}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "4c5d55d1-e8a3-402d-b65f-7fa95662a414",
+        "name": "Resumes And CVs",
+        "item": [
+          {
+            "id": "67483022-297b-4b0f-b6ce-9cb40fcbc090",
+            "name": "List Resumes",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "760f97a5-e697-4873-9b0e-c47eed96fcaa",
+            "name": "Create Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman Resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"{{userEmail}}\"}\n  }\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "5b0eb0be-c03e-42e3-b659-551d9631e5ba",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.resume && body.resume.id) { pm.environment.set('resumeId', String(body.resume.id)); }",
+                    "if (body && body.resume && body.resume.id) { pm.environment.set('sharedId', String(body.resume.id)); }"
+                  ],
+                  "_lastExecutionId": "13d14d9f-26cd-4b4b-9f4c-da83b4dd291a"
+                }
+              }
+            ]
+          },
+          {
+            "id": "a18e5b01-c5b6-4867-b45a-60f90942baa0",
+            "name": "Get Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c0811258-4e70-4dbd-bede-444e87e5e915",
+            "name": "Shared Document",
+            "request": {
+              "url": {
+                "path": [
+                  "shared",
+                  "{{sharedId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "e52ec293-a4eb-43b3-baa3-ef84273d7db2",
+            "name": "Create App Download Link",
+            "request": {
+              "url": {
+                "path": [
+                  "app-download-links"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"resourceType\": \"{{downloadResourceType}}\",\n  \"resourceId\": \"{{downloadResourceId}}\",\n  \"templateId\": \"{{templateId}}\",\n  \"title\": \"Postman Cover Letter\",\n  \"data\": {\n    \"personalInfo\": {\n      \"fullName\": \"Postman User\",\n      \"email\": \"{{userEmail}}\"\n    },\n    \"body\": {\n      \"introduction\": \"I am writing to express my interest in this opportunity.\",\n      \"closing\": \"Thank you for your time and consideration.\"\n    }\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8c78fee3-c183-427c-bc8e-1e99df352154",
+            "name": "Update Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman Resume Updated\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "83310080-5610-4d97-896a-1a087334d72f",
+            "name": "Delete Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "4994e51a-6f59-497e-aee5-7b779068ad0e",
+            "name": "List CVs",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "dedff4b6-b834-4a57-a972-182fbde4fe65",
+            "name": "Create CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman CV\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"{{userEmail}}\"}\n  }\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "beee1858-7147-4ada-bc5f-0071d7ab9742",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.cv && body.cv.id) { pm.environment.set('cvId', String(body.cv.id)); }"
+                  ],
+                  "_lastExecutionId": "52478b3a-b1bd-4d20-98f3-6233d363c268"
+                }
+              }
+            ]
+          },
+          {
+            "id": "91569fc8-b505-49d4-ac3b-34575803a6a6",
+            "name": "Get CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "5c934e4d-4a3e-464a-9e5e-1a826174d5d5",
+            "name": "Update CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman CV Updated\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a3e2eec9-80eb-4228-b70e-4a7f361fb549",
+            "name": "Delete CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "e935acd7-17fc-4722-acd9-531631d88cf1",
+        "name": "Templates Site Content",
+        "item": [
+          {
+            "id": "95cba167-0b52-4a30-9513-edafedc028e6",
+            "name": "Site Settings",
+            "request": {
+              "url": {
+                "path": [
+                  "site",
+                  "settings"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "4be826f5-5230-4cd7-92f6-79cd3f36559e",
+            "name": "Template Categories",
+            "request": {
+              "url": {
+                "path": [
+                  "templates",
+                  "categories"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "type",
+                    "value": "resume"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "0613809b-37ee-4bee-b61b-c507e27dfd05",
+            "name": "Template List",
+            "request": {
+              "url": {
+                "path": [
+                  "templates",
+                  "list"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "type",
+                    "value": "resume"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "63cd3d91-eba6-4463-baeb-f387ad251d60",
+            "name": "Template By Id",
+            "request": {
+              "url": {
+                "path": [
+                  "templates",
+                  "{{templateId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "type",
+                    "value": "resume"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a17eb717-ecca-4ef3-84a2-f149cf852353",
+            "name": "Subscription Packages",
+            "request": {
+              "url": {
+                "path": [
+                  "subscription-packages"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "9b8be231-396c-47e0-8668-c5364d902a47",
+            "name": "Blogs",
+            "request": {
+              "url": {
+                "path": [
+                  "blogs"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a29e1c47-7691-465f-b94e-66a4e740e3bc",
+            "name": "Blog Categories",
+            "request": {
+              "url": {
+                "path": [
+                  "blog-categories"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "96e150ee-b58a-49a0-9ca9-a0961fceb350",
+            "name": "Blog Tags",
+            "request": {
+              "url": {
+                "path": [
+                  "blog-tags"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "9f62ae7f-7608-4a82-aa8a-5a26855c53fa",
+            "name": "FAQ",
+            "request": {
+              "url": {
+                "path": [
+                  "faq"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "967e3f2c-c63b-4b08-a28e-f29fe38aaa37",
+            "name": "Contact Us",
+            "request": {
+              "url": {
+                "path": [
+                  "contact-us"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"API Tester\",\n  \"email\": \"api.tester@example.com\",\n  \"subject\": \"Test\",\n  \"message\": \"Hello from Postman\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "af83366f-19ef-43ca-a79a-161f94fd9cd8",
+        "name": "Payments",
+        "item": [
+          {
+            "id": "e3a8b487-73fe-452c-9860-7802f2fa7e35",
+            "name": "Payment Settings",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "settings"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "aac8844a-a256-412d-9230-38c07a5ea596",
+            "name": "Activation Status",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "activation-status"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "paymentTransactionId",
+                    "value": "{{paymentTransactionId}}"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "b29a10a0-1f6f-46f4-a593-1064a5ca56b1",
+            "name": "Stripe Checkout",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "checkout"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"packageId\": \"{{packageId}}\",\n  \"returnUrl\": \"/pricing\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "cd43bfc2-08d4-4dc8-bccf-626cd030cd86",
+            "name": "Stripe Confirm",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "confirm"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"paymentTransactionId\": \"{{paymentTransactionId}}\",\n  \"sessionId\": \"{{stripeSessionId}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "992f26c3-230a-45ea-b4d2-4a20a35ce18f",
+            "name": "Stripe Portal",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "portal"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "returnUrl",
+                    "value": "%2Fdashboard"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "7fee3b3e-4d55-4fc6-8812-29cf35f00558",
+            "name": "Stripe Return",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "return"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "stripe",
+                    "value": "success"
+                  },
+                  {
+                    "key": "payment_transaction_id",
+                    "value": "{{paymentTransactionId}}"
+                  },
+                  {
+                    "key": "session_id",
+                    "value": "{{stripeSessionId}}"
+                  },
+                  {
+                    "key": "return_url",
+                    "value": "%2Fpricing"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [],
+            "protocolProfileBehavior": {
+              "followRedirects": false
+            }
+          },
+          {
+            "id": "e2d49748-347e-4eb2-a718-c4ec63eeb31c",
+            "name": "Stripe Webhook (Signature Required)",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "webhook"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "stripe-signature",
+                  "value": "{{stripeSignature}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{{stripeWebhookPayload}}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "073e0c98-2184-4164-885c-9143f9837b6b",
+                  "type": "text/javascript",
+                  "exec": [
+                    "const payload = pm.environment.get('stripeWebhookPayload') || '{}';",
+                    "const secret = pm.environment.get('stripeWebhookSecret') || '';",
+                    "if (!secret) {",
+                    "  console.warn('stripeWebhookSecret is empty');",
+                    "} else {",
+                    "  const timestamp = Math.floor(Date.now() / 1000);",
+                    "  const signedPayload = `${timestamp}.${payload}`;",
+                    "  const signature = CryptoJS.HmacSHA256(signedPayload, secret).toString(CryptoJS.enc.Hex);",
+                    "  pm.environment.set('stripeSignature', `t=${timestamp},v1=${signature}`);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "1e2e23bf-1b22-4616-9654-ea85f83675b4",
+            "name": "PayPal Checkout",
+            "request": {
+              "url": {
+                "path": [
+                  "paypal",
+                  "checkout"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"packageId\": \"{{packageId}}\",\n  \"returnUrl\": \"/pricing\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "5106c4e0-b7c9-4ebd-b5a0-73116d7173bc",
+            "name": "PayPal Confirm",
+            "request": {
+              "url": {
+                "path": [
+                  "paypal",
+                  "confirm"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"paymentTransactionId\": \"{{paymentTransactionId}}\",\n  \"orderId\": \"{{paypalOrderId}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "d979664c-170f-43d1-ae0a-9da6cd5f7ed5",
+            "name": "Bank Transfer Settings",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "settings"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "990430b2-68f0-4c3b-bfd9-ed318554a09a",
+            "name": "Bank Transfer Receipt",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipt"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "packageId",
+                    "value": "{{bankTransferPackageId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{receiptFilePath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ad18e6c7-7f09-4a2e-8e3c-3abebb0941c3",
+            "name": "Bank Transfer Receipts",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipts"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "d998129d-8962-4062-a300-1424cf6b9414",
+        "name": "AI And PDF",
+        "item": [
+          {
+            "id": "9de9be7c-22fe-4ab1-b204-cf05eedf5486",
+            "name": "AI Parse",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "parse"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"text\": \"{{sampleResumeText}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ff14b19e-8323-47c2-b81f-4037c6d222d5",
+            "name": "AI Summary",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "summary"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"resumeData\": {{resumeJson}},\n  \"targetRole\": \"Software Engineer\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "0f126194-6f61-4c72-b8b1-0183ad74ab0e",
+            "name": "AI Rewrite",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "rewrite"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"bullet\": \"{{rewriteBullet}}\",\n  \"context\": \"{{rewriteContext}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "1e969afa-e853-4517-a9d3-dca7dad6faee",
+            "name": "AI ATS Check",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "ats-check"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{samplePdfPath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "aac662d2-1bdc-438a-add4-ec8776544551",
+            "name": "AI Job URL",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "job-url"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"url\": \"{{jobUrl}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "23da2037-90c7-417b-9225-a0f96f9b45fd",
+            "name": "Extract PDF Text",
+            "request": {
+              "url": {
+                "path": [
+                  "extract-pdf-text"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{samplePdfPath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "0fe4f337-8b90-4592-a4fa-d74e251d573e",
+            "name": "Generate PDF",
+            "request": {
+              "url": {
+                "path": [
+                  "generate-pdf"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "x-internal-export-key",
+                  "value": "{{internalExportKey}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"type\": \"resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {{resumeJson}}\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "ae7f5dd1-4b42-471b-a007-17f3dbb3d592",
+        "name": "Auth Sign Out",
+        "item": [
+          {
+            "id": "2265066a-cc9e-41c2-92e7-a920cf3c781d",
+            "name": "Sign Out",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "signout"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"callbackUrl\": \"/\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "c9dd5fd1-fd99-47a6-8da7-a6fd56777d68",
+        "name": "Panel Internal APIs (Website-used)",
+        "item": [
+          {
+            "id": "6570e7d0-8664-4a25-80a2-7dfed8abc1f8",
+            "name": "Internal Settings Batch",
+            "request": {
+              "url": {
+                "path": [
+                  "settings",
+                  "batch"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"keys\": [\n    \"google_client_id\",\n    \"google_authentication\",\n    \"email_authentication\",\n    \"gemini_api_key\",\n    \"bank_transfer_status\"\n  ]\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "234d168a-318c-430a-8fed-38dec54daeb0",
+            "name": "Internal Payment Gateways",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "gateways"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "5df50723-34a3-41c2-9650-589095c99d7a",
+            "name": "Internal Package By Id",
+            "request": {
+              "url": {
+                "path": [
+                  "packages",
+                  "{{packageId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "aad9a559-eeb4-48dd-a483-3c2ceba3387a",
+            "name": "Internal Auth Register",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{newUserName}}\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "23967b64-4448-493a-862e-40687f68f0bd",
+            "name": "Internal Auth Credentials",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "credentials"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ebbe42e6-f4af-4c70-9ee4-6d5e91b7d18e",
+            "name": "Internal Auth OAuth Google",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "oauth",
+                  "google"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"{{oauthTestEmail}}\",\n  \"name\": \"{{newUserName}}\",\n  \"image\": \"https://example.com/avatar.png\",\n  \"providerAccountId\": \"{{oauthProviderAccountId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "88fa0434-911f-497b-aa52-34148007c1ec",
+            "name": "Internal User Subscription",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "subscription"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "78e99b97-fd21-4476-940b-99a682122fa0",
+            "name": "Internal User Payment Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "payment-profile"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "6478564c-58f4-4cbe-afc1-5352ee5de07e",
+            "name": "Internal Update Payment Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "payment-profile"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"stripeCustomerId\": \"{{stripeCustomerId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "84b03d83-d286-4b7c-a8ec-205b747b3207",
+            "name": "Internal Update Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "profile"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{updatedUserName}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8c6febc5-9a7c-488c-8a00-cd9ae0e9498e",
+            "name": "Internal Activation Status",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "activation-status"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "paymentTransactionId",
+                    "value": "{{paymentTransactionId}}"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8f61901c-7800-4eff-a738-df1cd11bf806",
+            "name": "Internal List Resumes",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "368f85ca-5f38-41b0-95c3-46ea4282788c",
+            "name": "Internal Create Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal Postman Resume\",\n  \"template\": \"{{templateId}}\",\n  \"source\": \"manual\",\n  \"data\": {\n    \"basics\": {\n      \"name\": \"Internal User\",\n      \"email\": \"{{userEmail}}\"\n    }\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "dde2a0d4-6e5e-4125-a776-f0538d247187",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.resume && body.data.resume.id) { pm.environment.set('internalResumeId', String(body.data.resume.id)); }",
+                    "if (body && body.resume && body.resume.id) { pm.environment.set('internalResumeId', String(body.resume.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "ba97e024-2bd4-4d14-ba63-9fe024c8e50a",
+            "name": "Internal Get Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{internalResumeId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "d0cc3257-90f0-4c99-9e51-2bb6752e1726",
+            "name": "Internal Update Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{internalResumeId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal Resume Updated\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "7f373aa8-fb65-4c4a-aa4d-e452979f90e3",
+            "name": "Internal Create App Download Link",
+            "request": {
+              "url": {
+                "path": [
+                  "app-download-links"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"resourceType\": \"{{downloadResourceType}}\",\n  \"resourceId\": \"{{internalResumeId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "99149c74-ae26-4a9d-86c2-c34805c609a6",
+            "name": "Internal List CVs",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "362ab8a3-b2a2-40d0-874a-5440f7d02c59",
+            "name": "Internal Create CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal Postman CV\",\n  \"template\": \"{{templateId}}\",\n  \"source\": \"manual\",\n  \"data\": {\n    \"basics\": {\n      \"name\": \"Internal User\",\n      \"email\": \"{{userEmail}}\"\n    }\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "bba55bf4-9a2e-424a-a568-9466613b2015",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.cv && body.data.cv.id) { pm.environment.set('internalCvId', String(body.data.cv.id)); }",
+                    "if (body && body.cv && body.cv.id) { pm.environment.set('internalCvId', String(body.cv.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "6221641d-172a-4b46-8267-9a3b44c383ef",
+            "name": "Internal Get CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{internalCvId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "012d1781-77cb-47fd-bb32-ce659dce1e07",
+            "name": "Internal Update CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{internalCvId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal CV Updated\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "653087f4-9d7e-4062-8f33-f3892cba5f11",
+            "name": "Internal Market Value Index",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f3ff318f-964e-4f29-83b1-81065c3af796",
+            "name": "Internal Market Value Store",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"source\": \"resume\",\n  \"periodLabel\": \"Q1 2026\",\n  \"resumeId\": \"{{internalResumeId}}\",\n  \"resumeJson\": {{resumeJsonObject}},\n  \"reportJson\": {{marketReportJsonObject}}\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "b433aafe-e0ca-4861-a5f0-3e22d78b6bcd",
+                  "type": "text/javascript",
+                  "exec": [
+                    "const resumeObj = JSON.parse(pm.environment.get('resumeJson') || '{}');",
+                    "const reportObj = JSON.parse(pm.environment.get('marketReportJson') || '{}');",
+                    "pm.variables.set('resumeJsonObject', JSON.stringify(resumeObj));",
+                    "pm.variables.set('marketReportJsonObject', JSON.stringify(reportObj));"
+                  ]
+                }
+              },
+              {
+                "listen": "test",
+                "script": {
+                  "id": "387badfa-e073-4a8d-9501-c851e84fdd3a",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.report && body.data.report.id) { pm.environment.set('marketReportId', String(body.data.report.id)); }",
+                    "if (body && body.report && body.report.id) { pm.environment.set('marketReportId', String(body.report.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "beb6f7c2-6867-4fee-a0e6-841efbc873ff",
+            "name": "Internal Market Value Show",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value",
+                  "{{marketReportId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "7d01ab65-4966-4e3a-a64c-8e7a1839432b",
+            "name": "Internal Payment Create Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"packageId\": \"{{packageId}}\",\n  \"amount\": 7,\n  \"gateway\": \"Stripe\",\n  \"status\": \"pending\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "390b42db-e4fe-419d-8331-1f5b8f0d1f2c",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.transaction && body.data.transaction.id) { pm.environment.set('internalPaymentTransactionId', String(body.data.transaction.id)); }",
+                    "if (body && body.transaction && body.transaction.id) { pm.environment.set('internalPaymentTransactionId', String(body.transaction.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "eb435919-468c-4e0b-9eb3-d45c154322d5",
+            "name": "Internal Payment Get Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{internalPaymentTransactionId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c14af02e-44a6-4d3c-8021-86e8a23aa162",
+            "name": "Internal Payment Update Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{internalPaymentTransactionId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"status\": \"pending\",\n  \"orderId\": \"{{internalOrderId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "ecc22c70-5897-4338-9a2a-ed72dc9c34b8",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.environment.set('internalOrderId', `pi_postman_${Date.now()}`);"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "f1ec9dc8-2a08-4b11-9be3-2055f88a11ec",
+            "name": "Internal Payment Activate Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{internalPaymentTransactionId}}",
+                  "activate"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"orderId\": \"{{internalOrderId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "fa6e540f-4637-4394-b18d-553e5e1d92ea",
+            "name": "Internal Bank Transfer Receipt",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipt"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "packageId",
+                    "value": "{{bankTransferPackageId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{receiptFilePath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a9b4879e-31a8-46b6-b866-854eb3b5e4f9",
+            "name": "Internal Bank Transfer Receipts",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipts"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "0bf4ecef-3e03-4479-a0d4-e240daac36f7",
+            "name": "Internal Delete CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{internalCvId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f0c2ad92-714e-4fab-a428-2241c37da140",
+            "name": "Internal Delete Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{internalResumeId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      }
+    ],
+    "event": [],
+    "variable": [],
+    "info": {
+      "_postman_id": "f3735d66-58f2-4c8f-87f8-3eb594e4488c",
+      "name": "ResuPro Static Panel API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "description": {
+        "content": "Panel-first static frontend API collection for /api/rb/* endpoints.",
+        "type": "text/plain"
+      }
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment",
+      "postman_exported_at": "2026-02-23T19:46:10.685Z",
+      "postman_exported_using": "Newman/6.2.2"
+    },
+    "id": "d948627f-60a7-4bb0-96bc-7f61fdde1cfa",
+    "name": "ResuPro Static Panel Local",
+    "values": [
+      {
+        "type": "any",
+        "value": "http://localhost/Panel/public/api/rb",
+        "key": "apiBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "https://www.resumibuilder.com",
+        "key": "websiteBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "postman.run.1771856321@example.com",
+        "key": "userEmail"
+      },
+      {
+        "type": "any",
+        "value": "StrongPass@123a",
+        "key": "userPassword"
+      },
+      {
+        "type": "any",
+        "value": "Postman Register User",
+        "key": "newUserName"
+      },
+      {
+        "type": "any",
+        "value": "postman.register.{{$timestamp}}@example.com",
+        "key": "newUserEmail"
+      },
+      {
+        "type": "any",
+        "value": "StrongPass@123a",
+        "key": "newUserPassword"
+      },
+      {
+        "type": "any",
+        "value": "Postman Updated User",
+        "key": "updatedUserName"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl5e0dbyvvvolxhg2v2vdm",
+        "key": "resumeId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl5l7jfqpeskjwfeeu4oea",
+        "key": "cvId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl5e0dbyvvvolxhg2v2vdm",
+        "key": "sharedId"
+      },
+      {
+        "type": "any",
+        "value": "modern",
+        "key": "templateId"
+      },
+      {
+        "type": "any",
+        "value": "3",
+        "key": "packageId"
+      },
+      {
+        "type": "any",
+        "value": "153",
+        "key": "paymentTransactionId"
+      },
+      {
+        "type": "any",
+        "value": "cs_test_a1uiemnKaOrPD52KwKQbFgeI1WaWZSc7W93ADxvm8LPtXjvEUIXRZxl5Qz",
+        "key": "stripeSessionId"
+      },
+      {
+        "type": "any",
+        "value": "ORDER-TEST-AUTO",
+        "key": "paypalOrderId"
+      },
+      {
+        "type": "any",
+        "value": "t=1771875927,v1=ef26b5659449e32c0e541a6d93d050b025f5fa3705ccc5a16c84576013c44f24",
+        "key": "stripeSignature"
+      },
+      {
+        "type": "any",
+        "value": "{\"id\":\"evt_test_webhook\",\"object\":\"event\",\"type\":\"checkout.session.completed\"}",
+        "key": "stripeWebhookPayload"
+      },
+      {
+        "type": "any",
+        "value": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample-receipt.png",
+        "key": "receiptFilePath"
+      },
+      {
+        "type": "any",
+        "value": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample.pdf",
+        "key": "samplePdfPath"
+      },
+      {
+        "type": "any",
+        "value": "https://example.com/jobs/frontend-engineer",
+        "key": "jobUrl"
+      },
+      {
+        "type": "any",
+        "value": "Senior frontend engineer with React, TypeScript, and API integration experience.",
+        "key": "sampleResumeText"
+      },
+      {
+        "type": "any",
+        "value": "{\"basics\":{\"name\":\"Panel Local\",\"title\":\"Engineer\",\"email\":\"a@b.com\",\"phone\":\"123\",\"location\":\"City\",\"summary\":\"Summary\"},\"experiences\":[],\"education\":[],\"skills\":[]}",
+        "key": "resumeJson"
+      },
+      {
+        "type": "any",
+        "value": "eaf28bceaa55b24ae1ac93933f4ece6cec27c0e1ae6ca13bae2a544e7d7229fc",
+        "key": "internalExportKey"
+      },
+      {
+        "type": "any",
+        "value": "http://localhost/Panel/public/api/internal",
+        "key": "internalApiBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "cc15883cf31ff93e8313c59772e16b55f54b5415284945dbceaf779e5c88ac2e838bdeb31b2522d7d6e039d4070e016d",
+        "key": "internalApiKey"
+      },
+      {
+        "type": "any",
+        "value": "91",
+        "key": "internalUserId"
+      },
+      {
+        "type": "any",
+        "value": "resume",
+        "key": "downloadResourceType"
+      },
+      {
+        "type": "any",
+        "value": "{{resumeId}}",
+        "key": "downloadResourceId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl72xizicnyfvogifcdn8y",
+        "key": "internalResumeId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl75f9mijzcq4b9ipghslm",
+        "key": "internalCvId"
+      },
+      {
+        "type": "any",
+        "value": "161",
+        "key": "internalPaymentTransactionId"
+      },
+      {
+        "type": "any",
+        "value": "postman.oauth.test@example.com",
+        "key": "oauthTestEmail"
+      },
+      {
+        "type": "any",
+        "value": "postman-google-provider-001",
+        "key": "oauthProviderAccountId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "stripeCustomerId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "marketReportId"
+      },
+      {
+        "type": "any",
+        "value": "{\"score\":78,\"median\":6200,\"topSkill\":\"React\"}",
+        "key": "marketReportJson"
+      },
+      {
+        "type": "any",
+        "value": "whsec_QBwHN6HqVBk3HCiHjhCkOxv0PTX5JI07",
+        "key": "stripeWebhookSecret"
+      },
+      {
+        "type": "any",
+        "value": "Built internal dashboard",
+        "key": "rewriteBullet"
+      },
+      {
+        "type": "any",
+        "value": "React and TypeScript app used by recruiters",
+        "key": "rewriteContext"
+      },
+      {
+        "type": "any",
+        "value": "pi_postman_1771875966279",
+        "key": "internalOrderId"
+      },
+      {
+        "type": "any",
+        "value": "4",
+        "key": "bankTransferPackageId"
+      }
+    ]
+  },
+  "globals": {
+    "id": "facba990-ddfc-4aec-a521-b19ea1b12f0d",
+    "values": []
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 12,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 12,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 12,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 12,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 692.5,
+      "responseMin": 542,
+      "responseMax": 1300,
+      "responseSd": 233.29684238468946,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1772166347229,
+      "completed": 1772166356384
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 12,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "70bd827c-29b6-4074-bb4f-751ba7d39b71",
+          "httpRequestId": "7d41b1d1-d49d-4120-b050-9f1809f5ed7f"
+        },
+        "item": {
+          "id": "67483022-297b-4b0f-b6ce-9cb40fcbc090",
+          "name": "List Resumes",
+          "request": {
+            "url": {
+              "path": [
+                "resumes"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "resumes"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "18756b17-94ab-4b3c-a6f2-ddaedaf59c6c",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "1df574fc-78c2-4c65-8f36-3347b38b3719",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:47 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=100"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 626,
+          "responseSize": 30
+        },
+        "id": "67483022-297b-4b0f-b6ce-9cb40fcbc090"
+      },
+      {
+        "cursor": {
+          "ref": "22df6f03-fff9-4dff-9a29-39d3ce36cc27",
+          "length": 12,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "7bc7bd47-5073-4d21-be57-21624edfd5fe"
+        },
+        "item": {
+          "id": "760f97a5-e697-4873-9b0e-c47eed96fcaa",
+          "name": "Create Resume",
+          "request": {
+            "url": {
+              "path": [
+                "resumes"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"{{userEmail}}\"}\n  }\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5b0eb0be-c03e-42e3-b659-551d9631e5ba",
+                "type": "text/javascript",
+                "exec": [
+                  "var body = pm.response.json();",
+                  "if (body && body.resume && body.resume.id) { pm.environment.set('resumeId', String(body.resume.id)); }",
+                  "if (body && body.resume && body.resume.id) { pm.environment.set('sharedId', String(body.resume.id)); }"
+                ],
+                "_lastExecutionId": "13d14d9f-26cd-4b4b-9f4c-da83b4dd291a"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "resumes"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "7f97f961-23c5-4a26-ba8f-ba89f962e98a",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "157",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"title\": \"Postman Resume\",\n  \"templateId\": \"modern\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"postman.run.1771856321@example.com\"}\n  }\n}"
+          }
+        },
+        "response": {
+          "id": "0839865c-b720-4a80-b682-fefd4a787d69",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:47 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=99"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 567,
+          "responseSize": 30
+        },
+        "id": "760f97a5-e697-4873-9b0e-c47eed96fcaa"
+      },
+      {
+        "cursor": {
+          "ref": "56068b57-fcc2-40f9-bd29-d8e2eb583825",
+          "length": 12,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "0d5e2f77-fa18-4421-8b74-1821e4c722c3"
+        },
+        "item": {
+          "id": "a18e5b01-c5b6-4867-b45a-60f90942baa0",
+          "name": "Get Resume",
+          "request": {
+            "url": {
+              "path": [
+                "resumes",
+                "{{resumeId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "resumes",
+              "cmlzl5e0dbyvvvolxhg2v2vdm"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "2ce0dae6-218c-40ef-93eb-4f0727daef94",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "f3f5fdab-2d70-46bc-8112-6bc45b7cd0f5",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:48 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=98"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 542,
+          "responseSize": 30
+        },
+        "id": "a18e5b01-c5b6-4867-b45a-60f90942baa0"
+      },
+      {
+        "cursor": {
+          "ref": "2822ce6c-c99b-428b-8778-ca20adfe33c4",
+          "length": 12,
+          "cycles": 1,
+          "position": 3,
+          "iteration": 0,
+          "httpRequestId": "8f133eda-66c1-4ab9-b3d5-a9612d5e63f2"
+        },
+        "item": {
+          "id": "c0811258-4e70-4dbd-bede-444e87e5e915",
+          "name": "Shared Document",
+          "request": {
+            "url": {
+              "path": [
+                "shared",
+                "{{sharedId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "shared",
+              "cmlzl5e0dbyvvvolxhg2v2vdm"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "e4289a37-500e-4149-b2f8-e9f28adcccba",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "0aa7b20f-2336-4ac9-94f5-23a85c4ec888",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:49 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=97"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              78,
+              111,
+              116,
+              32,
+              102,
+              111,
+              117,
+              110,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 1300,
+          "responseSize": 27
+        },
+        "id": "c0811258-4e70-4dbd-bede-444e87e5e915"
+      },
+      {
+        "cursor": {
+          "ref": "0ec79951-d4d9-4d04-a1c8-2786c54bd6ca",
+          "length": 12,
+          "cycles": 1,
+          "position": 4,
+          "iteration": 0,
+          "httpRequestId": "951955f2-5c29-49c2-8fa0-f3aeee3a653f"
+        },
+        "item": {
+          "id": "e52ec293-a4eb-43b3-baa3-ef84273d7db2",
+          "name": "Create App Download Link",
+          "request": {
+            "url": {
+              "path": [
+                "app-download-links"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"{{downloadResourceType}}\",\n  \"resourceId\": \"{{downloadResourceId}}\",\n  \"templateId\": \"{{templateId}}\",\n  \"title\": \"Postman Cover Letter\",\n  \"data\": {\n    \"personalInfo\": {\n      \"fullName\": \"Postman User\",\n      \"email\": \"{{userEmail}}\"\n    },\n    \"body\": {\n      \"introduction\": \"I am writing to express my interest in this opportunity.\",\n      \"closing\": \"Thank you for your time and consideration.\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "app-download-links"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "adfa7836-7380-4e2a-b012-e0997a6e45f4",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "432",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"resourceType\": \"resume\",\n  \"resourceId\": \"cmlzl5e0dbyvvvolxhg2v2vdm\",\n  \"templateId\": \"modern\",\n  \"title\": \"Postman Cover Letter\",\n  \"data\": {\n    \"personalInfo\": {\n      \"fullName\": \"Postman User\",\n      \"email\": \"postman.run.1771856321@example.com\"\n    },\n    \"body\": {\n      \"introduction\": \"I am writing to express my interest in this opportunity.\",\n      \"closing\": \"Thank you for your time and consideration.\"\n    }\n  }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": {
+          "id": "bd038ab7-c062-4484-b8c4-2fa4b3597f41",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:50 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=96"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 591,
+          "responseSize": 30
+        },
+        "id": "e52ec293-a4eb-43b3-baa3-ef84273d7db2"
+      },
+      {
+        "cursor": {
+          "ref": "ec496c17-a927-43ed-9997-98d5bb6281ef",
+          "length": 12,
+          "cycles": 1,
+          "position": 5,
+          "iteration": 0,
+          "httpRequestId": "a6635936-82c9-49b0-a3bb-312e577b7086"
+        },
+        "item": {
+          "id": "8c78fee3-c183-427c-bc8e-1e99df352154",
+          "name": "Update Resume",
+          "request": {
+            "url": {
+              "path": [
+                "resumes",
+                "{{resumeId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Resume Updated\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "resumes",
+              "cmlzl5e0dbyvvvolxhg2v2vdm"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "81e1a447-dd11-4d76-a4e5-16dcd2cb319d",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "39",
+              "system": true
+            }
+          ],
+          "method": "PUT",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"title\": \"Postman Resume Updated\"\n}"
+          }
+        },
+        "response": {
+          "id": "a75e40e6-3ed8-441a-850b-d7d9db6a5cce",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:51 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=95"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 680,
+          "responseSize": 30
+        },
+        "id": "8c78fee3-c183-427c-bc8e-1e99df352154"
+      },
+      {
+        "cursor": {
+          "ref": "86599759-7e5b-484f-9621-15a5bee9dbd1",
+          "length": 12,
+          "cycles": 1,
+          "position": 6,
+          "iteration": 0,
+          "httpRequestId": "2bcb2ff4-3112-4a52-b20d-4b3aa7a0e390"
+        },
+        "item": {
+          "id": "83310080-5610-4d97-896a-1a087334d72f",
+          "name": "Delete Resume",
+          "request": {
+            "url": {
+              "path": [
+                "resumes",
+                "{{resumeId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "resumes",
+              "cmlzl5e0dbyvvvolxhg2v2vdm"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "d3504666-3558-4cca-a2c7-93781ed816d6",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "DELETE"
+        },
+        "response": {
+          "id": "955e92e0-96ff-4d37-a7bf-909d068042eb",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:51 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=94"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 618,
+          "responseSize": 30
+        },
+        "id": "83310080-5610-4d97-896a-1a087334d72f"
+      },
+      {
+        "cursor": {
+          "ref": "5eca137c-b23d-4110-b868-368b06a48baf",
+          "length": 12,
+          "cycles": 1,
+          "position": 7,
+          "iteration": 0,
+          "httpRequestId": "56ac9901-dea3-4780-951e-fe3599d59b9c"
+        },
+        "item": {
+          "id": "4994e51a-6f59-497e-aee5-7b779068ad0e",
+          "name": "List CVs",
+          "request": {
+            "url": {
+              "path": [
+                "cvs"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "cvs"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "a5de1fb1-d213-48aa-8033-cc9f7f639cd5",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "554047b2-723e-4212-976c-a10e4c088659",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:52 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=93"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 564,
+          "responseSize": 30
+        },
+        "id": "4994e51a-6f59-497e-aee5-7b779068ad0e"
+      },
+      {
+        "cursor": {
+          "ref": "4bdf126d-0597-482a-8e2d-8f77fe37c809",
+          "length": 12,
+          "cycles": 1,
+          "position": 8,
+          "iteration": 0,
+          "httpRequestId": "7afca5f1-1e8a-417b-8138-4116b20414ea"
+        },
+        "item": {
+          "id": "dedff4b6-b834-4a57-a972-182fbde4fe65",
+          "name": "Create CV",
+          "request": {
+            "url": {
+              "path": [
+                "cvs"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman CV\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"{{userEmail}}\"}\n  }\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "beee1858-7147-4ada-bc5f-0071d7ab9742",
+                "type": "text/javascript",
+                "exec": [
+                  "var body = pm.response.json();",
+                  "if (body && body.cv && body.cv.id) { pm.environment.set('cvId', String(body.cv.id)); }"
+                ],
+                "_lastExecutionId": "52478b3a-b1bd-4d20-98f3-6233d363c268"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "cvs"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "026d534a-11e7-4bde-acfb-bf6830b65be4",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "153",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"title\": \"Postman CV\",\n  \"templateId\": \"modern\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"postman.run.1771856321@example.com\"}\n  }\n}"
+          }
+        },
+        "response": {
+          "id": "a389d42e-50da-4ffb-b129-a986887645be",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:53 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=92"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 1100,
+          "responseSize": 30
+        },
+        "id": "dedff4b6-b834-4a57-a972-182fbde4fe65"
+      },
+      {
+        "cursor": {
+          "ref": "703d76cd-ce97-462d-81fb-5842e6eb6362",
+          "length": 12,
+          "cycles": 1,
+          "position": 9,
+          "iteration": 0,
+          "httpRequestId": "fa124983-f29e-437f-9eae-f15c39806fc4"
+        },
+        "item": {
+          "id": "91569fc8-b505-49d4-ac3b-34575803a6a6",
+          "name": "Get CV",
+          "request": {
+            "url": {
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "cvs",
+              "cmlzl5l7jfqpeskjwfeeu4oea"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "5c951a50-ff0f-4724-bc63-898872b5c858",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "3a819194-e91b-4ac0-8595-bc395dedaf60",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:54 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=91"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 590,
+          "responseSize": 30
+        },
+        "id": "91569fc8-b505-49d4-ac3b-34575803a6a6"
+      },
+      {
+        "cursor": {
+          "ref": "16edb08e-aab7-4d7a-919d-1db3c9430d1d",
+          "length": 12,
+          "cycles": 1,
+          "position": 10,
+          "iteration": 0,
+          "httpRequestId": "920650a9-545c-40c8-88bc-2bb4e2158a69"
+        },
+        "item": {
+          "id": "5c934e4d-4a3e-464a-9e5e-1a826174d5d5",
+          "name": "Update CV",
+          "request": {
+            "url": {
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman CV Updated\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "cvs",
+              "cmlzl5l7jfqpeskjwfeeu4oea"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "3631f92d-61da-4fdf-8d3a-fc8e64b98715",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "35",
+              "system": true
+            }
+          ],
+          "method": "PUT",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"title\": \"Postman CV Updated\"\n}"
+          }
+        },
+        "response": {
+          "id": "e86a82f2-1a7e-46d2-9ed4-aeb21f05e03a",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:55 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=90"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 557,
+          "responseSize": 30
+        },
+        "id": "5c934e4d-4a3e-464a-9e5e-1a826174d5d5"
+      },
+      {
+        "cursor": {
+          "ref": "6f2960a6-ead7-46b9-87cb-4278bc0d0d8a",
+          "length": 12,
+          "cycles": 1,
+          "position": 11,
+          "iteration": 0,
+          "httpRequestId": "7b56e23f-7a6a-4a17-998e-b5828ff3a7d7"
+        },
+        "item": {
+          "id": "a3e2eec9-80eb-4228-b70e-4a7f361fb549",
+          "name": "Delete CV",
+          "request": {
+            "url": {
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "DELETE"
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "cvs",
+              "cmlzl5l7jfqpeskjwfeeu4oea"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "1ab03cf5-2878-454f-a8f4-80fd650b16e7",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "DELETE"
+        },
+        "response": {
+          "id": "315a7b22-f71a-4d64-a0ab-d07cc2c58e32",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:25:55 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=89"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 575,
+          "responseSize": 30
+        },
+        "id": "a3e2eec9-80eb-4228-b70e-4a7f361fb549"
+      }
+    ],
+    "transfers": {
+      "responseTotal": 357
+    },
+    "failures": [],
+    "error": null
+  }
+}

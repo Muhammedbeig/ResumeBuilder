@@ -35,7 +35,31 @@ export function SeoManager() {
 
   useEffect(() => {
     const seo = resolveSeo(pathname || "/");
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const baseUrl = (() => {
+      const candidates = [
+        process.env.NEXT_PUBLIC_WEBSITE_URL,
+        process.env.NEXT_PUBLIC_SITE_URL,
+        process.env.NEXT_PUBLIC_APP_URL,
+      ];
+
+      for (const candidate of candidates) {
+        const raw = candidate?.trim();
+        if (!raw) continue;
+        try {
+          const parsed = new URL(raw);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            return `${parsed.protocol}//${parsed.host}`;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      if (typeof window !== "undefined") {
+        return window.location.origin;
+      }
+      return "";
+    })();
     const canonical = baseUrl ? `${baseUrl}${pathname || "/"}` : "";
 
     document.title = seo.title;

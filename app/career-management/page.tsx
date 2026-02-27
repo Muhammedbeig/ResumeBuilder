@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { resolveApiUrl } from "@/lib/client-api";
 import { hasPaidAccess, normalizePlanId } from "@/lib/subscription";
 import {
@@ -225,10 +226,40 @@ export default function CareerManagementPage() {
   if (isCheckingPlan) {
     return (
       <div className="min-h-screen pt-24 pb-20 bg-gray-50 dark:bg-gray-950">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6 space-y-8">
           <Card className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
-            <CardContent className="py-12 text-center text-gray-500">
-              Checking your plan...
+            <CardContent className="py-8 space-y-5">
+              <Skeleton className="h-6 w-40 rounded-full" />
+              <Skeleton className="h-10 w-72 max-w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                {[0, 1, 2].map((key) => (
+                  <div
+                    key={`career-management-metric-skeleton-${key}`}
+                    className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 p-4 space-y-3"
+                  >
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-6 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/50 backdrop-blur">
+            <CardHeader>
+              <Skeleton className="h-7 w-56" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Skeleton className="h-10 w-full max-w-md rounded-md" />
+              <Skeleton className="h-11 w-full rounded-md" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Skeleton className="h-11 w-full rounded-md" />
+                <Skeleton className="h-11 w-full rounded-md" />
+              </div>
+              <Skeleton className="h-10 w-44 rounded-md" />
             </CardContent>
           </Card>
         </div>

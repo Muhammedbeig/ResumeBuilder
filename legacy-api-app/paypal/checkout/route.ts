@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Unable to determine public app URL. Configure NEXT_PUBLIC_APP_URL or NEXTAUTH_URL.",
+            "Unable to determine public app URL. Configure WEBSITE_URL (preferred) or NEXT_PUBLIC_APP_URL.",
         },
         { status: 500 },
       );

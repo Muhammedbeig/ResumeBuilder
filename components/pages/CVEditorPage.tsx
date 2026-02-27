@@ -2598,6 +2598,7 @@ function SkillsSection({
     Record<string, string>
   >({});
   const skipNextSkillSuggestRef = useRef(false);
+  const lastSkillSuggestRequestKeyRef = useRef("");
 
   const experiencesForSuggestions = experienceSource || cvData.experiences;
 
@@ -2701,16 +2702,13 @@ function SkillsSection({
 
   useEffect(() => {
     if (!isActive) {
+      lastSkillSuggestRequestKeyRef.current = "";
       setIsSkillSuggestionsLoading(false);
       return;
     }
     if (!isAdding) {
+      lastSkillSuggestRequestKeyRef.current = "";
       setAiSuggestions([]);
-      setIsSkillSuggestionsLoading(false);
-      return;
-    }
-    if (skipNextSkillSuggestRef.current) {
-      skipNextSkillSuggestRef.current = false;
       setIsSkillSuggestionsLoading(false);
       return;
     }
@@ -2723,11 +2721,28 @@ function SkillsSection({
     const context = [newGroup.name, newGroup.skills, experienceText]
       .join(" ")
       .trim();
+    const requestKey = `${cvData.basics.title.trim()}|${context}`;
+    if (skipNextSkillSuggestRef.current) {
+      // User clicked a suggested skill chip; keep suggestions local-only without re-fetch.
+      skipNextSkillSuggestRef.current = false;
+      lastSkillSuggestRequestKeyRef.current = requestKey;
+      setIsSkillSuggestionsLoading(false);
+      return;
+    }
     if (!cvData.basics.title && !context) {
+      lastSkillSuggestRequestKeyRef.current = "";
       setAiSuggestions([]);
       setIsSkillSuggestionsLoading(false);
       return;
     }
+    if (lastSkillSuggestRequestKeyRef.current === requestKey) {
+      setIsSkillSuggestionsLoading(false);
+      return;
+    }
+
+    // De-duplicate requests when parent/state re-renders keep effective context unchanged.
+    lastSkillSuggestRequestKeyRef.current = requestKey;
+
     let isMounted = true;
     setIsSkillSuggestionsLoading(true);
     const timer = setTimeout(async () => {

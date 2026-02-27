@@ -1,0 +1,6438 @@
+{
+  "collection": {
+    "_": {
+      "postman_id": "f3735d66-58f2-4c8f-87f8-3eb594e4488c"
+    },
+    "item": [
+      {
+        "id": "487c035d-f9df-43eb-9a05-c61142572df3",
+        "name": "Auth",
+        "item": [
+          {
+            "id": "2931491b-45a4-4137-90f9-017758116a49",
+            "name": "Get Providers",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "providers"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f868f757-2c01-46d7-95ae-e79795e48a16",
+            "name": "Register",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{newUserName}}\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "5ab6f599-844a-4ad7-bc41-b95f709d48ca",
+            "name": "Credentials Login",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "callback",
+                  "credentials"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"callbackUrl\": \"/dashboard\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "8fe4294e-9a50-4314-bc60-ee74cf1d7cef",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                    "var body = pm.response.json();",
+                    "if (body && body.user && body.user.id) { pm.environment.set('internalUserId', String(body.user.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "6751c3dc-40ab-4f98-b3ed-3ae72733376a",
+            "name": "Get Session",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "session"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "ab1c63e2-132b-4227-a61f-4c29bfe9d574",
+        "name": "User And Subscription",
+        "item": [
+          {
+            "id": "fdd7bd79-9604-4fbb-85f0-18a032df7998",
+            "name": "Get User Subscription",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "subscription"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "29471569-418f-4913-8f84-d28269fa5dbb",
+            "name": "Update Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "update"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{updatedUserName}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "fa7658c6-2e68-4e06-a9c4-26948cc92980",
+        "name": "Resumes And CVs",
+        "item": [
+          {
+            "id": "28eb1dbd-f57e-438b-9a84-0a7a91f98d82",
+            "name": "List Resumes",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "4b6032f8-4b84-4bd4-9375-7f0ed9b62c56",
+            "name": "Create Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman Resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"{{userEmail}}\"}\n  }\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "f9a84d24-b72d-4a66-973c-d4d9f579ff1d",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.resume && body.resume.id) { pm.environment.set('resumeId', String(body.resume.id)); }",
+                    "if (body && body.resume && body.resume.id) { pm.environment.set('sharedId', String(body.resume.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "4520c0f2-bd10-4b49-a879-844a1eb7927c",
+            "name": "Get Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8fd357a7-f0d5-4c79-9ab8-00e412f542ce",
+            "name": "Shared Document",
+            "request": {
+              "url": {
+                "path": [
+                  "shared",
+                  "{{sharedId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "def6f93c-ae7d-463d-9cf2-02b57ec845c3",
+            "name": "Create App Download Link",
+            "request": {
+              "url": {
+                "path": [
+                  "app-download-links"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"resourceType\": \"{{downloadResourceType}}\",\n  \"resourceId\": \"{{downloadResourceId}}\",\n  \"templateId\": \"{{templateId}}\",\n  \"title\": \"Postman Cover Letter\",\n  \"data\": {\n    \"personalInfo\": {\n      \"fullName\": \"Postman User\",\n      \"email\": \"{{userEmail}}\"\n    },\n    \"body\": {\n      \"introduction\": \"I am writing to express my interest in this opportunity.\",\n      \"closing\": \"Thank you for your time and consideration.\"\n    }\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "3874ef4c-51f7-42c5-9175-318576dd9823",
+            "name": "Update Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman Resume Updated\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "42e9919d-c902-4ebc-b5c7-dd2da9936d5c",
+            "name": "Delete Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{resumeId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "bb3ca40e-22c1-482a-975e-cd934d033b86",
+            "name": "List CVs",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "2a52b2df-a724-4aea-88c4-4f60026a6444",
+            "name": "Create CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman CV\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {\n    \"basics\": {\"name\": \"Test User\", \"email\": \"{{userEmail}}\"}\n  }\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "d95deb42-d4d8-448a-be57-adb39c2f2d56",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.cv && body.cv.id) { pm.environment.set('cvId', String(body.cv.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "0154e702-2523-4254-9a5c-519223593800",
+            "name": "Get CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "ad1fbc21-77f9-4d26-b6c9-983a3e0db66d",
+            "name": "Update CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Postman CV Updated\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "316be6fd-0f57-4381-9b17-9c2ab0d749f6",
+            "name": "Delete CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{cvId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "fccd6ead-24ed-44e9-a72a-e604e2359cfa",
+        "name": "Templates Site Content",
+        "item": [
+          {
+            "id": "2e7b92e0-d0e5-499b-aedd-242641a90350",
+            "name": "Site Settings",
+            "request": {
+              "url": {
+                "path": [
+                  "site",
+                  "settings"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8189bb2e-61ee-44c3-bedc-a98133a694d9",
+            "name": "Template Categories",
+            "request": {
+              "url": {
+                "path": [
+                  "templates",
+                  "categories"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "type",
+                    "value": "resume"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "0c7e8d06-8a23-4452-b870-a637e247107c",
+            "name": "Template List",
+            "request": {
+              "url": {
+                "path": [
+                  "templates",
+                  "list"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "type",
+                    "value": "resume"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "894c7516-cc89-47e7-a6f0-6352d306d86c",
+            "name": "Template By Id",
+            "request": {
+              "url": {
+                "path": [
+                  "templates",
+                  "{{templateId}}"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "type",
+                    "value": "resume"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "639e0e5b-1eff-475a-b864-8a958a174537",
+            "name": "Subscription Packages",
+            "request": {
+              "url": {
+                "path": [
+                  "subscription-packages"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "5cc4a0dd-4350-438b-be1e-acf9385a15c0",
+            "name": "Blogs",
+            "request": {
+              "url": {
+                "path": [
+                  "blogs"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8dd00197-905c-47e6-ab5b-c470081ff119",
+            "name": "Blog Categories",
+            "request": {
+              "url": {
+                "path": [
+                  "blog-categories"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "73e8a187-814b-4ac0-9aae-9b00983afb3e",
+            "name": "Blog Tags",
+            "request": {
+              "url": {
+                "path": [
+                  "blog-tags"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "90dd95d1-ca67-4fec-a8ec-065e9ca5f0bf",
+            "name": "FAQ",
+            "request": {
+              "url": {
+                "path": [
+                  "faq"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "bf9e3048-7fd0-4baf-b023-a7d704854870",
+            "name": "Contact Us",
+            "request": {
+              "url": {
+                "path": [
+                  "contact-us"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"API Tester\",\n  \"email\": \"api.tester@example.com\",\n  \"subject\": \"Test\",\n  \"message\": \"Hello from Postman\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "59d47d1e-5c88-405d-86c2-9dd8c782e8ad",
+        "name": "Payments",
+        "item": [
+          {
+            "id": "7a0dff33-78cc-4888-8087-6a9ed9f5fd2c",
+            "name": "Payment Settings",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "settings"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "17e018ed-d22a-4127-bcba-a430a19f1570",
+            "name": "Activation Status",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "activation-status"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "paymentTransactionId",
+                    "value": "{{paymentTransactionId}}"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "52f5078c-d4b3-435e-a263-30aebec45a88",
+            "name": "Stripe Checkout",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "checkout"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"packageId\": \"{{packageId}}\",\n  \"returnUrl\": \"/pricing\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a7fa2ce4-ee9b-4c25-a29e-160cfa6304e6",
+            "name": "Stripe Confirm",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "confirm"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"paymentTransactionId\": \"{{paymentTransactionId}}\",\n  \"sessionId\": \"{{stripeSessionId}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "fe0860e3-9e7a-4af2-8d7d-49de576abdbf",
+            "name": "Stripe Portal",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "portal"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "returnUrl",
+                    "value": "%2Fdashboard"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c2d78858-2a4d-4cea-aa0b-ae734c53df04",
+            "name": "Stripe Return",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "return"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "stripe",
+                    "value": "success"
+                  },
+                  {
+                    "key": "payment_transaction_id",
+                    "value": "{{paymentTransactionId}}"
+                  },
+                  {
+                    "key": "session_id",
+                    "value": "{{stripeSessionId}}"
+                  },
+                  {
+                    "key": "return_url",
+                    "value": "%2Fpricing"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [],
+            "protocolProfileBehavior": {
+              "followRedirects": false
+            }
+          },
+          {
+            "id": "56ce1f17-ac80-4d04-b686-81d3735b836e",
+            "name": "Stripe Webhook (Signature Required)",
+            "request": {
+              "url": {
+                "path": [
+                  "stripe",
+                  "webhook"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "stripe-signature",
+                  "value": "{{stripeSignature}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{{stripeWebhookPayload}}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "6192b13d-29e5-4a59-8fc5-cb2586787b8b",
+                  "type": "text/javascript",
+                  "exec": [
+                    "const payload = pm.environment.get('stripeWebhookPayload') || '{}';",
+                    "const secret = pm.environment.get('stripeWebhookSecret') || '';",
+                    "if (!secret) {",
+                    "  console.warn('stripeWebhookSecret is empty');",
+                    "} else {",
+                    "  const timestamp = Math.floor(Date.now() / 1000);",
+                    "  const signedPayload = `${timestamp}.${payload}`;",
+                    "  const signature = CryptoJS.HmacSHA256(signedPayload, secret).toString(CryptoJS.enc.Hex);",
+                    "  pm.environment.set('stripeSignature', `t=${timestamp},v1=${signature}`);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "a2f5019e-733d-425b-a0c7-b6d266407e2e",
+            "name": "PayPal Checkout",
+            "request": {
+              "url": {
+                "path": [
+                  "paypal",
+                  "checkout"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"packageId\": \"{{packageId}}\",\n  \"returnUrl\": \"/pricing\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "550d493f-ba6b-4c73-8dea-2a41ecb015e6",
+            "name": "PayPal Confirm",
+            "request": {
+              "url": {
+                "path": [
+                  "paypal",
+                  "confirm"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"paymentTransactionId\": \"{{paymentTransactionId}}\",\n  \"orderId\": \"{{paypalOrderId}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "2b600d8f-8a28-41b6-a6b2-364fe7c80397",
+            "name": "Bank Transfer Settings",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "settings"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "3982d75f-f206-4e54-be05-7360997b54bd",
+            "name": "Bank Transfer Receipt",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipt"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "packageId",
+                    "value": "{{bankTransferPackageId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{receiptFilePath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f35fff32-6506-4db2-99b7-3eaf3f1d6279",
+            "name": "Bank Transfer Receipts",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipts"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "c170bba0-80cf-40de-b789-80669f8e53ea",
+        "name": "AI And PDF",
+        "item": [
+          {
+            "id": "4e2f7c77-6f08-4aa0-a129-303af1c6c615",
+            "name": "AI Parse",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "parse"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"text\": \"{{sampleResumeText}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "2c6b8c7a-342e-43e3-aee9-46f9abe97829",
+            "name": "AI Summary",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "summary"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"resumeData\": {{resumeJson}},\n  \"targetRole\": \"Software Engineer\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "69db0827-291a-4699-836a-dea82fabb503",
+            "name": "AI Rewrite",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "rewrite"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"bullet\": \"{{rewriteBullet}}\",\n  \"context\": \"{{rewriteContext}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "b4434327-db73-45bb-91f6-76b6d0eb3b94",
+            "name": "AI ATS Check",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "ats-check"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{samplePdfPath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "2a22c99f-990f-4af5-8c25-459ff7bc532b",
+            "name": "AI Job URL",
+            "request": {
+              "url": {
+                "path": [
+                  "ai",
+                  "job-url"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"url\": \"{{jobUrl}}\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "57194211-26a9-470e-88ae-11ac9552e46a",
+            "name": "Extract PDF Text",
+            "request": {
+              "url": {
+                "path": [
+                  "extract-pdf-text"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{samplePdfPath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "996923c5-c0fe-45a8-baea-6817a98e0c17",
+            "name": "Generate PDF",
+            "request": {
+              "url": {
+                "path": [
+                  "generate-pdf"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "x-internal-export-key",
+                  "value": "{{internalExportKey}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"type\": \"resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {{resumeJson}}\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "a9f8b68d-5088-4c4c-80a0-71255a8586cb",
+        "name": "Auth Sign Out",
+        "item": [
+          {
+            "id": "c6967d8b-d535-45dd-bf2c-ff76d92a8831",
+            "name": "Sign Out",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "signout"
+                ],
+                "host": [
+                  "{{apiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"callbackUrl\": \"/\"\n}"
+              }
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "411b998b-76c9-4ef7-b9b0-e718abdf4543",
+        "name": "Panel Internal APIs (Website-used)",
+        "item": [
+          {
+            "id": "2e9b42b5-4b78-4954-9a13-da05cb57ecc8",
+            "name": "Internal Settings Batch",
+            "request": {
+              "url": {
+                "path": [
+                  "settings",
+                  "batch"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"keys\": [\n    \"google_client_id\",\n    \"google_authentication\",\n    \"email_authentication\",\n    \"gemini_api_key\",\n    \"bank_transfer_status\"\n  ]\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "bcd56b9e-c7c7-48c2-827c-723424514bc3",
+            "name": "Internal Payment Gateways",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "gateways"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "9c1222bf-f0fe-4155-900d-c906a15b9a74",
+            "name": "Internal Package By Id",
+            "request": {
+              "url": {
+                "path": [
+                  "packages",
+                  "{{packageId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "5a523c2b-1a42-4b7d-9e38-e9fec56907c1",
+            "name": "Internal Auth Register",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{newUserName}}\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "cb1628c8-9f1e-426a-b0d6-83cdcd072975",
+            "name": "Internal Auth Credentials",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "credentials"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "8231a2f2-4290-4871-a1de-308cf3746591",
+            "name": "Internal Auth OAuth Google",
+            "request": {
+              "url": {
+                "path": [
+                  "auth",
+                  "oauth",
+                  "google"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"{{oauthTestEmail}}\",\n  \"name\": \"{{newUserName}}\",\n  \"image\": \"https://example.com/avatar.png\",\n  \"providerAccountId\": \"{{oauthProviderAccountId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "db052e3c-3576-49b2-9e34-d4b9bd7edbb1",
+            "name": "Internal User Subscription",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "subscription"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "440edf35-6805-4e74-8121-c86cca8ea455",
+            "name": "Internal User Payment Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "payment-profile"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "db2632b1-0706-40f5-950b-ada11e1d75a0",
+            "name": "Internal Update Payment Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "payment-profile"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"stripeCustomerId\": \"{{stripeCustomerId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "a01a2a3d-3e63-4dbd-910b-e22b3af1ac3d",
+            "name": "Internal Update Profile",
+            "request": {
+              "url": {
+                "path": [
+                  "user",
+                  "profile"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"{{updatedUserName}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "60167a6d-5dec-4527-aafe-7ab2ac94fde7",
+            "name": "Internal Activation Status",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "activation-status"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [
+                  {
+                    "key": "paymentTransactionId",
+                    "value": "{{paymentTransactionId}}"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "62940b7d-1df5-4b76-a358-b053ead7f2aa",
+            "name": "Internal List Resumes",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "770af275-dfe9-4788-9283-49639615886e",
+            "name": "Internal Create Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal Postman Resume\",\n  \"template\": \"{{templateId}}\",\n  \"source\": \"manual\",\n  \"data\": {\n    \"basics\": {\n      \"name\": \"Internal User\",\n      \"email\": \"{{userEmail}}\"\n    }\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "bf546cd1-cde4-4135-9a41-067e25fe4d1f",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.resume && body.data.resume.id) { pm.environment.set('internalResumeId', String(body.data.resume.id)); }",
+                    "if (body && body.resume && body.resume.id) { pm.environment.set('internalResumeId', String(body.resume.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "6d0d5fc9-d2c2-4094-b887-8158de2cb5a2",
+            "name": "Internal Get Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{internalResumeId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "11c34b5b-380e-4a61-8822-65b6e50b42d5",
+            "name": "Internal Update Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{internalResumeId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal Resume Updated\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "060c6217-dfcf-4ea1-a80c-c212647d2282",
+            "name": "Internal Create App Download Link",
+            "request": {
+              "url": {
+                "path": [
+                  "app-download-links"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"resourceType\": \"{{downloadResourceType}}\",\n  \"resourceId\": \"{{internalResumeId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "0e7d1291-1a23-4d27-8993-33680624ce88",
+            "name": "Internal List CVs",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "e66639b5-52c9-404e-b011-dc936dbf7f85",
+            "name": "Internal Create CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal Postman CV\",\n  \"template\": \"{{templateId}}\",\n  \"source\": \"manual\",\n  \"data\": {\n    \"basics\": {\n      \"name\": \"Internal User\",\n      \"email\": \"{{userEmail}}\"\n    }\n  }\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "d23d4c21-d2ab-4bfb-b28a-09dfc4ffe0c7",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.cv && body.data.cv.id) { pm.environment.set('internalCvId', String(body.data.cv.id)); }",
+                    "if (body && body.cv && body.cv.id) { pm.environment.set('internalCvId', String(body.cv.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "244ac8dd-33ac-4993-a936-6513d0519dc2",
+            "name": "Internal Get CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{internalCvId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "eaa6a4df-e280-41ea-b8f6-e0e27b3a7d8f",
+            "name": "Internal Update CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{internalCvId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Internal CV Updated\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "67eeb12b-564d-4025-beb3-ad29e5ecba46",
+            "name": "Internal Market Value Index",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "9eb1eb17-f570-4f7e-b1ed-557b515ceba0",
+            "name": "Internal Market Value Store",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"source\": \"resume\",\n  \"periodLabel\": \"Q1 2026\",\n  \"resumeId\": \"{{internalResumeId}}\",\n  \"resumeJson\": {{resumeJsonObject}},\n  \"reportJson\": {{marketReportJsonObject}}\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "cf0b5201-cd57-41aa-bd15-b492f4b195a7",
+                  "type": "text/javascript",
+                  "exec": [
+                    "const resumeObj = JSON.parse(pm.environment.get('resumeJson') || '{}');",
+                    "const reportObj = JSON.parse(pm.environment.get('marketReportJson') || '{}');",
+                    "pm.variables.set('resumeJsonObject', JSON.stringify(resumeObj));",
+                    "pm.variables.set('marketReportJsonObject', JSON.stringify(reportObj));"
+                  ]
+                }
+              },
+              {
+                "listen": "test",
+                "script": {
+                  "id": "541aafc4-fe6e-487e-9af2-c38f162d1e3d",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.report && body.data.report.id) { pm.environment.set('marketReportId', String(body.data.report.id)); }",
+                    "if (body && body.report && body.report.id) { pm.environment.set('marketReportId', String(body.report.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "e08aeb44-b5ef-4028-a301-efa1fbae4a42",
+            "name": "Internal Market Value Show",
+            "request": {
+              "url": {
+                "path": [
+                  "market-value",
+                  "{{marketReportId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "f9e416dd-396d-4be2-a78d-7c4195185f5c",
+            "name": "Internal Payment Create Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"packageId\": \"{{packageId}}\",\n  \"amount\": 7,\n  \"gateway\": \"Stripe\",\n  \"status\": \"pending\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "5e83f6fc-f0a5-4927-93b6-dc1e9e185523",
+                  "type": "text/javascript",
+                  "exec": [
+                    "var body = pm.response.json();",
+                    "if (body && body.data && body.data.transaction && body.data.transaction.id) { pm.environment.set('internalPaymentTransactionId', String(body.data.transaction.id)); }",
+                    "if (body && body.transaction && body.transaction.id) { pm.environment.set('internalPaymentTransactionId', String(body.transaction.id)); }"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "406c08da-241b-4a49-a38d-7614bb1926cf",
+            "name": "Internal Payment Get Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{internalPaymentTransactionId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "c20203b9-007a-4bb8-99eb-e3a39285d3e2",
+            "name": "Internal Payment Update Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{internalPaymentTransactionId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PATCH",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"status\": \"pending\",\n  \"orderId\": \"{{internalOrderId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "47bb58f0-60af-4c37-8497-87d908714184",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.environment.set('internalOrderId', `pi_postman_${Date.now()}`);"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "1077520c-3bd9-4445-912e-72978ba68058",
+            "name": "Internal Payment Activate Transaction",
+            "request": {
+              "url": {
+                "path": [
+                  "payment",
+                  "transactions",
+                  "{{internalPaymentTransactionId}}",
+                  "activate"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"orderId\": \"{{internalOrderId}}\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "637d9c14-8b01-4c6c-8675-f649412b1fd1",
+            "name": "Internal Bank Transfer Receipt",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipt"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "packageId",
+                    "value": "{{bankTransferPackageId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "file",
+                    "type": "file",
+                    "src": "{{receiptFilePath}}"
+                  }
+                ]
+              }
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "29dce90b-0745-4a0d-b582-741da0707a00",
+            "name": "Internal Bank Transfer Receipts",
+            "request": {
+              "url": {
+                "path": [
+                  "bank-transfer",
+                  "receipts"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "GET"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "7d6a453e-08a4-405d-89eb-95f541e6d19f",
+            "name": "Internal Delete CV",
+            "request": {
+              "url": {
+                "path": [
+                  "cvs",
+                  "{{internalCvId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          },
+          {
+            "id": "65f97e76-5085-4c34-b9b8-c53bfd1efd6f",
+            "name": "Internal Delete Resume",
+            "request": {
+              "url": {
+                "path": [
+                  "resumes",
+                  "{{internalResumeId}}"
+                ],
+                "host": [
+                  "{{internalApiBaseUrl}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-ResuPro-Internal-Key",
+                  "value": "{{internalApiKey}}"
+                },
+                {
+                  "key": "X-ResuPro-User-Id",
+                  "value": "{{internalUserId}}"
+                }
+              ],
+              "method": "DELETE"
+            },
+            "response": [],
+            "event": []
+          }
+        ],
+        "event": []
+      }
+    ],
+    "event": [],
+    "variable": [],
+    "info": {
+      "_postman_id": "f3735d66-58f2-4c8f-87f8-3eb594e4488c",
+      "name": "ResuPro Static Panel API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "description": {
+        "content": "Panel-first static frontend API collection for /api/rb/* endpoints.",
+        "type": "text/plain"
+      }
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment",
+      "postman_exported_at": "2026-02-23T19:46:10.685Z",
+      "postman_exported_using": "Newman/6.2.2"
+    },
+    "id": "d948627f-60a7-4bb0-96bc-7f61fdde1cfa",
+    "name": "ResuPro Static Panel Local",
+    "values": [
+      {
+        "type": "any",
+        "value": "http://localhost/Panel/public/api/rb",
+        "key": "apiBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "https://www.resumibuilder.com",
+        "key": "websiteBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "postman.run.1771856321@example.com",
+        "key": "userEmail"
+      },
+      {
+        "type": "any",
+        "value": "StrongPass@123a",
+        "key": "userPassword"
+      },
+      {
+        "type": "any",
+        "value": "Postman Register User",
+        "key": "newUserName"
+      },
+      {
+        "type": "any",
+        "value": "postman.register.{{$timestamp}}@example.com",
+        "key": "newUserEmail"
+      },
+      {
+        "type": "any",
+        "value": "StrongPass@123a",
+        "key": "newUserPassword"
+      },
+      {
+        "type": "any",
+        "value": "Postman Updated User",
+        "key": "updatedUserName"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl5e0dbyvvvolxhg2v2vdm",
+        "key": "resumeId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl5l7jfqpeskjwfeeu4oea",
+        "key": "cvId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl5e0dbyvvvolxhg2v2vdm",
+        "key": "sharedId"
+      },
+      {
+        "type": "any",
+        "value": "modern",
+        "key": "templateId"
+      },
+      {
+        "type": "any",
+        "value": "3",
+        "key": "packageId"
+      },
+      {
+        "type": "any",
+        "value": "153",
+        "key": "paymentTransactionId"
+      },
+      {
+        "type": "any",
+        "value": "cs_test_a1uiemnKaOrPD52KwKQbFgeI1WaWZSc7W93ADxvm8LPtXjvEUIXRZxl5Qz",
+        "key": "stripeSessionId"
+      },
+      {
+        "type": "any",
+        "value": "ORDER-TEST-AUTO",
+        "key": "paypalOrderId"
+      },
+      {
+        "type": "any",
+        "value": "t=1771875927,v1=ef26b5659449e32c0e541a6d93d050b025f5fa3705ccc5a16c84576013c44f24",
+        "key": "stripeSignature"
+      },
+      {
+        "type": "any",
+        "value": "{\"id\":\"evt_test_webhook\",\"object\":\"event\",\"type\":\"checkout.session.completed\"}",
+        "key": "stripeWebhookPayload"
+      },
+      {
+        "type": "any",
+        "value": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample-receipt.png",
+        "key": "receiptFilePath"
+      },
+      {
+        "type": "any",
+        "value": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample.pdf",
+        "key": "samplePdfPath"
+      },
+      {
+        "type": "any",
+        "value": "https://example.com/jobs/frontend-engineer",
+        "key": "jobUrl"
+      },
+      {
+        "type": "any",
+        "value": "Senior frontend engineer with React, TypeScript, and API integration experience.",
+        "key": "sampleResumeText"
+      },
+      {
+        "type": "any",
+        "value": "{\"basics\":{\"name\":\"Panel Local\",\"title\":\"Engineer\",\"email\":\"a@b.com\",\"phone\":\"123\",\"location\":\"City\",\"summary\":\"Summary\"},\"experiences\":[],\"education\":[],\"skills\":[]}",
+        "key": "resumeJson"
+      },
+      {
+        "type": "any",
+        "value": "eaf28bceaa55b24ae1ac93933f4ece6cec27c0e1ae6ca13bae2a544e7d7229fc",
+        "key": "internalExportKey"
+      },
+      {
+        "type": "any",
+        "value": "http://localhost/Panel/public/api/internal",
+        "key": "internalApiBaseUrl"
+      },
+      {
+        "type": "any",
+        "value": "cc15883cf31ff93e8313c59772e16b55f54b5415284945dbceaf779e5c88ac2e838bdeb31b2522d7d6e039d4070e016d",
+        "key": "internalApiKey"
+      },
+      {
+        "type": "any",
+        "value": "91",
+        "key": "internalUserId"
+      },
+      {
+        "type": "any",
+        "value": "resume",
+        "key": "downloadResourceType"
+      },
+      {
+        "type": "any",
+        "value": "{{resumeId}}",
+        "key": "downloadResourceId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl72xizicnyfvogifcdn8y",
+        "key": "internalResumeId"
+      },
+      {
+        "type": "any",
+        "value": "cmlzl75f9mijzcq4b9ipghslm",
+        "key": "internalCvId"
+      },
+      {
+        "type": "any",
+        "value": "161",
+        "key": "internalPaymentTransactionId"
+      },
+      {
+        "type": "any",
+        "value": "postman.oauth.test@example.com",
+        "key": "oauthTestEmail"
+      },
+      {
+        "type": "any",
+        "value": "postman-google-provider-001",
+        "key": "oauthProviderAccountId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "stripeCustomerId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "marketReportId"
+      },
+      {
+        "type": "any",
+        "value": "{\"score\":78,\"median\":6200,\"topSkill\":\"React\"}",
+        "key": "marketReportJson"
+      },
+      {
+        "type": "any",
+        "value": "whsec_QBwHN6HqVBk3HCiHjhCkOxv0PTX5JI07",
+        "key": "stripeWebhookSecret"
+      },
+      {
+        "type": "any",
+        "value": "Built internal dashboard",
+        "key": "rewriteBullet"
+      },
+      {
+        "type": "any",
+        "value": "React and TypeScript app used by recruiters",
+        "key": "rewriteContext"
+      },
+      {
+        "type": "any",
+        "value": "pi_postman_1771875966279",
+        "key": "internalOrderId"
+      },
+      {
+        "type": "any",
+        "value": "4",
+        "key": "bankTransferPackageId"
+      }
+    ]
+  },
+  "globals": {
+    "id": "fd367868-1c7c-4e46-87e7-797dda73b2ad",
+    "values": []
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 2145.8571428571427,
+      "responseMin": 574,
+      "responseMax": 8021,
+      "responseSd": 2618.2708267956123,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1772166402937,
+      "completed": 1772166418421
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 7,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "9759a35e-a0ec-4b01-a99d-be9cdb583f46",
+          "httpRequestId": "88cb8969-9fb2-47d0-a478-f7ba87c4ecd6"
+        },
+        "item": {
+          "id": "4e2f7c77-6f08-4aa0-a129-303af1c6c615",
+          "name": "AI Parse",
+          "request": {
+            "url": {
+              "path": [
+                "ai",
+                "parse"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"{{sampleResumeText}}\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "ai",
+              "parse"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "9ffe1921-6b80-4da8-a3ae-d531538ccb7d",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "96",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"text\": \"Senior frontend engineer with React, TypeScript, and API integration experience.\"\n}"
+          }
+        },
+        "response": {
+          "id": "d8fd1c7c-32e5-4181-b8be-097276dbc359",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:43 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=100"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 777,
+          "responseSize": 30
+        },
+        "id": "4e2f7c77-6f08-4aa0-a129-303af1c6c615"
+      },
+      {
+        "cursor": {
+          "ref": "dcb494f4-a932-4aa2-8c22-2cb0f8bf64af",
+          "length": 7,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "b62f63fc-567b-4dde-9d47-93bfe672dff8"
+        },
+        "item": {
+          "id": "2c6b8c7a-342e-43e3-aee9-46f9abe97829",
+          "name": "AI Summary",
+          "request": {
+            "url": {
+              "path": [
+                "ai",
+                "summary"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resumeData\": {{resumeJson}},\n  \"targetRole\": \"Software Engineer\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "ai",
+              "summary"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "28812bdc-5b99-4382-924b-2e5e11b91f20",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "223",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"resumeData\": {\"basics\":{\"name\":\"Panel Local\",\"title\":\"Engineer\",\"email\":\"a@b.com\",\"phone\":\"123\",\"location\":\"City\",\"summary\":\"Summary\"},\"experiences\":[],\"education\":[],\"skills\":[]},\n  \"targetRole\": \"Software Engineer\"\n}"
+          }
+        },
+        "response": {
+          "id": "662c058e-655a-4ee1-8b82-578800f5678c",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:43 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=99"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 574,
+          "responseSize": 30
+        },
+        "id": "2c6b8c7a-342e-43e3-aee9-46f9abe97829"
+      },
+      {
+        "cursor": {
+          "ref": "1bc7570b-296e-4538-add6-264889d83e20",
+          "length": 7,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "a9e1b105-8b8d-489b-9328-3fe952a5f9f3"
+        },
+        "item": {
+          "id": "69db0827-291a-4699-836a-dea82fabb503",
+          "name": "AI Rewrite",
+          "request": {
+            "url": {
+              "path": [
+                "ai",
+                "rewrite"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bullet\": \"{{rewriteBullet}}\",\n  \"context\": \"{{rewriteContext}}\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "ai",
+              "rewrite"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "67852f4f-cee9-4b87-955d-03418f7cc5c7",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "102",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"bullet\": \"Built internal dashboard\",\n  \"context\": \"React and TypeScript app used by recruiters\"\n}"
+          }
+        },
+        "response": {
+          "id": "afd96ff9-3b6a-4ed1-8bf4-11b455399f99",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:44 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=98"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 632,
+          "responseSize": 30
+        },
+        "id": "69db0827-291a-4699-836a-dea82fabb503"
+      },
+      {
+        "cursor": {
+          "ref": "2d9c9e7d-7bc2-4e06-ad57-7a04a33f6f6c",
+          "length": 7,
+          "cycles": 1,
+          "position": 3,
+          "iteration": 0,
+          "httpRequestId": "f8cea2c7-e004-4ac0-b175-e7441f6c155d"
+        },
+        "item": {
+          "id": "b4434327-db73-45bb-91f6-76b6d0eb3b94",
+          "name": "AI ATS Check",
+          "request": {
+            "url": {
+              "path": [
+                "ai",
+                "ats-check"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "{{samplePdfPath}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "ai",
+              "ats-check"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "d9da8e30-a6b5-4d98-81ec-146d70b3c35c",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "33574",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "formdata",
+            "formdata": [
+              {
+                "key": "file",
+                "type": "file",
+                "src": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample.pdf"
+              }
+            ]
+          }
+        },
+        "response": {
+          "id": "e18f1a94-6f13-4e99-a91b-5cb7e45ba557",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:45 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=97"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 604,
+          "responseSize": 30
+        },
+        "id": "b4434327-db73-45bb-91f6-76b6d0eb3b94"
+      },
+      {
+        "cursor": {
+          "ref": "e3a09421-700a-4351-a053-18059607dc63",
+          "length": 7,
+          "cycles": 1,
+          "position": 4,
+          "iteration": 0,
+          "httpRequestId": "d63af571-59bb-44a7-8e84-6a6ff7514b27"
+        },
+        "item": {
+          "id": "2a22c99f-990f-4af5-8c25-459ff7bc532b",
+          "name": "AI Job URL",
+          "request": {
+            "url": {
+              "path": [
+                "ai",
+                "job-url"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"{{jobUrl}}\"\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "ai",
+              "job-url"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "e1d78718-f69d-4a05-a43c-f81ee601790b",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "57",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"url\": \"https://example.com/jobs/frontend-engineer\"\n}"
+          }
+        },
+        "response": {
+          "id": "1a708e76-9717-4b45-8a8c-6f8b078ac1d3",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:45 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=96"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 715,
+          "responseSize": 30
+        },
+        "id": "2a22c99f-990f-4af5-8c25-459ff7bc532b"
+      },
+      {
+        "cursor": {
+          "ref": "647490e8-7e7f-46ae-9bf7-2e196adc1e64",
+          "length": 7,
+          "cycles": 1,
+          "position": 5,
+          "iteration": 0,
+          "httpRequestId": "0352578e-8aa6-467d-a09c-25444a7dca25"
+        },
+        "item": {
+          "id": "57194211-26a9-470e-88ae-11ac9552e46a",
+          "name": "Extract PDF Text",
+          "request": {
+            "url": {
+              "path": [
+                "extract-pdf-text"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "{{samplePdfPath}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "extract-pdf-text"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "34db4d7a-3435-4249-97e8-f76157c2fbcd",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "33574",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "formdata",
+            "formdata": [
+              {
+                "key": "file",
+                "type": "file",
+                "src": "C:\\Users\\Muham\\resume-builder\\postman\\static-panel\\sample.pdf"
+              }
+            ]
+          }
+        },
+        "response": {
+          "id": "c3bba85e-b9da-4b1b-bba2-b3ee315e563d",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:46 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=95"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              123,
+              34,
+              116,
+              101,
+              120,
+              116,
+              34,
+              58,
+              34,
+              83,
+              97,
+              109,
+              112,
+              108,
+              101,
+              32,
+              80,
+              68,
+              70,
+              92,
+              114,
+              92,
+              110,
+              71,
+              101,
+              110,
+              101,
+              114,
+              97,
+              116,
+              101,
+              100,
+              32,
+              102,
+              111,
+              114,
+              32,
+              32,
+              32,
+              65,
+              80,
+              73,
+              32,
+              116,
+              101,
+              115,
+              116,
+              115,
+              46,
+              92,
+              114,
+              92,
+              110,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              80,
+              97,
+              103,
+              101,
+              32,
+              40,
+              48,
+              41,
+              32,
+              66,
+              114,
+              101,
+              97,
+              107,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              45,
+              92,
+              114,
+              92,
+              110,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 8021,
+          "responseSize": 111
+        },
+        "id": "57194211-26a9-470e-88ae-11ac9552e46a"
+      },
+      {
+        "cursor": {
+          "ref": "598aeb28-0b5c-43fc-a25a-92a51ebf03b5",
+          "length": 7,
+          "cycles": 1,
+          "position": 6,
+          "iteration": 0,
+          "httpRequestId": "475c4054-0344-4931-8a22-63a33ed4784e"
+        },
+        "item": {
+          "id": "996923c5-c0fe-45a8-baea-6817a98e0c17",
+          "name": "Generate PDF",
+          "request": {
+            "url": {
+              "path": [
+                "generate-pdf"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-internal-export-key",
+                "value": "{{internalExportKey}}"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {{resumeJson}}\n}"
+            }
+          },
+          "response": [],
+          "event": []
+        },
+        "request": {
+          "url": {
+            "protocol": "http",
+            "path": [
+              "Panel",
+              "public",
+              "api",
+              "rb",
+              "generate-pdf"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "x-internal-export-key",
+              "value": "eaf28bceaa55b24ae1ac93933f4ece6cec27c0e1ae6ca13bae2a544e7d7229fc"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "b238db21-6ac0-44fd-bce0-b4a468437377",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "226",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"type\": \"resume\",\n  \"templateId\": \"modern\",\n  \"data\": {\"basics\":{\"name\":\"Panel Local\",\"title\":\"Engineer\",\"email\":\"a@b.com\",\"phone\":\"123\",\"location\":\"City\",\"summary\":\"Summary\"},\"experiences\":[],\"education\":[],\"skills\":[]}\n}"
+          }
+        },
+        "response": {
+          "id": "53d20ee9-d591-4dd7-b04e-0b9952fab5dd",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Fri, 27 Feb 2026 04:26:54 GMT"
+            },
+            {
+              "key": "Server",
+              "value": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.12"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Content-Disposition",
+              "value": "attachment; filename=\"resume-modern.pdf\""
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "60"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "60"
+            },
+            {
+              "key": "Vary",
+              "value": "Origin"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5, max=94"
+            },
+            {
+              "key": "Connection",
+              "value": "Keep-Alive"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/pdf"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              13,
+              10,
+              32,
+              32,
+              32,
+              32,
+              37,
+              80,
+              68,
+              70,
+              45,
+              49,
+              46,
+              51,
+              10,
+              37,
+              255,
+              255,
+              255,
+              255,
+              10,
+              57,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              84,
+              121,
+              112,
+              101,
+              32,
+              47,
+              69,
+              120,
+              116,
+              71,
+              83,
+              116,
+              97,
+              116,
+              101,
+              10,
+              47,
+              99,
+              97,
+              32,
+              49,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              56,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              84,
+              121,
+              112,
+              101,
+              32,
+              47,
+              80,
+              97,
+              103,
+              101,
+              10,
+              47,
+              80,
+              97,
+              114,
+              101,
+              110,
+              116,
+              32,
+              49,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              77,
+              101,
+              100,
+              105,
+              97,
+              66,
+              111,
+              120,
+              32,
+              91,
+              48,
+              32,
+              48,
+              32,
+              53,
+              57,
+              53,
+              46,
+              50,
+              56,
+              48,
+              48,
+              50,
+              57,
+              32,
+              56,
+              52,
+              49,
+              46,
+              56,
+              57,
+              48,
+              48,
+              49,
+              53,
+              93,
+              10,
+              47,
+              67,
+              111,
+              110,
+              116,
+              101,
+              110,
+              116,
+              115,
+              32,
+              54,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              82,
+              101,
+              115,
+              111,
+              117,
+              114,
+              99,
+              101,
+              115,
+              32,
+              55,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              85,
+              115,
+              101,
+              114,
+              85,
+              110,
+              105,
+              116,
+              32,
+              49,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              55,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              80,
+              114,
+              111,
+              99,
+              83,
+              101,
+              116,
+              32,
+              91,
+              47,
+              80,
+              68,
+              70,
+              32,
+              47,
+              84,
+              101,
+              120,
+              116,
+              32,
+              47,
+              73,
+              109,
+              97,
+              103,
+              101,
+              66,
+              32,
+              47,
+              73,
+              109,
+              97,
+              103,
+              101,
+              67,
+              32,
+              47,
+              73,
+              109,
+              97,
+              103,
+              101,
+              73,
+              93,
+              10,
+              47,
+              69,
+              120,
+              116,
+              71,
+              83,
+              116,
+              97,
+              116,
+              101,
+              32,
+              60,
+              60,
+              10,
+              47,
+              71,
+              115,
+              49,
+              32,
+              57,
+              32,
+              48,
+              32,
+              82,
+              10,
+              62,
+              62,
+              10,
+              47,
+              70,
+              111,
+              110,
+              116,
+              32,
+              60,
+              60,
+              10,
+              47,
+              70,
+              49,
+              32,
+              49,
+              48,
+              32,
+              48,
+              32,
+              82,
+              10,
+              62,
+              62,
+              10,
+              47,
+              67,
+              111,
+              108,
+              111,
+              114,
+              83,
+              112,
+              97,
+              99,
+              101,
+              32,
+              60,
+              60,
+              10,
+              62,
+              62,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              50,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              40,
+              82,
+              101,
+              115,
+              117,
+              80,
+              114,
+              111,
+              32,
+              80,
+              68,
+              70,
+              32,
+              69,
+              110,
+              103,
+              105,
+              110,
+              101,
+              41,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              51,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              40,
+              114,
+              101,
+              97,
+              99,
+              116,
+              45,
+              112,
+              100,
+              102,
+              41,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              52,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              40,
+              68,
+              58,
+              50,
+              48,
+              50,
+              54,
+              48,
+              50,
+              50,
+              55,
+              48,
+              52,
+              50,
+              54,
+              53,
+              56,
+              90,
+              41,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              53,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              40,
+              82,
+              101,
+              115,
+              117,
+              80,
+              114,
+              111,
+              41,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              49,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              80,
+              114,
+              111,
+              100,
+              117,
+              99,
+              101,
+              114,
+              32,
+              49,
+              50,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              67,
+              114,
+              101,
+              97,
+              116,
+              111,
+              114,
+              32,
+              49,
+              51,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              67,
+              114,
+              101,
+              97,
+              116,
+              105,
+              111,
+              110,
+              68,
+              97,
+              116,
+              101,
+              32,
+              49,
+              52,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              65,
+              117,
+              116,
+              104,
+              111,
+              114,
+              32,
+              49,
+              53,
+              32,
+              48,
+              32,
+              82,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              48,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              84,
+              121,
+              112,
+              101,
+              32,
+              47,
+              70,
+              111,
+              110,
+              116,
+              10,
+              47,
+              66,
+              97,
+              115,
+              101,
+              70,
+              111,
+              110,
+              116,
+              32,
+              47,
+              72,
+              101,
+              108,
+              118,
+              101,
+              116,
+              105,
+              99,
+              97,
+              10,
+              47,
+              83,
+              117,
+              98,
+              116,
+              121,
+              112,
+              101,
+              32,
+              47,
+              84,
+              121,
+              112,
+              101,
+              49,
+              10,
+              47,
+              69,
+              110,
+              99,
+              111,
+              100,
+              105,
+              110,
+              103,
+              32,
+              47,
+              87,
+              105,
+              110,
+              65,
+              110,
+              115,
+              105,
+              69,
+              110,
+              99,
+              111,
+              100,
+              105,
+              110,
+              103,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              52,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              51,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              84,
+              121,
+              112,
+              101,
+              32,
+              47,
+              67,
+              97,
+              116,
+              97,
+              108,
+              111,
+              103,
+              10,
+              47,
+              80,
+              97,
+              103,
+              101,
+              115,
+              32,
+              49,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              78,
+              97,
+              109,
+              101,
+              115,
+              32,
+              50,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              86,
+              105,
+              101,
+              119,
+              101,
+              114,
+              80,
+              114,
+              101,
+              102,
+              101,
+              114,
+              101,
+              110,
+              99,
+              101,
+              115,
+              32,
+              53,
+              32,
+              48,
+              32,
+              82,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              49,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              84,
+              121,
+              112,
+              101,
+              32,
+              47,
+              80,
+              97,
+              103,
+              101,
+              115,
+              10,
+              47,
+              67,
+              111,
+              117,
+              110,
+              116,
+              32,
+              49,
+              10,
+              47,
+              75,
+              105,
+              100,
+              115,
+              32,
+              91,
+              56,
+              32,
+              48,
+              32,
+              82,
+              93,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              50,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              68,
+              101,
+              115,
+              116,
+              115,
+              32,
+              60,
+              60,
+              10,
+              32,
+              32,
+              47,
+              78,
+              97,
+              109,
+              101,
+              115,
+              32,
+              91,
+              10,
+              93,
+              10,
+              62,
+              62,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              53,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              68,
+              105,
+              115,
+              112,
+              108,
+              97,
+              121,
+              68,
+              111,
+              99,
+              84,
+              105,
+              116,
+              108,
+              101,
+              32,
+              116,
+              114,
+              117,
+              101,
+              10,
+              62,
+              62,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              54,
+              32,
+              48,
+              32,
+              111,
+              98,
+              106,
+              10,
+              60,
+              60,
+              10,
+              47,
+              76,
+              101,
+              110,
+              103,
+              116,
+              104,
+              32,
+              53,
+              51,
+              56,
+              10,
+              47,
+              70,
+              105,
+              108,
+              116,
+              101,
+              114,
+              32,
+              47,
+              70,
+              108,
+              97,
+              116,
+              101,
+              68,
+              101,
+              99,
+              111,
+              100,
+              101,
+              10,
+              62,
+              62,
+              10,
+              115,
+              116,
+              114,
+              101,
+              97,
+              109,
+              10,
+              120,
+              156,
+              205,
+              148,
+              81,
+              139,
+              219,
+              48,
+              12,
+              128,
+              223,
+              253,
+              43,
+              244,
+              7,
+              78,
+              149,
+              108,
+              73,
+              182,
+              161,
+              244,
+              225,
+              216,
+              118,
+              176,
+              183,
+              142,
+              194,
+              30,
+              198,
+              158,
+              220,
+              100,
+              27,
+              52,
+              7,
+              93,
+              97,
+              191,
+              127,
+              196,
+              105,
+              218,
+              164,
+              151,
+              30,
+              140,
+              221,
+              195,
+              197,
+              165,
+              150,
+              100,
+              199,
+              150,
+              190,
+              72,
+              98,
+              32,
+              32,
+              120,
+              96,
+              32,
+              72,
+              194,
+              152,
+              50,
+              17,
+              43,
+              148,
+              206,
+              29,
+              221,
+              209,
+              245,
+              75,
+              157,
+              211,
+              172,
+              232,
+              19,
+              145,
+              207,
+              64,
+              112,
+              152,
+              171,
+              247,
+              149,
+              50,
+              221,
+              56,
+              57,
+              250,
+              112,
+              199,
+              254,
+              47,
+              214,
+              226,
+              104,
+              126,
+              228,
+              76,
+              189,
+              175,
+              148,
+              26,
+              209,
+              161,
+              254,
+              143,
+              163,
+              184,
+              159,
+              238,
+              43,
+              60,
+              187,
+              213,
+              211,
+              137,
+              225,
+              199,
+              201,
+              173,
+              62,
+              52,
+              127,
+              126,
+              149,
+              230,
+              203,
+              211,
+              35,
+              148,
+              147,
+              99,
+              232,
+              199,
+              169,
+              60,
+              215,
+              119,
+              150,
+              189,
+              249,
+              221,
+              184,
+              214,
+              109,
+              43,
+              176,
+              163,
+              227,
+              122,
+              40,
+              131,
+              79,
+              253,
+              239,
+              204,
+              241,
+              106,
+              38,
+              240,
+              177,
+              183,
+              206,
+              111,
+              33,
+              36,
+              155,
+              63,
+              17,
+              8,
+              41,
+              11,
+              115,
+              52,
+              137,
+              164,
+              41,
+              249,
+              160,
+              1,
+              8,
+              89,
+              253,
+              204,
+              170,
+              213,
+              183,
+              209,
+              247,
+              99,
+              117,
+              131,
+              239,
+              125,
+              210,
+              199,
+              221,
+              196,
+              143,
+              201,
+              210,
+              174,
+              115,
+              171,
+              79,
+              12,
+              129,
+              96,
+              215,
+              186,
+              111,
+              107,
+              165,
+              13,
+              8,
+              193,
+              218,
+              216,
+              26,
+              83,
+              43,
+              27,
+              32,
+              88,
+              123,
+              146,
+              98,
+              173,
+              133,
+              170,
+              24,
+              87,
+              235,
+              119,
+              216,
+              125,
+              118,
+              31,
+              119,
+              110,
+              123,
+              57,
+              150,
+              85,
+              81,
+              123,
+              232,
+              165,
+              171,
+              174,
+              108,
+              235,
+              152,
+              3,
+              8,
+              54,
+              96,
+              185,
+              90,
+              152,
+              48,
+              45,
+              66,
+              25,
+              226,
+              158,
+              68,
+              92,
+              169,
+              16,
+              103,
+              163,
+              152,
+              36,
+              112,
+              136,
+              190,
+              191,
+              13,
+              249,
+              10,
+              105,
+              216,
+              252,
+              134,
+              84,
+              216,
+              15,
+              84,
+              68,
+              135,
+              208,
+              27,
+              139,
+              150,
+              43,
+              24,
+              141,
+              126,
+              17,
+              130,
+              36,
+              36,
+              47,
+              175,
+              67,
+              80,
+              69,
+              79,
+              68,
+              196,
+              183,
+              44,
+              18,
+              250,
+              69,
+              22,
+              254,
+              18,
+              176,
+              84,
+              0,
+              64,
+              24,
+              110,
+              30,
+              32,
+              156,
+              39,
+              140,
+              207,
+              111,
+              200,
+              33,
+              227,
+              8,
+              34,
+              88,
+              174,
+              40,
+              162,
+              196,
+              236,
+              169,
+              31,
+              198,
+              66,
+              3,
+              29,
+              63,
+              164,
+              142,
+              111,
+              44,
+              88,
+              107,
+              251,
+              97,
+              57,
+              112,
+              240,
+              33,
+              44,
+              178,
+              74,
+              138,
+              22,
+              233,
+              5,
+              172,
+              91,
+              96,
+              62,
+              1,
+              83,
+              66,
+              149,
+              43,
+              178,
+              227,
+              139,
+              202,
+              202,
+              152,
+              223,
+              107,
+              105,
+              49,
+              143,
+              165,
+              165,
+              126,
+              3,
+              158,
+              96,
+              45,
+              173,
+              88,
+              69,
+              38,
+              170,
+              65,
+              131,
+              100,
+              105,
+              165,
+              25,
+              12,
+              44,
+              197,
+              147,
+              6,
+              29,
+              18,
+              78,
+              246,
+              178,
+              23,
+              238,
+              95,
+              83,
+              130,
+              181,
+              230,
+              229,
+              186,
+              19,
+              65,
+              74,
+              121,
+              41,
+              231,
+              8,
+              88,
+              145,
+              161,
+              115,
+              34,
+              131,
+              116,
+              184,
+              72,
+              183,
+              115,
+              169,
+              43,
+              134,
+              118,
+              222,
+              211,
+              75,
+              183,
+              115,
+              223,
+              66,
+              207,
+              91,
+              206,
+              194,
+              124,
+              42,
+              227,
+              133,
+              135,
+              81,
+              152,
+              79,
+              175,
+              183,
+              219,
+              255,
+              253,
+              90,
+              116,
+              13,
+              8,
+              39,
+              141,
+              121,
+              210,
+              106,
+              170,
+              15,
+              221,
+              98,
+              146,
+              17,
+              248,
+              128,
+              182,
+              212,
+              179,
+              51,
+              170,
+              188,
+              223,
+              6,
+              69,
+              104,
+              231,
+              236,
+              10,
+              81,
+              109,
+              63,
+              20,
+              226,
+              121,
+              226,
+              190,
+              71,
+              61,
+              132,
+              190,
+              90,
+              151,
+              51,
+              71,
+              20,
+              205,
+              36,
+              45,
+              21,
+              224,
+              56,
+              254,
+              2,
+              7,
+              71,
+              172,
+              164,
+              10,
+              101,
+              110,
+              100,
+              115,
+              116,
+              114,
+              101,
+              97,
+              109,
+              10,
+              101,
+              110,
+              100,
+              111,
+              98,
+              106,
+              10,
+              120,
+              114,
+              101,
+              102,
+              10,
+              48,
+              32,
+              49,
+              54,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              54,
+              53,
+              53,
+              51,
+              53,
+              32,
+              102,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              55,
+              52,
+              57,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              56,
+              48,
+              54,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              54,
+              54,
+              50,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              54,
+              52,
+              49,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              56,
+              53,
+              51,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              56,
+              57,
+              54,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              49,
+              56,
+              57,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              53,
+              57,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              49,
+              53,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              53,
+              52,
+              51,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              52,
+              53,
+              50,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              51,
+              50,
+              53,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              51,
+              54,
+              50,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              51,
+              57,
+              48,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              48,
+              52,
+              50,
+              54,
+              32,
+              48,
+              48,
+              48,
+              48,
+              48,
+              32,
+              110,
+              32,
+              10,
+              116,
+              114,
+              97,
+              105,
+              108,
+              101,
+              114,
+              10,
+              60,
+              60,
+              10,
+              47,
+              83,
+              105,
+              122,
+              101,
+              32,
+              49,
+              54,
+              10,
+              47,
+              82,
+              111,
+              111,
+              116,
+              32,
+              51,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              73,
+              110,
+              102,
+              111,
+              32,
+              49,
+              49,
+              32,
+              48,
+              32,
+              82,
+              10,
+              47,
+              73,
+              68,
+              32,
+              91,
+              60,
+              102,
+              102,
+              101,
+              101,
+              54,
+              97,
+              97,
+              54,
+              52,
+              101,
+              100,
+              102,
+              49,
+              99,
+              52,
+              102,
+              56,
+              102,
+              97,
+              52,
+              101,
+              51,
+              99,
+              49,
+              51,
+              56,
+              100,
+              53,
+              56,
+              55,
+              98,
+              51,
+              62,
+              32,
+              60,
+              102,
+              102,
+              101,
+              101,
+              54,
+              97,
+              97,
+              54,
+              52,
+              101,
+              100,
+              102,
+              49,
+              99,
+              52,
+              102,
+              56,
+              102,
+              97,
+              52,
+              101,
+              51,
+              99,
+              49,
+              51,
+              56,
+              100,
+              53,
+              56,
+              55,
+              98,
+              51,
+              62,
+              93,
+              10,
+              62,
+              62,
+              10,
+              115,
+              116,
+              97,
+              114,
+              116,
+              120,
+              114,
+              101,
+              102,
+              10,
+              49,
+              53,
+              48,
+              54,
+              10,
+              37,
+              37,
+              69,
+              79,
+              70,
+              10
+            ]
+          },
+          "cookie": [],
+          "responseTime": 3698,
+          "responseSize": 1987
+        },
+        "id": "996923c5-c0fe-45a8-baea-6817a98e0c17"
+      }
+    ],
+    "transfers": {
+      "responseTotal": 2248
+    },
+    "failures": [],
+    "error": null
+  }
+}

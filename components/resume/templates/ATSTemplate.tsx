@@ -99,13 +99,13 @@ export function ATSTemplate({ data, className = "" }: ATSTemplateProps) {
                     </p>
                   </div>
                   <p className="text-xs text-gray-600 font-medium">
-                    {exp.startDate} â€“ {exp.current ? "Present" : exp.endDate}
+                    {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                   </p>
                 </div>
                 <ul className="mt-1 space-y-0.5">
                   {exp.bullets.map((bullet, idx) => (
                     <li key={idx} className="text-sm text-gray-700 pl-3">
-                      â€¢ <RichText inline text={bullet} />
+                      &bull; <RichText inline text={bullet} />
                     </li>
                   ))}
                 </ul>
@@ -138,7 +138,7 @@ export function ATSTemplate({ data, className = "" }: ATSTemplateProps) {
                     )}
                   </div>
                   <p className="text-xs text-gray-600 font-medium">
-                    {edu.startDate} â€“ {edu.endDate}
+                    {edu.startDate} - {edu.endDate}
                   </p>
                 </div>
               </div>
@@ -213,7 +213,7 @@ export function ATSTemplate({ data, className = "" }: ATSTemplateProps) {
               <div key={cert.id || idx} className="mb-1">
                 <p className="text-sm font-medium text-gray-900">{cert.name}</p>
                 <p className="text-xs text-gray-600">
-                  {cert.issuer} â€¢ {cert.date}
+                  {cert.issuer} &bull; {cert.date}
                 </p>
               </div>
             ))}
@@ -249,10 +249,10 @@ export function ATSTemplate({ data, className = "" }: ATSTemplateProps) {
         </p>
         <div className="flex flex-wrap justify-center gap-3 text-sm text-gray-600">
           {basics.location && <span>{basics.location}</span>}
-          {basics.email && <span>â€¢ {basics.email}</span>}
-          {basics.phone && <span>â€¢ {basics.phone}</span>}
-          {basics.linkedin && <span>â€¢ LinkedIn</span>}
-          {basics.github && <span>â€¢ GitHub</span>}
+          {basics.email && <span>&bull; {basics.email}</span>}
+          {basics.phone && <span>&bull; {basics.phone}</span>}
+          {basics.linkedin && <span>&bull; LinkedIn</span>}
+          {basics.github && <span>&bull; GitHub</span>}
         </div>
       </div>
 

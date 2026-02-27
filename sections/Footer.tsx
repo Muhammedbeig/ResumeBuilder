@@ -1,4 +1,6 @@
-﻿import Link from "next/link";
+"use client";
+
+import Link from "next/link";
 import {
   Facebook,
   Instagram,
@@ -8,15 +10,18 @@ import {
   Sparkles,
   Twitter,
 } from "lucide-react";
-import { fetchSiteSettings } from "@/lib/site-settings";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
 
 const footerLinks = {
   product: [
     { name: "Features", href: "#features" },
-    // { name: "Pricing", href: "#pricing" },
-    { name: "Templates", href: "/templates" },
+    { name: "Resume Builder", href: "/resume/start" },
+    { name: "CV Builder", href: "/cv/start" },
+    { name: "Cover Letter Builder", href: "/cover-letter/start" },
     { name: "ATS Checker", href: "/ats-checker" },
+    { name: "AI Resume Optimizer", href: "/ai-resume-optimizer" },
+    { name: "Career Management", href: "/career-management" },
   ],
   company: [
     { name: "About Us", href: "/about" },
@@ -40,8 +45,8 @@ const footerLinks = {
 
 type SocialLink = { name: string; icon: typeof Twitter; href: string };
 
-export async function Footer() {
-  const settings = await fetchSiteSettings();
+export function Footer() {
+  const { settings } = useSiteSettings();
   const brandName = settings.companyName || DEFAULT_SITE_SETTINGS.companyName;
   const description =
     settings.footerDescription || DEFAULT_SITE_SETTINGS.footerDescription;
@@ -235,7 +240,7 @@ export async function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            (c) {year} {brandName}. All rights reserved.
+            © {year} {brandName}. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <span className="text-sm text-gray-500">
@@ -247,3 +252,4 @@ export async function Footer() {
     </footer>
   );
 }
+

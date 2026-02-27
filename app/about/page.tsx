@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Footer } from "@/sections/Footer";
-import { fetchSiteSettings } from "@/lib/site-settings";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/site-settings-shared";
 import { normalizeRichContent } from "@/lib/rich-content";
 
@@ -38,8 +40,8 @@ const resources = [
   },
 ];
 
-export default async function AboutPage() {
-  const settings = await fetchSiteSettings();
+export default function AboutPage() {
+  const { settings } = useSiteSettings();
   const brandName = settings.companyName || DEFAULT_SITE_SETTINGS.companyName;
   const aboutContent = normalizeRichContent(settings.aboutUs);
   const hasPanelContent = Boolean(aboutContent);
@@ -177,3 +179,4 @@ export default async function AboutPage() {
     </main>
   );
 }
+

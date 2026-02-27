@@ -189,12 +189,31 @@ export function DashboardPage() {
     return (
       <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="border-dashed">
-            <CardContent className="flex items-center justify-center py-20 text-gray-500">
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              Loading dashboard...
-            </CardContent>
-          </Card>
+          <div className="grid lg:grid-cols-4 gap-8 animate-pulse">
+            <div className="hidden lg:block space-y-6">
+              <div className="space-y-2">
+                <div className="h-3 w-20 rounded bg-gray-200 dark:bg-gray-800" />
+                <div className="h-10 rounded bg-gray-200 dark:bg-gray-800" />
+                <div className="h-10 rounded bg-gray-200 dark:bg-gray-800" />
+                <div className="h-10 rounded bg-gray-200 dark:bg-gray-800" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-14 rounded bg-gray-200 dark:bg-gray-800" />
+                <div className="h-10 rounded bg-gray-200 dark:bg-gray-800" />
+                <div className="h-10 rounded bg-gray-200 dark:bg-gray-800" />
+              </div>
+            </div>
+
+            <div className="lg:col-span-3 space-y-6">
+              <div className="h-10 w-64 rounded bg-gray-200 dark:bg-gray-800" />
+              <div className="h-5 w-80 rounded bg-gray-200 dark:bg-gray-800" />
+              <div className="grid gap-4">
+                <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+                <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+                <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

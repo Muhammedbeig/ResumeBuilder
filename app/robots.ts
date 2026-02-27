@@ -4,6 +4,8 @@ export const dynamic = "force-static";
 
 const baseUrl = () => {
   const candidates = [
+    process.env.WEBSITE_URL,
+    process.env.NEXT_PUBLIC_WEBSITE_URL,
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.NEXTAUTH_URL,

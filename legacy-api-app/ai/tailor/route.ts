@@ -70,6 +70,7 @@ TASK 1: AUDIT (Keyword Matching)
 TASK 2: OPTIMIZE (Suggestion Generation)
 - Identify experience bullet points to rewrite.
 - **STRICT CONSTRAINT**: Each "suggested" rewrite MUST be under 220 characters AND under 30 words.
+- **COMPREHENSIVENESS**: Keep the same meaning, but make each rewrite slightly more descriptive by adding about 5-8 helpful words when possible within limits.
 - **NO SENTENCE BREAKAGE**: Do not truncate mid-sentence. The suggestion must be a complete, professional, and impactful statement.
 - **KEYWORD INJECTION**: You MUST inject "missingKeywords" into these rewrites.
 - **FORMATTING**: Use PLAIN TEXT ONLY. NO bolding (**), NO italics, NO markdown symbols.

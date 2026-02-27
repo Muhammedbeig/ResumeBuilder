@@ -3,6 +3,9 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+/**
+ * Executes a shell command and returns a promise.
+ */
 function run(command, args, env = process.env) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -21,53 +24,61 @@ function run(command, args, env = process.env) {
   });
 }
 
+/**
+ * Creates aliases for dynamic RSC (React Server Component) payload files.
+ * This maps problematic Next.js static export filenames (like $d$id) to a stable '_' placeholder structure.
+ * This allows 'serve.json' to have simple, deterministic rules for dynamic routes.
+ */
 function createRscPageAliases(outDir) {
-  const pageFiles = [];
-
   const walk = (dir) => {
     const entries = readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
+      
       if (entry.isDirectory()) {
         walk(fullPath);
         continue;
       }
-      if (entry.isFile() && entry.name === "__PAGE__.txt") {
-        pageFiles.push(fullPath);
+
+      // Identify RSC payload files (__PAGE__.txt or files containing dynamic placeholders like $d$id)
+      if (entry.isFile() && (entry.name === "__PAGE__.txt" || entry.name.includes("$d$"))) {
+        const relParts = path.relative(outDir, fullPath).split(path.sep);
+        // Find where the Next.js app router structure starts
+        const markerIndex = relParts.findIndex((part) => part.startsWith("__next."));
+        if (markerIndex <= 0) continue;
+
+        const routeDir = relParts.slice(0, markerIndex);
+        const nextParts = relParts.slice(markerIndex);
+        
+        // Create a normalized path where dynamic segment placeholders ($d$id, $d$slug, etc.) are replaced with '_'
+        const safeNextParts = nextParts.map((p) => p.replace(/\$d\$(id|slug|category)/g, "_"));
+        const targetPath = path.join(outDir, ...routeDir, ...safeNextParts);
+
+        if (fullPath === targetPath) continue;
+        
+        const targetDir = path.dirname(targetPath);
+        if (!existsSync(targetDir)) {
+          mkdirSync(targetDir, { recursive: true });
+        }
+        
+        if (!existsSync(targetPath)) {
+          copyFileSync(fullPath, targetPath);
+        }
       }
     }
   };
 
   if (!existsSync(outDir)) return;
   walk(outDir);
-
-  let created = 0;
-
-  for (const filePath of pageFiles) {
-    const relParts = path.relative(outDir, filePath).split(path.sep);
-    const markerIndex = relParts.findIndex((part) => part.startsWith("__next."));
-    if (markerIndex <= 0) continue;
-
-    const routeDir = relParts.slice(0, markerIndex);
-    const nextParts = relParts.slice(markerIndex, -1);
-    if (nextParts.length === 0) continue;
-
-    const flatName = `${nextParts.join(".")}.__PAGE__.txt`;
-    const targetPath = path.join(outDir, ...routeDir, flatName);
-
-    if (existsSync(targetPath)) continue;
-    copyFileSync(filePath, targetPath);
-    created += 1;
-  }
-
-  if (created > 0) {
-    console.log(`Created ${created} static RSC alias file(s) for __PAGE__.txt`);
-  }
 }
 
 async function main() {
   const env = { ...process.env, NEXT_STATIC_EXPORT: "1" };
-  await run("next", ["build"], env);
+  
+  // Perform the standard Next.js build and export
+  if (!process.env.SKIP_BUILD) {
+    await run("next", ["build"], env);
+  }
 
   const outDir = path.join(process.cwd(), "out");
   const rootServeConfig = path.join(process.cwd(), "serve.json");
@@ -75,15 +86,16 @@ async function main() {
   const rootHtaccess = path.join(process.cwd(), ".htaccess");
   const outHtaccess = path.join(outDir, ".htaccess");
 
+  // Ensure serve.json is copied to the export directory
   if (existsSync(rootServeConfig)) {
     if (!existsSync(outDir)) {
       mkdirSync(outDir, { recursive: true });
     }
     copyFileSync(rootServeConfig, outServeConfig);
-    // Keep a copy inside out/ because serve resolves config relative to served dir.
     console.log("Copied serve.json -> out/serve.json");
   }
 
+  // Ensure .htaccess is preserved for Apache-based hosts (Hostinger)
   if (existsSync(rootHtaccess)) {
     if (!existsSync(outDir)) {
       mkdirSync(outDir, { recursive: true });
@@ -92,6 +104,7 @@ async function main() {
     console.log("Copied .htaccess -> out/.htaccess");
   }
 
+  // Generate RSC aliases to stabilize dynamic routing in static mode
   createRscPageAliases(outDir);
 }
 

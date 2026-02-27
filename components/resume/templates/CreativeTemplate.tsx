@@ -180,8 +180,7 @@ export function CreativeTemplate({
                       {exp.role}
                     </h3>
                     <span className="text-slate-500 font-mono text-sm bg-slate-200 px-2 py-1 rounded">
-                      {exp.startDate} â€”{" "}
-                      {exp.current ? "Present" : exp.endDate}
+                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                     </span>
                   </div>
                   <div className="text-slate-600 font-semibold mb-3">
@@ -193,7 +192,7 @@ export function CreativeTemplate({
                         key={idx}
                         className="text-slate-600 leading-relaxed text-sm flex gap-2"
                       >
-                        <span className="text-slate-400 mt-1">â€º</span>
+                        <span className="text-slate-400 mt-1">&rsaquo;</span>
                         <RichText inline text={bullet} />
                       </li>
                     ))}
