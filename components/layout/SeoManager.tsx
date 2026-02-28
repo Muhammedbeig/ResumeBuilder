@@ -109,7 +109,7 @@ export function SeoManager() {
     let active = true;
     void (async () => {
       try {
-        const res = await fetch(resolveApiUrl("/api/site/settings"), { cache: "no-store" });
+        const res = await fetch(resolveApiUrl("/rb/site/settings"), { cache: "no-store" });
         if (!res.ok) return;
         const data = (await res.json()) as {
           faviconUrl?: string;

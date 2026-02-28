@@ -18,7 +18,7 @@ export async function fetchTemplateCategories(
 ): Promise<PanelTemplateCategory[]> {
   try {
     const res = await fetchJson<{ data?: PanelTemplateCategory[] }>(
-      `/api/templates/categories?type=${encodeURIComponent(type)}`,
+      `/rb/templates/categories?type=${encodeURIComponent(type)}`,
     );
     return Array.isArray(res.data) ? res.data : [];
   } catch {
@@ -40,7 +40,7 @@ export async function fetchTemplates(
 
   try {
     const res = await fetchJson<{ data?: PanelTemplate[] }>(
-      `/api/templates/list?${search.toString()}`,
+      `/rb/templates/list?${search.toString()}`,
     );
     return Array.isArray(res.data) ? res.data : [];
   } catch {
@@ -54,7 +54,7 @@ export async function fetchTemplateById(
 ): Promise<PanelTemplate | null> {
   try {
     const res = await fetchJson<{ data?: PanelTemplate }>(
-      `/api/templates/${encodeURIComponent(templateId)}?type=${encodeURIComponent(type)}`,
+      `/rb/templates/${encodeURIComponent(templateId)}?type=${encodeURIComponent(type)}`,
     );
     return res.data ?? null;
   } catch {

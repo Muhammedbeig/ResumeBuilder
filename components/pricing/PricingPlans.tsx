@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -154,7 +154,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
           ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
           : "";
         const res = await fetchWithTimeout(
-          `/api/payment/activation-status${query}`,
+          `/rb/payment/activation-status${query}`,
           { cache: "no-store" },
           8000,
         ).catch(() => null);
@@ -257,7 +257,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
           (paymentTransactionId || checkoutSessionId)
         ) {
           await fetchWithTimeout(
-            "/api/stripe/confirm",
+            "/rb/stripe/confirm",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -275,7 +275,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
           paypalOrderId
         ) {
           await fetchWithTimeout(
-            "/api/paypal/confirm",
+            "/rb/paypal/confirm",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -310,7 +310,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     void (async () => {
       try {
-        const res = await fetch(resolveApiUrl("/api/bank-transfer/settings"), {
+        const res = await fetch(resolveApiUrl("/rb/bank-transfer/settings"), {
           cache: "no-store",
         });
         if (!res.ok) return;
@@ -339,7 +339,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     void (async () => {
       try {
-        const res = await fetch(resolveApiUrl("/api/payment/settings"), { cache: "no-store" });
+        const res = await fetch(resolveApiUrl("/rb/payment/settings"), { cache: "no-store" });
         if (!res.ok) return;
         const data = (await res.json()) as PaymentSettingsResponse;
         if (!active) return;
@@ -409,7 +409,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     setIsRedirecting(true);
     try {
-      const response = await fetch(resolveApiUrl("/api/stripe/checkout"), {
+      const response = await fetch(resolveApiUrl("/rb/stripe/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -459,7 +459,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
 
     setIsPayPalRedirecting(true);
     try {
-      const response = await fetch(resolveApiUrl("/api/paypal/checkout"), {
+      const response = await fetch(resolveApiUrl("/rb/paypal/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -505,7 +505,7 @@ export function PricingPlans({ flow, returnUrl, cards }: PricingPlansProps) {
       formData.append("packageId", selectedPackageId);
       formData.append("file", receiptFile);
 
-      const response = await fetch(resolveApiUrl("/api/bank-transfer/receipt"), {
+      const response = await fetch(resolveApiUrl("/rb/bank-transfer/receipt"), {
         method: "POST",
         body: formData,
       });

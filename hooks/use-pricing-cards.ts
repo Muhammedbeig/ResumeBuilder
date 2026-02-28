@@ -28,7 +28,7 @@ export function usePricingCards() {
 
     void (async () => {
       try {
-        const response = await fetch(resolveApiUrl("/api/subscription-packages"), {
+        const response = await fetch(resolveApiUrl("/rb/subscription-packages"), {
           cache: "no-store",
           credentials: "include",
         });

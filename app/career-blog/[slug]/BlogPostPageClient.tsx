@@ -77,7 +77,7 @@ function getCategoryMeta(
 }
 
 async function fetchBlogBySlug(slug: string) {
-  const url = new URL(resolveApiUrl("/api/blogs"), window.location.origin);
+  const url = new URL(resolveApiUrl("/rb/blogs"), window.location.origin);
   url.searchParams.set("slug", slug);
 
   const response = await fetch(url.toString(), {

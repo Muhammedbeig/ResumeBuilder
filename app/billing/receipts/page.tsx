@@ -79,7 +79,7 @@ export default function ReceiptsPage() {
 
   const loadCards = async () => {
     try {
-      const response = await fetch(resolveApiUrl("/api/subscription-packages"));
+      const response = await fetch(resolveApiUrl("/rb/subscription-packages"));
       if (!response.ok) throw new Error("Failed to load packages");
       const data = (await response.json()) as { cards?: PricingCard[] };
       setCards(Array.isArray(data.cards) ? data.cards : []);
@@ -90,7 +90,7 @@ export default function ReceiptsPage() {
 
   const loadReceipts = async () => {
     try {
-      const response = await fetch(resolveApiUrl("/api/bank-transfer/receipts"));
+      const response = await fetch(resolveApiUrl("/rb/bank-transfer/receipts"));
       if (!response.ok) {
         throw new Error("Failed to load receipts");
       }
@@ -113,7 +113,7 @@ export default function ReceiptsPage() {
 
     void (async () => {
       try {
-        const res = await fetch(resolveApiUrl("/api/bank-transfer/settings"), {
+        const res = await fetch(resolveApiUrl("/rb/bank-transfer/settings"), {
           cache: "no-store",
         });
         if (!res.ok) return;
@@ -167,7 +167,7 @@ export default function ReceiptsPage() {
       formData.append("packageId", selectedPackageId);
       formData.append("file", receiptFile);
 
-      const response = await fetch(resolveApiUrl("/api/bank-transfer/receipt"), {
+      const response = await fetch(resolveApiUrl("/rb/bank-transfer/receipt"), {
         method: "POST",
         body: formData,
       });

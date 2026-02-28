@@ -68,7 +68,7 @@ export function ContactPage({
 
     setIsLoading(true);
     try {
-      const response = await fetch(resolveApiUrl("/api/contact-us"), {
+      const response = await fetch(resolveApiUrl("/rb/contact-us"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

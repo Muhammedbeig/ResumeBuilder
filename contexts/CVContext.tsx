@@ -136,7 +136,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(resolveApiUrl("/api/cvs"));
+      const response = await fetch(resolveApiUrl("/rb/cvs"));
       if (!response.ok) {
         console.error("Failed to load CVs", response.status);
         setCVs([]);
@@ -171,7 +171,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl("/api/cvs"), {
+        const response = await fetch(resolveApiUrl("/rb/cvs"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, template, data: dataToUse }),
@@ -203,7 +203,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl(`/api/cvs/${cvId}`));
+        const response = await fetch(resolveApiUrl(`/rb/cvs/${cvId}`));
         if (!response.ok) {
           throw new Error("Failed to load CV");
         }
@@ -225,7 +225,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       if (!session?.user) return;
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl(`/api/cvs/${id}`), {
+        const response = await fetch(resolveApiUrl(`/rb/cvs/${id}`), {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -267,7 +267,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
       if (!isAutoSave) setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl(`/api/cvs/${currentCV.id}`), {
+        const response = await fetch(resolveApiUrl(`/rb/cvs/${currentCV.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -479,7 +479,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       if (existing) return existing;
 
       const request = (async () => {
-        const response = await fetch(resolveApiUrl(`/api/ai/${path}`), {
+        const response = await fetch(resolveApiUrl(`/rb/ai/${path}`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

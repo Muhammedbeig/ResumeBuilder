@@ -60,7 +60,7 @@ export default function CareerManagementPage() {
     let active = true;
     const loadSubscription = async () => {
       try {
-        const res = await fetch(resolveApiUrl("/api/user/subscription"));
+        const res = await fetch(resolveApiUrl("/rb/user/subscription"));
         if (!res.ok) {
           return;
         }
@@ -119,7 +119,7 @@ export default function CareerManagementPage() {
   }, [resumes, selectedResumeId]);
 
   const fetchResumeJson = async (resumeId: string) => {
-    const response = await fetch(resolveApiUrl(`/api/resumes/${resumeId}`));
+    const response = await fetch(resolveApiUrl(`/rb/resumes/${resumeId}`));
     if (!response.ok) {
       throw new Error("Failed to load resume");
     }
@@ -130,7 +130,7 @@ export default function CareerManagementPage() {
   const parseResumeFromFile = async (fileToParse: File) => {
     const formData = new FormData();
     formData.append("file", fileToParse);
-    const extractRes = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
+    const extractRes = await fetch(resolveApiUrl("/rb/extract-pdf-text"), {
       method: "POST",
       body: formData,
     });
@@ -142,7 +142,7 @@ export default function CareerManagementPage() {
       throw new Error("No text found in PDF");
     }
 
-    const parseRes = await fetch(resolveApiUrl("/api/ai/parse"), {
+    const parseRes = await fetch(resolveApiUrl("/rb/ai/parse"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: extractData.text }),
@@ -192,7 +192,7 @@ export default function CareerManagementPage() {
         throw new Error("Resume data not found");
       }
 
-      const response = await fetch(resolveApiUrl("/api/market-value"), {
+      const response = await fetch(resolveApiUrl("/rb/market-value"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

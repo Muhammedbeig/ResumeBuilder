@@ -55,7 +55,7 @@ function normalizeFaqRows(rows: PanelFaq[]): FaqItem[] {
 }
 
 async function fetchFaqsFromApi(): Promise<FaqItem[]> {
-  const response = await fetch(resolveApiUrl("/api/faq"), {
+  const response = await fetch(resolveApiUrl("/rb/faq"), {
     cache: "no-store",
     credentials: "include",
   });

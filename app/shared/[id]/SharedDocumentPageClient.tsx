@@ -65,7 +65,7 @@ function extractTemplateRecord(payload: unknown): PanelTemplateRecord | null {
 }
 
 async function fetchSharedDocument(id: string) {
-  const url = resolveApiUrl(`/api/shared/${encodeURIComponent(id)}`);
+  const url = resolveApiUrl(`/rb/shared/${encodeURIComponent(id)}`);
   const response = await fetch(url, {
     cache: "no-store",
     credentials: "include",
@@ -78,7 +78,7 @@ async function fetchSharedDocument(id: string) {
 
 async function fetchTemplateConfig(type: "resume" | "cv", templateId: string) {
   const url = new URL(
-    resolveApiUrl(`/api/templates/${encodeURIComponent(templateId)}`),
+    resolveApiUrl(`/rb/templates/${encodeURIComponent(templateId)}`),
     window.location.origin,
   );
   url.searchParams.set("type", type);

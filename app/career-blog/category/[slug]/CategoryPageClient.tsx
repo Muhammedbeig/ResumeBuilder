@@ -69,10 +69,10 @@ function humanizeSlug(value: string) {
 
 async function fetchCategoryData(categorySlug: string) {
   const categoriesUrl = new URL(
-    resolveApiUrl("/api/blog-categories"),
+    resolveApiUrl("/rb/blog-categories"),
     window.location.origin,
   );
-  const blogsUrl = new URL(resolveApiUrl("/api/blogs"), window.location.origin);
+  const blogsUrl = new URL(resolveApiUrl("/rb/blogs"), window.location.origin);
   blogsUrl.searchParams.set("category_slug", categorySlug);
   blogsUrl.searchParams.set("sort_by", "new-to-old");
 

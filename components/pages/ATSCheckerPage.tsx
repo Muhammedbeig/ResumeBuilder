@@ -173,7 +173,7 @@ export function ATSCheckerPage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch(resolveApiUrl("/api/ai/ats-check"), {
+      const response = await fetch(resolveApiUrl("/rb/ai/ats-check"), {
         method: "POST",
         body: formData,
       });

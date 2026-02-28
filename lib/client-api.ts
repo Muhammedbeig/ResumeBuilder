@@ -1,22 +1,11 @@
 "use client";
 
-const API_PREFIX = "/api";
 const RB_PREFIX = "/rb";
-
-function parseDirectModeEnabled(raw: string | undefined): boolean {
-  const value = (raw ?? "").trim().toLowerCase();
-  // Default ON for static deployments where host rewrites may not be available.
-  if (value === "") return true;
-  return !["0", "false", "off", "no"].includes(value);
-}
-
-const DIRECT_MODE_ENABLED = parseDirectModeEnabled(
-  process.env.NEXT_PUBLIC_API_DIRECT_MODE,
-);
 
 const API_ROOT_CANDIDATES = [
   process.env.NEXT_PUBLIC_API_BASE_URL ?? null,
   process.env.NEXT_PUBLIC_API_URL ?? null,
+  process.env.PANEL_API_BASE_URL ?? null,
 ] as const;
 
 function normalizeApiRoot(value?: string | null): string | null {
@@ -28,15 +17,19 @@ function normalizeApiRoot(value?: string | null): string | null {
   try {
     const parsed = new URL(raw);
     const trimmedPath = parsed.pathname.replace(/\/+$/, "");
-    let apiPath = trimmedPath;
-    if (apiPath.endsWith("/api/rb")) {
-      // already normalized
-    } else if (apiPath.endsWith("/api")) {
-      apiPath = `${apiPath}${RB_PREFIX}`;
+    const segments = trimmedPath.split("/").filter(Boolean);
+    const lastSegment = segments[segments.length - 1]?.toLowerCase() ?? "";
+
+    if (lastSegment === "rb") {
+      // Already normalized to an RB namespace.
+    } else if (lastSegment === "api") {
+      segments.push("rb");
     } else {
-      apiPath = `${apiPath}/api${RB_PREFIX}`;
+      segments.push("api", "rb");
     }
-    return `${parsed.origin}${apiPath.replace(/\/{2,}/g, "/")}`;
+
+    const normalizedPath = `/${segments.join("/")}`.replace(/\/{2,}/g, "/");
+    return `${parsed.origin}${normalizedPath}`;
   } catch {
     return null;
   }
@@ -55,7 +48,9 @@ function isLocalHost(hostname: string): boolean {
 function inferPanelApiRootFromLocation(): string | null {
   if (typeof window === "undefined") return null;
   const host = window.location.hostname.toLowerCase();
-  if (isLocalHost(host)) return null;
+  if (isLocalHost(host)) {
+    return normalizeApiRoot("http://localhost/Panel/public/api");
+  }
 
   const parts = host.split(".").filter(Boolean);
   if (parts.length < 2) return null;
@@ -94,14 +89,13 @@ function getConfiguredApiRoot(): string | null {
   return inferPanelApiRootFromLocation();
 }
 
-function isApiPath(pathname: string) {
-  return pathname === API_PREFIX || pathname.startsWith(`${API_PREFIX}/`);
+function isRbApiPath(pathname: string): boolean {
+  return pathname === RB_PREFIX || pathname.startsWith(`${RB_PREFIX}/`);
 }
 
 function toApiTail(pathname: string) {
-  if (pathname === API_PREFIX) return "";
-  if (pathname.startsWith(`${API_PREFIX}/`))
-    return pathname.slice(API_PREFIX.length);
+  if (pathname === RB_PREFIX) return "";
+  if (pathname.startsWith(`${RB_PREFIX}/`)) return pathname.slice(RB_PREFIX.length);
   return pathname;
 }
 
@@ -124,18 +118,12 @@ export function resolveApiUrl(input: string): string {
     return input;
   }
 
-  if (!isApiPath(parsed.pathname)) return input;
-
-  const isLocalRelative = parsed.origin === window.location.origin;
-  // Rewrite-first mode: keep relative /api calls so host/Next rewrites handle routing.
-  // This avoids CORS/cookie issues when Panel is on a different origin.
-  if (isLocalRelative && !DIRECT_MODE_ENABLED) {
-    return input;
-  }
+  if (!isRbApiPath(parsed.pathname)) return input;
 
   const configuredApiRoot = getConfiguredApiRoot();
   if (!configuredApiRoot) return input;
 
+  const isLocalRelative = parsed.origin === window.location.origin;
   const configuredOrigin = new URL(configuredApiRoot).origin;
   const isAlreadyConfiguredOrigin = parsed.origin === configuredOrigin;
   if (!isLocalRelative && !isAlreadyConfiguredOrigin) {
@@ -146,7 +134,7 @@ export function resolveApiUrl(input: string): string {
 }
 
 export function resolveAuthBasePath(): string {
-  return "/api/auth";
+  return "/rb/auth";
 }
 
 let fetchInterceptorInstalled = false;

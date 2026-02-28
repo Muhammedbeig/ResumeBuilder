@@ -77,7 +77,7 @@ function normalizeSessionPayload(payload: unknown): SessionData {
 }
 
 async function fetchSessionFromApi(): Promise<SessionData> {
-  const response = await fetch(resolveApiUrl("/api/auth/session"), {
+  const response = await fetch(resolveApiUrl("/rb/auth/session"), {
     cache: "no-store",
     credentials: "include",
   });
@@ -182,7 +182,7 @@ export function useSession() {
 }
 
 export async function getProviders(): Promise<ProvidersMap | null> {
-  const response = await fetch(resolveApiUrl("/api/auth/providers"), {
+  const response = await fetch(resolveApiUrl("/rb/auth/providers"), {
     cache: "no-store",
     credentials: "include",
   }).catch(() => null);
@@ -199,7 +199,7 @@ export async function signIn(
   const redirect = options?.redirect !== false;
 
   if (provider === "credentials") {
-    const response = await fetch(resolveApiUrl("/api/auth/callback/credentials"), {
+    const response = await fetch(resolveApiUrl("/rb/auth/callback/credentials"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -248,7 +248,7 @@ export async function signIn(
 
   if (provider === "google") {
     const startUrl = new URL(
-      resolveApiUrl("/api/auth/google/start"),
+      resolveApiUrl("/rb/auth/google/start"),
       window.location.origin,
     );
     if (callbackUrl) {
@@ -278,7 +278,7 @@ export async function signOut(
     typeof options?.callbackUrl === "string" ? options.callbackUrl : "/";
   const redirect = options?.redirect !== false;
 
-  const response = await fetch(resolveApiUrl("/api/auth/signout"), {
+  const response = await fetch(resolveApiUrl("/rb/auth/signout"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

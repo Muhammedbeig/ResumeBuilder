@@ -40,7 +40,7 @@ export default function ReportDetailClient() {
     if (!reportId) return;
     let active = true;
     setLoading(true);
-    fetch(resolveApiUrl(`/api/market-value/${reportId}`))
+    fetch(resolveApiUrl(`/rb/market-value/${reportId}`))
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         if (!active) return;

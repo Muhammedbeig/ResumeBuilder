@@ -152,7 +152,7 @@ export async function POST(request: Request) {
     }
     const resolvedReturnUrl = resolveReturnUrl(body.returnUrl, baseUrl);
 
-    const callbackBase = new URL("/api/stripe/return", baseUrl);
+    const callbackBase = new URL("/rb/stripe/return", baseUrl);
     callbackBase.searchParams.set("return_url", resolvedReturnUrl);
     callbackBase.searchParams.set(
       "payment_transaction_id",

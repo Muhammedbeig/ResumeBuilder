@@ -136,7 +136,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(resolveApiUrl("/api/resumes"));
+      const response = await fetch(resolveApiUrl("/rb/resumes"));
       if (!response.ok) {
         console.error("Failed to load resumes", response.status);
         setResumes([]);
@@ -174,7 +174,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl("/api/resumes"), {
+        const response = await fetch(resolveApiUrl("/rb/resumes"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, template, data: dataToUse }),
@@ -209,7 +209,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl(`/api/resumes/${resumeId}`));
+        const response = await fetch(resolveApiUrl(`/rb/resumes/${resumeId}`));
         if (!response.ok) {
           throw new Error("Failed to load resume");
         }
@@ -231,7 +231,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       if (!session?.user) return;
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl(`/api/resumes/${id}`), {
+        const response = await fetch(resolveApiUrl(`/rb/resumes/${id}`), {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -273,7 +273,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       if (!isAutoSave) setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl(`/api/resumes/${currentResume.id}`), {
+        const response = await fetch(resolveApiUrl(`/rb/resumes/${currentResume.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -338,7 +338,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     );
 
     try {
-      await fetch(resolveApiUrl(`/api/resumes/${currentResume.id}`), {
+      await fetch(resolveApiUrl(`/rb/resumes/${currentResume.id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -525,7 +525,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       if (existing) return existing;
 
       const request = (async () => {
-        const response = await fetch(resolveApiUrl(`/api/ai/${path}`), {
+        const response = await fetch(resolveApiUrl(`/rb/ai/${path}`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

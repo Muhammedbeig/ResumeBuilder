@@ -9,7 +9,7 @@
   "values": [
     {
       "type": "any",
-      "value": "http://localhost/Panel/public/api/rb",
+      "value": "https://panel.resumibuilder.com/public/api/rb",
       "key": "apiBaseUrl"
     },
     {
@@ -129,7 +129,7 @@
     },
     {
       "type": "any",
-      "value": "http://localhost/Panel/public/api/internal",
+      "value": "https://panel.resumibuilder.com/public/api/internal",
       "key": "internalApiBaseUrl"
     },
     {

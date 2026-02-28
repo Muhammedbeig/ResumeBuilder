@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { resolveApiUrl } from "@/lib/client-api";
 
 function buildCurrentPath(): string {
-  if (typeof window === "undefined") return "/api/auth/callback/google";
-  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (typeof window === "undefined") return "/rb/auth/callback/google";
+  return `/rb/auth/callback/google${window.location.search}${window.location.hash}`;
 }
 
 function isSameLocation(target: string): boolean {

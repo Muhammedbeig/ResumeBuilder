@@ -1,0 +1,94 @@
+{
+  "info": {
+    "name": "Local 3 API Retest",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Credentials Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+              "var body = pm.response.json();",
+              "if (body && body.user && body.user.id) { pm.environment.set('internalUserId', String(body.user.id)); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"callbackUrl\": \"/dashboard\"\n}"
+        },
+        "url": "{{apiBaseUrl}}/auth/callback/credentials"
+      }
+    },
+    {
+      "name": "AI ATS Check",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "{{samplePdfPath}}"
+            }
+          ]
+        },
+        "url": "{{apiBaseUrl}}/ai/ats-check"
+      }
+    },
+    {
+      "name": "Extract PDF Text",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "{{samplePdfPath}}"
+            }
+          ]
+        },
+        "url": "{{apiBaseUrl}}/extract-pdf-text"
+      }
+    },
+    {
+      "name": "Generate PDF",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-internal-export-key",
+            "value": "{{internalExportKey}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"resume\",\n  \"templateId\": \"{{templateId}}\",\n  \"data\": {{resumeJson}}\n}"
+        },
+        "url": "{{apiBaseUrl}}/generate-pdf"
+      }
+    }
+  ]
+}

@@ -124,7 +124,7 @@ function AllArticlesSkeleton() {
 }
 
 async function fetchBlogs(): Promise<PanelBlog[]> {
-  const url = new URL(resolveApiUrl("/api/blogs"), window.location.origin);
+  const url = new URL(resolveApiUrl("/rb/blogs"), window.location.origin);
   url.searchParams.set("sort_by", "new-to-old");
 
   const response = await fetch(url.toString(), {

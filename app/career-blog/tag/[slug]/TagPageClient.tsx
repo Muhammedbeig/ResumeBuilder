@@ -80,8 +80,8 @@ function getCategoryMeta(
 }
 
 async function fetchTagData(tagValue: string) {
-  const tagsUrl = new URL(resolveApiUrl("/api/blog-tags"), window.location.origin);
-  const blogsUrl = new URL(resolveApiUrl("/api/blogs"), window.location.origin);
+  const tagsUrl = new URL(resolveApiUrl("/rb/blog-tags"), window.location.origin);
+  const blogsUrl = new URL(resolveApiUrl("/rb/blogs"), window.location.origin);
   blogsUrl.searchParams.set("tag", tagValue);
   blogsUrl.searchParams.set("sort_by", "new-to-old");
 

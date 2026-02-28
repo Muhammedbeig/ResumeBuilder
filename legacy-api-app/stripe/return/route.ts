@@ -35,7 +35,7 @@ async function confirmStripePayment(
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const res = await fetch(`${appOrigin}/api/stripe/confirm`, {
+      const res = await fetch(`${appOrigin}/rb/stripe/confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

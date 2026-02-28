@@ -349,7 +349,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     async (templateId: string) => {
       setIsLoading(true);
       try {
-        const response = await fetch(resolveApiUrl("/api/generate-pdf"), {
+        const response = await fetch(resolveApiUrl("/rb/generate-pdf"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

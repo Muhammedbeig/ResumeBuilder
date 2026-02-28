@@ -147,7 +147,7 @@ export function UserNav() {
     let active = true;
     void (async () => {
       try {
-        const response = await fetch(resolveApiUrl("/api/user/subscription"), {
+        const response = await fetch(resolveApiUrl("/rb/user/subscription"), {
           cache: "no-store",
         });
         if (!response.ok) return;
@@ -224,7 +224,7 @@ export function UserNav() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(resolveApiUrl("/api/user/update"), {
+      const res = await fetch(resolveApiUrl("/rb/user/update"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -270,7 +270,7 @@ export function UserNav() {
         payload.currentPassword = currentPassword;
       }
 
-      const res = await fetch(resolveApiUrl("/api/user/update"), {
+      const res = await fetch(resolveApiUrl("/rb/user/update"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -359,7 +359,7 @@ export function UserNav() {
               <DropdownMenuItem
                 onClick={() => {
                   window.location.href = resolveApiUrl(
-                    `/api/stripe/portal?returnUrl=${encodeURIComponent(window.location.pathname)}`,
+                    `/rb/stripe/portal?returnUrl=${encodeURIComponent(window.location.pathname)}`,
                   );
                 }}
               >
@@ -505,7 +505,7 @@ export function UserNav() {
                     onClick={() => {
                       setIsSettingsOpen(false);
                       window.location.href = resolveApiUrl(
-                        `/api/stripe/portal?returnUrl=${encodeURIComponent(pathname || "/dashboard")}`,
+                        `/rb/stripe/portal?returnUrl=${encodeURIComponent(pathname || "/dashboard")}`,
                       );
                     }}
                     className="w-full"

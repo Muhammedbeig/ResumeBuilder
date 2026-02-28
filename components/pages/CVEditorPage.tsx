@@ -356,7 +356,7 @@ export function CVEditorPage() {
   const syncSubscription = useCallback(async () => {
     try {
       const response = await fetchWithTimeout(
-        "/api/user/subscription",
+        "/rb/user/subscription",
         { cache: "no-store" },
         8000,
       );
@@ -389,7 +389,7 @@ export function CVEditorPage() {
           ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
           : "";
         const response = await fetchWithTimeout(
-          `/api/payment/activation-status${query}`,
+          `/rb/payment/activation-status${query}`,
           { cache: "no-store" },
           8000,
         ).catch(() => null);
@@ -431,7 +431,7 @@ export function CVEditorPage() {
             (paymentTransactionId || checkoutSessionId)
           ) {
             await fetchWithTimeout(
-              "/api/stripe/confirm",
+              "/rb/stripe/confirm",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -449,7 +449,7 @@ export function CVEditorPage() {
             paypalOrderId
           ) {
             await fetchWithTimeout(
-              "/api/paypal/confirm",
+              "/rb/paypal/confirm",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

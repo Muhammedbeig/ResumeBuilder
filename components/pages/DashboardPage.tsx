@@ -71,7 +71,7 @@ export function DashboardPage() {
     if (!session?.user) return;
     let active = true;
     setReportsLoading(true);
-    fetch(resolveApiUrl("/api/market-value"))
+    fetch(resolveApiUrl("/rb/market-value"))
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         if (!active) return;

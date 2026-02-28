@@ -358,7 +358,7 @@ export function ResumeEditorPage() {
   const syncSubscription = useCallback(async () => {
     try {
       const response = await fetchWithTimeout(
-        "/api/user/subscription",
+        "/rb/user/subscription",
         { cache: "no-store" },
         8000,
       );
@@ -391,7 +391,7 @@ export function ResumeEditorPage() {
           ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
           : "";
         const response = await fetchWithTimeout(
-          `/api/payment/activation-status${query}`,
+          `/rb/payment/activation-status${query}`,
           { cache: "no-store" },
           8000,
         ).catch(() => null);
@@ -436,7 +436,7 @@ export function ResumeEditorPage() {
             (paymentTransactionId || checkoutSessionId)
           ) {
             await fetchWithTimeout(
-              "/api/stripe/confirm",
+              "/rb/stripe/confirm",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -454,7 +454,7 @@ export function ResumeEditorPage() {
             paypalOrderId
           ) {
             await fetchWithTimeout(
-              "/api/paypal/confirm",
+              "/rb/paypal/confirm",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

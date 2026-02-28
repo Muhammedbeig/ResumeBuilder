@@ -224,7 +224,7 @@ export default function AIResumeOptimizerPage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
+      const response = await fetch(resolveApiUrl("/rb/extract-pdf-text"), {
         method: "POST",
         body: formData,
       });
@@ -272,7 +272,7 @@ export default function AIResumeOptimizerPage() {
     setIsAnalyzing(true);
     try {
       // Step 1: Parse Resume
-      const parseRes = await fetch(resolveApiUrl("/api/ai/parse"), {
+      const parseRes = await fetch(resolveApiUrl("/rb/ai/parse"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: resumeText }),
@@ -337,7 +337,7 @@ export default function AIResumeOptimizerPage() {
       setParsedResume(processedResume);
 
       // Step 2: Tailor Resume
-      const tailorRes = await fetch(resolveApiUrl("/api/ai/tailor"), {
+      const tailorRes = await fetch(resolveApiUrl("/rb/ai/tailor"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -391,7 +391,7 @@ export default function AIResumeOptimizerPage() {
 
     setIsJobUrlLoading(true);
     try {
-      const response = await fetch(resolveApiUrl("/api/ai/job-url"), {
+      const response = await fetch(resolveApiUrl("/rb/ai/job-url"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: jobUrl }),

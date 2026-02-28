@@ -2,7 +2,6 @@ User-Agent: *
 Allow: /
 Disallow: /dashboard
 Disallow: /editor
-Disallow: /api
 Disallow: /billing
 Disallow: /checkout
 

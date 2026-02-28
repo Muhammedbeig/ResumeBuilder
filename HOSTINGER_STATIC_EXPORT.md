@@ -13,7 +13,7 @@ npm run build
 - `public/.htaccess` is included to:
   - map dynamic URLs to placeholder pages
   - provide `.html` fallback routing
-  - support optional `/api/*` forwarding to Panel
+  - serve static assets and route rewrites only
 
 ## Required deploy steps
 
@@ -24,11 +24,8 @@ npm run build
    npm run typecheck
    npm run build
    ```
-2. Open `public/.htaccess` and configure API forwarding:
-   - Uncomment **Option A** and set your Panel API host, or
-   - Uncomment **Option B** if Panel API is under same domain path.
-3. Copy/upload full `out/` contents to Hostinger public web root.
-4. Verify hard refresh/deep-link URLs:
+2. Copy/upload full `out/` contents to Hostinger public web root.
+3. Verify hard refresh/deep-link URLs:
    - `/resume/<id>`
    - `/cv/<id>`
    - `/cover-letter/<id>`
@@ -38,7 +35,7 @@ npm run build
    - `/career-blog/category/<slug>`
    - `/career-blog/tag/<slug>`
    - `/templates/<category>`
-5. Verify API-backed flows:
+4. Verify API-backed flows:
    - login/signup/session
    - create/edit/save resume/cv/cover letter
    - pricing checkout/confirm/status
@@ -46,6 +43,6 @@ npm run build
 
 ## Notes
 
-- Static export does not run Next middleware/proxy or `app/api/*`.
-- If `/api/*` forwarding is not configured on Hostinger, authenticated and data-saving flows will fail.
+- Static export does not run Next middleware/proxy or runtime API route handlers.
+- Frontend API calls are direct Panel calls via `/rb/*` mapping in `resolveApiUrl`, so legacy API-route forwarding is not required.
 - Newman regression can be run after you add/import Postman collections in this repo (none were present at implementation time).

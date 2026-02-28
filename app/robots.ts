@@ -32,7 +32,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/editor", "/api", "/billing", "/checkout"],
+        disallow: ["/dashboard", "/editor", "/billing", "/checkout"],
       },
     ],
     ...(base ? { sitemap: `${base}/sitemap.xml` } : {}),

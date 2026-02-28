@@ -30,7 +30,7 @@ export default function ResumePreviewPage() {
       if (!exportHtml) {
         throw new Error("Unable to capture resume HTML for export.");
       }
-      const response = await fetch(resolveApiUrl("/api/generate-pdf"), {
+      const response = await fetch(resolveApiUrl("/rb/generate-pdf"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

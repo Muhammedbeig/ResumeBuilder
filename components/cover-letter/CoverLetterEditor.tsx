@@ -138,7 +138,7 @@ export function CoverLetterEditor() {
   const syncSubscription = useCallback(async () => {
     try {
       const response = await fetchWithTimeout(
-        "/api/user/subscription",
+        "/rb/user/subscription",
         { cache: "no-store" },
         8000,
       );
@@ -171,7 +171,7 @@ export function CoverLetterEditor() {
           ? `?paymentTransactionId=${encodeURIComponent(paymentTransactionId)}`
           : "";
         const response = await fetchWithTimeout(
-          `/api/payment/activation-status${query}`,
+          `/rb/payment/activation-status${query}`,
           { cache: "no-store" },
           8000,
         ).catch(() => null);
@@ -212,7 +212,7 @@ export function CoverLetterEditor() {
             (paymentTransactionId || checkoutSessionId)
           ) {
             await fetchWithTimeout(
-              "/api/stripe/confirm",
+              "/rb/stripe/confirm",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -230,7 +230,7 @@ export function CoverLetterEditor() {
             paypalOrderId
           ) {
             await fetchWithTimeout(
-              "/api/paypal/confirm",
+              "/rb/paypal/confirm",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

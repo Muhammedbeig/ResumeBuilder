@@ -99,7 +99,7 @@ export default function StartResumePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const extractRes = await fetch(resolveApiUrl("/api/extract-pdf-text"), {
+      const extractRes = await fetch(resolveApiUrl("/rb/extract-pdf-text"), {
         method: "POST",
         body: formData,
       });
@@ -110,7 +110,7 @@ export default function StartResumePage() {
       if (!text) throw new Error("Could not extract text from PDF");
 
       // 2. Parse text with AI
-      const parseRes = await fetch(resolveApiUrl("/api/ai/parse"), {
+      const parseRes = await fetch(resolveApiUrl("/rb/ai/parse"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
