@@ -352,6 +352,14 @@
     {
       "source": "/:page/:sub/:leaf/__next.:segment1.:segment2.:segment3.txt",
       "destination": "/:page/:sub/:leaf/__next.:segment1/:segment2/:segment3.txt"
+    },
+    {
+      "source": "/:page/:sub/:leaf/:node/__next.:segment1.:segment2.:segment3.:segment4.__PAGE__.txt",
+      "destination": "/:page/:sub/:leaf/:node/__next.:segment1/:segment2/:segment3/:segment4/__PAGE__.txt"
+    },
+    {
+      "source": "/:page/:sub/:leaf/:node/__next.:segment1.:segment2.:segment3.:segment4.txt",
+      "destination": "/:page/:sub/:leaf/:node/__next.:segment1/:segment2/:segment3/:segment4.txt"
     }
   ]
 }

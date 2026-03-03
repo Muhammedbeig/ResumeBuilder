@@ -10,10 +10,8 @@ npm run build
 
 - App API routes are no longer part of the exported frontend.
 - Dynamic pages are exported through placeholder static pages (for example `/resume/_.html`).
-- `public/.htaccess` is included to:
-  - map dynamic URLs to placeholder pages
-  - provide `.html` fallback routing
-  - serve static assets and route rewrites only
+- Routing source of truth is `serve.json` (copied to `out/serve.json` during build).
+- `npm start` serves static output with `serve` + rewrite rules from `out/serve.json`.
 
 ## Required deploy steps
 
@@ -40,9 +38,22 @@ npm run build
    - create/edit/save resume/cv/cover letter
    - pricing checkout/confirm/status
    - receipts/billing
+5. Verify Panel export proxy settings in production (`Panel/.env`):
+   - `RESUME_BUILDER_EXPORT_URL=https://www.resumibuilder.com`
+   - `RESUPRO_INTERNAL_API_KEY` matches website `.env`
+   - `INTERNAL_EXPORT_KEY` / `RESUME_BUILDER_EXPORT_KEY` matches website `.env`
+   - `PANEL_API_BASE_URL=https://panel.resumibuilder.com/public/api`
+   - Export proxy target (`RESUME_BUILDER_EXPORT_URL`) must expose:
+     - `POST /extract-pdf-text`
+     - `POST /generate-pdf`
+6. On Panel after env update:
+   ```bash
+   php artisan optimize:clear
+   php artisan config:clear
+   ```
 
 ## Notes
 
 - Static export does not run Next middleware/proxy or runtime API route handlers.
 - Frontend API calls are direct Panel calls via `/rb/*` mapping in `resolveApiUrl`, so legacy API-route forwarding is not required.
-- Newman regression can be run after you add/import Postman collections in this repo (none were present at implementation time).
+- Newman regression should be run with the production runtime environment file once per deployment candidate.

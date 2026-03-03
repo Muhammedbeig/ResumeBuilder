@@ -1,6 +1,0 @@
- INFO  Accepting connections at http://localhost:3000
- HTTP  2/25/2026 11:12:06 AM ::1 GET /
- HTTP  2/25/2026 11:12:06 AM ::1 GET /
- HTTP  2/25/2026 11:12:06 AM ::1 Returned 200 in 64 ms
- HTTP  2/25/2026 11:12:06 AM ::1 Returned 200 in 24 ms
-^C

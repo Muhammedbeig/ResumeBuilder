@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "node scripts/build-static.mjs",
     "start": "node scripts/start-static.mjs",
+    "start:export-worker": "tsx scripts/export-worker.ts",
     "build:next": "next build",
     "start:next": "next start",
     "lint": "eslint .",

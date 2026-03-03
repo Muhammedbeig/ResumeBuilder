@@ -34,3 +34,18 @@ next-env.d.ts
 
 # local postman secrets
 postman/static-panel/*.local.json
+postman/static-panel/*.report.json
+postman/static-panel/**/*.report.json
+postman/static-panel/**/.tmp-*.json
+postman/static-panel/.rb_cookie.txt
+postman/static-panel/.tmp-*.json
+postman/static-panel/newman-*.json
+postman/static-panel/newman-*.log
+tmp-*.log
+tmp-*.json
+serve_out.txt
+
+# local env files
+.env
+.env.*
+!.env.example
