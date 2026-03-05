@@ -3,6 +3,50 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+function normalizeOrigin(raw) {
+  const value = String(raw ?? "").trim();
+  if (!value) return "";
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return "";
+  }
+}
+
+function canonicalWebsiteOrigin(env) {
+  const candidates = [
+    env.WEBSITE_URL,
+    env.NEXT_PUBLIC_APP_URL,
+    env.NEXT_PUBLIC_WEBSITE_URL,
+    env.NEXTAUTH_URL,
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeOrigin(candidate);
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function applyWebsiteUrlDefaults(env) {
+  const canonical = canonicalWebsiteOrigin(env);
+  if (!canonical) return env;
+
+  // Keep website-facing origins aligned from one canonical domain.
+  env.WEBSITE_URL = canonical;
+  env.NEXT_PUBLIC_APP_URL = canonical;
+  env.NEXT_PUBLIC_WEBSITE_URL = canonical;
+  env.NEXTAUTH_URL = canonical;
+
+  // Preserve explicit export target when intentionally different.
+  if (!normalizeOrigin(env.RESUME_BUILDER_EXPORT_URL)) {
+    env.RESUME_BUILDER_EXPORT_URL = canonical;
+  }
+
+  return env;
+}
+
 /**
  * Executes a shell command and returns a promise.
  */
@@ -73,7 +117,7 @@ function createRscPageAliases(outDir) {
 }
 
 async function main() {
-  const env = { ...process.env, NEXT_STATIC_EXPORT: "1" };
+  const env = applyWebsiteUrlDefaults({ ...process.env, NEXT_STATIC_EXPORT: "1" });
   
   // Perform the standard Next.js build and export
   if (!process.env.SKIP_BUILD) {

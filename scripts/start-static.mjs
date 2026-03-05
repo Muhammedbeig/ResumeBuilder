@@ -4,6 +4,50 @@ import { createServer } from "node:http";
 import path from "node:path";
 import process from "node:process";
 
+function normalizeOrigin(raw) {
+  const value = String(raw ?? "").trim();
+  if (!value) return "";
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return "";
+  }
+}
+
+function canonicalWebsiteOrigin(env) {
+  const candidates = [
+    env.WEBSITE_URL,
+    env.NEXT_PUBLIC_APP_URL,
+    env.NEXT_PUBLIC_WEBSITE_URL,
+    env.NEXTAUTH_URL,
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeOrigin(candidate);
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function applyWebsiteUrlDefaults(env) {
+  const canonical = canonicalWebsiteOrigin(env);
+  if (!canonical) return env;
+
+  env.WEBSITE_URL = canonical;
+  env.NEXT_PUBLIC_APP_URL = canonical;
+  env.NEXT_PUBLIC_WEBSITE_URL = canonical;
+  env.NEXTAUTH_URL = canonical;
+
+  if (!normalizeOrigin(env.RESUME_BUILDER_EXPORT_URL)) {
+    env.RESUME_BUILDER_EXPORT_URL = canonical;
+  }
+
+  return env;
+}
+
+applyWebsiteUrlDefaults(process.env);
+
 const publicPort = Number.parseInt(process.env.PORT || "3000", 10);
 const publicHost = process.env.HOST || "0.0.0.0";
 
